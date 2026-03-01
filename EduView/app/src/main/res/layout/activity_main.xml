@@ -42,19 +42,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Posts"
-                android:fontFamily="@font/lalezar"
-                android:allowClickWhenDisabled="true" />
+                android:fontFamily="@font/lalezar" />
 
             <com.google.android.material.tabs.TabItem
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Announcements"
-                android:allowClickWhenDisabled="true"/>
+                android:text="Announcements" />
             <com.google.android.material.tabs.TabItem
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Pending"
-                android:allowClickWhenDisabled="true"/>
+                android:text="Pending" />
 
 
         </com.google.android.material.tabs.TabLayout>
