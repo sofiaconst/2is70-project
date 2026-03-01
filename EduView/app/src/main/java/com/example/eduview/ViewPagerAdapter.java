@@ -15,7 +15,6 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
     @Override
     public Fragment createFragment(int position) {
         switch (position) {
-            case 0: return new Posts();
             case 1: return new Announcements();
             // add if statement for teacher
             case 2: return new Pending();

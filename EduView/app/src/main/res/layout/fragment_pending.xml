@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,8 +9,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="Pending"
-        android:textSize="50sp"
-        android:layout_marginTop="140dp"/>
+        android:text="@string/feed_title_3"
+        android:textSize="50sp" />
 
-</FrameLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

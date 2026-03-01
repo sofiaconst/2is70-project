@@ -9,10 +9,14 @@ import android.view.View;
 import android.view.ViewGroup;
 
 public class Pending extends Fragment {
+    public Pending() { }
+
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+    public android.view.View onCreateView(
+            android.view.LayoutInflater inflater,
+            android.view.ViewGroup container,
+            android.os.Bundle savedInstanceState
+    ) {
         return inflater.inflate(R.layout.fragment_pending, container, false);
     }
 }
