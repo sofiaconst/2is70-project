@@ -3,4 +3,7 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="design_default_color_primary">#CB30E0</color>
+    <color name="red">#FF383C</color>
+    <color name="gray">#CCCCCC</color>
+    <color name="aqua">#00C0E8</color>
 </resources>

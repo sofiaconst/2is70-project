@@ -26,8 +26,6 @@
             android:paddingBottom="24dp">
 
             <!-- HEADER AREA: keep your existing header ConstraintLayout here -->
-
-            <!-- Role fragment container (grows as needed) -->
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/profileHeader"
                 android:layout_width="match_parent"
@@ -35,8 +33,8 @@
 
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/profileImage"
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
+                    android:layout_width="170dp"
+                    android:layout_height="170dp"
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="10dp"
                     android:padding="2dp"
@@ -65,7 +63,7 @@
                     android:layout_marginTop="10dp"
                     android:fontFamily="@font/robotomono"
                     android:text="Firstname Lastname"
-                    android:textSize="20sp"
+                    android:textSize="30sp"
                     android:textStyle="bold"
                     app:layout_constraintBottom_toTopOf="@+id/profile_bar"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -94,7 +92,7 @@
                         android:paddingBottom="4dp"
                         android:text="Teacher"
                         android:textColor="@android:color/black"
-                        android:textSize="12sp" />
+                        android:textSize="18sp" />
 
                 </com.google.android.material.card.MaterialCardView>
 
@@ -105,7 +103,7 @@
                     android:layout_marginTop="8dp"
                     android:fontFamily="@font/robotomono"
                     android:text="Class classname"
-                    android:textSize="18sp"
+                    android:textSize="25sp"
                     android:textStyle="bold"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/profileImage"
@@ -120,26 +118,25 @@
                     android:layout_marginTop="25dp"
                     android:fontFamily="@font/robotomono"
                     android:text="About Me"
-                    android:textSize="20sp"
+                    android:textSize="25sp"
                     android:textStyle="bold"
-                    app:layout_constraintBottom_toTopOf="@id/aboutMeCard"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/Teacher_Class_Text" />
+                    app:layout_constraintTop_toBottomOf="@+id/profileImage" />
 
                 <TextView
                     android:id="@+id/EditBioText"
                     android:layout_width="wrap_content"
-                    android:layout_height="15dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
                     android:clickable="true"
                     android:fontFamily="@font/robotomono"
                     android:text="Edit"
                     android:textColor="@color/aqua"
-                    android:textSize="12sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     app:layout_constraintBottom_toTopOf="@+id/aboutMeCard"
                     app:layout_constraintEnd_toEndOf="parent"
-                    tools:layout_marginTop="20dp" />
+                    tools:layout_marginTop="10dp" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/aboutMeCard"
@@ -170,9 +167,9 @@
                         android:scrollbars="vertical" />
 
                 </com.google.android.material.card.MaterialCardView>
-
             </androidx.constraintlayout.widget.ConstraintLayout>
 
+            <!-- Role fragment container (grows as needed) -->
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/profileFragmentContainer"
                 android:layout_width="match_parent"
@@ -182,8 +179,8 @@
             <!-- Buttons inside scroll -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonLogout"
-                android:layout_width="270dp"
-                android:layout_height="48dp"
+                android:layout_width="300dp"
+                android:layout_height="60dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="24dp"
                 android:backgroundTint="@color/red"
@@ -191,18 +188,18 @@
                 android:stateListAnimator="@null"
                 android:text="Log out"
                 android:textColor="@android:color/white"
-                android:textSize="16sp"
+                android:textSize="25sp"
                 app:cornerRadius="12dp"
                 app:icon="@drawable/logout_button_icon"
                 app:iconGravity="textStart"
                 app:iconPadding="12dp"
-                app:iconSize="20dp"
+                app:iconSize="30dp"
                 app:iconTint="@android:color/white" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonDelete"
-                android:layout_width="270dp"
-                android:layout_height="48dp"
+                android:layout_width="300dp"
+                android:layout_height="60dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="12dp"
                 android:backgroundTint="@color/red"
@@ -210,12 +207,12 @@
                 android:stateListAnimator="@null"
                 android:text="Delete"
                 android:textColor="@android:color/white"
-                android:textSize="16sp"
+                android:textSize="25sp"
                 app:cornerRadius="12dp"
                 app:icon="@drawable/delete_button_icon"
                 app:iconGravity="textStart"
                 app:iconPadding="12dp"
-                app:iconSize="20dp"
+                app:iconSize="30dp"
                 app:iconTint="@android:color/white" />
 
         </LinearLayout>
