@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.EduView">
         <activity
-            android:name=".MainActivity"
+            android:name=".TeacherFeedActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
