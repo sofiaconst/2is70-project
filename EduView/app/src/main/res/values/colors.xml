@@ -4,4 +4,5 @@
     <color name="white">#FFFFFFFF</color>
     <color name="design_default_color_primary">#CB30E0</color>
     <color name="feed_tab_selected">#D260C3</color>
+    <color name="reject_post">#DC2020</color>
 </resources>

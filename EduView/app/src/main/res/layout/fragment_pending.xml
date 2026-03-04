@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -11,7 +11,10 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:padding="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:id="@+id/tvStudentName"
@@ -29,25 +32,27 @@
             android:id="@+id/tvPendingPostContent"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:textColor="#444444"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_top_toBottomOf="@id/tvStudentName"
+            tools:layout_editor_absoluteY="27dp"
             tools:text="Check out my science project on plant cells!" />
 
         <ImageView
             android:id="@+id/ivPostImage"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
             android:adjustViewBounds="true"
             android:maxHeight="300dp"
             android:scaleType="centerInside"
             android:visibility="visible"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/tvStudentName"
             app:layout_top_toBottomOf="@id/tvPendingPostContent"
             tools:src="@android:drawable/ic_menu_gallery" />
 
@@ -60,22 +65,6 @@
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_top_toBottomOf="@id/ivPostImage">
-
-            <ImageButton
-                android:id="@+id/btnLikePost"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_heart"
-                app:tint="#E91E63" />
-
-            <TextView
-                android:id="@+id/tvLikeCount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0"
-                android:textColor="#E91E63"
-                android:textStyle="bold" />
         </LinearLayout>
 
         <LinearLayout
@@ -96,7 +85,7 @@
                 android:layout_marginEnd="24dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@android:drawable/ic_menu_close_clear_cancel"
-                app:tint="#E53935" />
+                app:tint="@color/black" />
 
             <ImageButton
                 android:id="@+id/btnAcceptPost"
@@ -108,4 +97,4 @@
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-</androidx.cardview.widget.CardView>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,14 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".Announcements">
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp">
 
-    <TextView
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/feed_title_2"
-        android:textSize="50sp" />
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
+        <TextView
+            android:id="@+id/tvStudentName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="@color/design_default_color_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_top_toTopOf="parent"
+            tools:layout_editor_absoluteY="1dp"
+            tools:text="John Doe" />
+
+        <TextView
+            android:id="@+id/tvPendingPostContent"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="#444444"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_top_toBottomOf="@id/tvStudentName"
+            tools:layout_editor_absoluteY="35dp"
+            tools:text="Check out my science project on plant cells!" />
+
+        <ImageView
+            android:id="@+id/ivPostImage"
+            android:layout_width="362dp"
+            android:layout_height="259dp"
+            android:layout_marginTop="20dp"
+            android:adjustViewBounds="true"
+            android:maxHeight="300dp"
+            android:scaleType="centerInside"
+            android:visibility="visible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvPendingPostContent"
+            app:layout_top_toBottomOf="@id/tvPendingPostContent"
+            tools:src="@android:drawable/ic_menu_gallery" />
+
+        <LinearLayout
+            android:id="@+id/layoutLike"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_top_toBottomOf="@id/ivPostImage">
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layoutModeration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_top_toBottomOf="@id/layoutLike"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
