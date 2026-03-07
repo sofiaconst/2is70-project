@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "991771873786",
+    "firebase_url": "https://eduview-3493f-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "eduview-3493f",
+    "storage_bucket": "eduview-3493f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:991771873786:android:f501d1a6febe74a2229443",
+        "android_client_info": {
+          "package_name": "com.example.eduview"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCS_kKrhu55JKWGV_LGFBm3ArFopmTLw2A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
