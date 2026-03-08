@@ -1,0 +1,45 @@
+name: Android Full Tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  full-tests:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: EduView
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Make Gradle executable
+        run: chmod +x gradlew
+
+      - name: Run Android instrumented tests + coverage
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          script: ./gradlew connectedDebugAndroidTest jacocoTestReport --info
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-test-reports
+          path: EduView/app/build/reports/androidTests/
