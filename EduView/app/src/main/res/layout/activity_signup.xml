@@ -194,21 +194,10 @@
                     android:inputType="textPassword"
                     android:background="@drawable/bg_input_rounded"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Class Name"
-                    android:textSize="12sp"
-                    android:layout_marginTop="12dp"
-                    android:textColor="#444444"/>
-
-                <EditText
-                    android:id="@+id/et_class_name"
+                <FrameLayout
+                    android:id="@+id/fragmentContainer"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Enter the name of your class"
-                    android:inputType="text"
-                    android:background="@drawable/bg_input_rounded"/>
+                    android:layout_height="wrap_content" />
 
                 <TextView
                     android:id="@+id/tv_error"
