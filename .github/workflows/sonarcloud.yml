@@ -10,6 +10,10 @@ jobs:
     name: Build, test, coverage, SonarCloud
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: EduView
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -35,9 +39,12 @@ jobs:
           api-level: 30
           arch: x86_64
           profile: pixel_4
+          working-directory: EduView
           script: ./gradlew connectedDebugAndroidTest jacocoTestReport --info
 
       - name: SonarQube Cloud scan
         uses: SonarSource/sonarqube-scan-action@v7
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: EduView
