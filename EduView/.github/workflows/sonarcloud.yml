@@ -3,14 +3,15 @@ name: SonarCloud
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
-  sonar:
-    name: Build, Test, Coverage, SonarCloud
+  sonarcloud:
+    name: Build, test, coverage, SonarCloud
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -20,21 +21,23 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+          cache: gradle
 
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Make gradlew executable
+      - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Run tests, coverage, and SonarCloud
+      - name: Run unit tests
+        run: ./gradlew clean testDebugUnitTest --info
+
+      - name: Run instrumented tests and generate JaCoCo report
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          profile: pixel_4
+          script: ./gradlew connectedDebugAndroidTest jacocoTestReport --info
+
+      - name: SonarQube Cloud scan
+        uses: SonarSource/sonarqube-scan-action@v7
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew clean testDebugUnitTest connectedDebugAndroidTest jacocoTestReport sonar --info
