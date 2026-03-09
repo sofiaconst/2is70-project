@@ -35,8 +35,8 @@
 
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/profileImage"
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
+                    android:layout_width="220dp"
+                    android:layout_height="220dp"
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="10dp"
                     android:padding="2dp"
@@ -50,8 +50,8 @@
 
                 <View
                     android:id="@+id/profile_bar"
-                    android:layout_width="200dp"
-                    android:layout_height="1dp"
+                    android:layout_width="500dp"
+                    android:layout_height="3dp"
                     android:layout_marginTop="10dp"
                     android:background="#BDBDBD"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -65,7 +65,7 @@
                     android:layout_marginTop="10dp"
                     android:fontFamily="@font/robotomono"
                     android:text="Firstname Lastname"
-                    android:textSize="20sp"
+                    android:textSize="40sp"
                     android:textStyle="bold"
                     app:layout_constraintBottom_toTopOf="@+id/profile_bar"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -94,7 +94,7 @@
                         android:paddingBottom="4dp"
                         android:text="Teacher"
                         android:textColor="@android:color/black"
-                        android:textSize="12sp" />
+                        android:textSize="20sp" />
 
                 </com.google.android.material.card.MaterialCardView>
 
@@ -105,7 +105,7 @@
                     android:layout_marginTop="8dp"
                     android:fontFamily="@font/robotomono"
                     android:text="Class classname"
-                    android:textSize="18sp"
+                    android:textSize="35sp"
                     android:textStyle="bold"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/profileImage"
@@ -117,25 +117,25 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:layout_marginTop="25dp"
+                    android:layout_marginTop="30dp"
                     android:fontFamily="@font/robotomono"
                     android:text="About Me"
-                    android:textSize="20sp"
+                    android:textSize="45sp"
                     android:textStyle="bold"
                     app:layout_constraintBottom_toTopOf="@id/aboutMeCard"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/Teacher_Class_Text" />
+                    app:layout_constraintTop_toBottomOf="@id/profileImage" />
 
                 <TextView
                     android:id="@+id/EditBioText"
                     android:layout_width="wrap_content"
-                    android:layout_height="15dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
                     android:clickable="true"
                     android:fontFamily="@font/robotomono"
                     android:text="Edit"
                     android:textColor="@color/aqua"
-                    android:textSize="12sp"
+                    android:textSize="24sp"
                     android:textStyle="bold"
                     app:layout_constraintBottom_toTopOf="@+id/aboutMeCard"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -144,7 +144,7 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/aboutMeCard"
                     android:layout_width="0dp"
-                    android:layout_height="110dp"
+                    android:layout_height="200dp"
                     android:layout_marginStart="16dp"
                     android:layout_marginEnd="16dp"
                     app:cardBackgroundColor="#F3F0F0"
@@ -159,7 +159,7 @@
                     <EditText
                         android:id="@+id/etAboutMe"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="200dp"
                         android:background="@android:color/transparent"
                         android:gravity="top|start"
                         android:hint="A little bit about me..."
@@ -167,7 +167,8 @@
                         android:isScrollContainer="true"
                         android:overScrollMode="ifContentScrolls"
                         android:padding="12dp"
-                        android:scrollbars="vertical" />
+                        android:scrollbars="vertical"
+                        android:textSize="30sp" />
 
                 </com.google.android.material.card.MaterialCardView>
 
@@ -182,8 +183,8 @@
             <!-- Buttons inside scroll -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonLogout"
-                android:layout_width="270dp"
-                android:layout_height="48dp"
+                android:layout_width="400dp"
+                android:layout_height="80dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="24dp"
                 android:backgroundTint="@color/red"
@@ -191,18 +192,18 @@
                 android:stateListAnimator="@null"
                 android:text="Log out"
                 android:textColor="@android:color/white"
-                android:textSize="16sp"
+                android:textSize="35sp"
                 app:cornerRadius="12dp"
                 app:icon="@drawable/logout_button_icon"
                 app:iconGravity="textStart"
                 app:iconPadding="12dp"
-                app:iconSize="20dp"
+                app:iconSize="50dp"
                 app:iconTint="@android:color/white" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonDelete"
-                android:layout_width="270dp"
-                android:layout_height="48dp"
+                android:layout_width="400dp"
+                android:layout_height="80dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="12dp"
                 android:backgroundTint="@color/red"
@@ -210,12 +211,12 @@
                 android:stateListAnimator="@null"
                 android:text="Delete"
                 android:textColor="@android:color/white"
-                android:textSize="16sp"
+                android:textSize="35sp"
                 app:cornerRadius="12dp"
                 app:icon="@drawable/delete_button_icon"
                 app:iconGravity="textStart"
                 app:iconPadding="12dp"
-                app:iconSize="20dp"
+                app:iconSize="50dp"
                 app:iconTint="@android:color/white" />
 
         </LinearLayout>
