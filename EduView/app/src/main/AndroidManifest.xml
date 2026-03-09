@@ -13,7 +13,7 @@
         android:theme="@style/Theme.EduView">
         <activity
             android:name=".SignupActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/title_activity_signup"
             android:theme="@style/Theme.EduView" />
         <activity

@@ -83,8 +83,8 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         tvSignup.setOnClickListener(v -> {
-            // Navigate to SignupActivity
-            startActivity(new Intent(this, SignupActivity.class));
+            Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
+            startActivity(intent);
         });
     }
 }
