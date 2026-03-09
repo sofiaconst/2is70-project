@@ -2,6 +2,7 @@ package com.example.eduview.Classes;
 
 import static com.example.eduview.Resources.UserRole.PARENT;
 
+import java.util.Collection;
 import java.util.List;
 
 public class Parent extends User {
@@ -24,7 +25,8 @@ public class Parent extends User {
     public String getEmail() {
         return email;
     }
-    public List<String> getChildID() {
+    public List<String> getChildrenIDs() {
         return childID;
     }
+
 }

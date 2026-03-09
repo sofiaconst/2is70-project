@@ -4,14 +4,13 @@ import static com.example.eduview.Resources.UserRole.STUDENT;
 
 public class Student extends User {
     private String classID;
-    private String parentID;
 
     //Empty Constructor needed for Firebase
     public Student() {}
 
-    public Student(String id, String firstName, String lastName, String parentID){
+    public Student(String id, String firstName, String lastName, String classID){
         super(id, firstName, lastName, STUDENT);
-        this.parentID = parentID;
+        this.classID = classID;
     }
 
     /*
@@ -19,10 +18,6 @@ public class Student extends User {
      */
     public String getClassID() {
         return classID;
-    }
-
-    public String getParentID() {
-        return parentID;
     }
 
     /*
@@ -33,5 +28,7 @@ public class Student extends User {
     }
 
 
-
+    public String getClassId() {
+        return classID;
+    }
 }

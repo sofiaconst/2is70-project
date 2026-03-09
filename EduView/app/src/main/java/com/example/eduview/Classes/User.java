@@ -5,7 +5,7 @@ import static com.example.eduview.Resources.UserRole.*;
 import com.example.eduview.Resources.UserRole;
 
 public class User {
-    private String id;
+    private String userid;
     private String firstName;
     private String lastName;
     private UserRole role;
@@ -16,15 +16,18 @@ public class User {
     public User() {}
 
     //User profile Creation constructor
-    public User(String id, String firstName, String lastName, UserRole role) {
-
+    public User(String userid, String firstName, String lastName, UserRole role) {
+        this.userid = userid;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.role = role;
     }
 
     /*
     Getters
      */
     public String getId() {
-        return id;
+        return userid;
     }
 
     public String getFirstName() {
@@ -32,10 +35,12 @@ public class User {
     }
 
     public String getLastName() {
+
         return lastName;
     }
 
     public String getProfileImageURL() {
+
         return profileImageURL;
     }
 
@@ -56,11 +61,9 @@ public class User {
     public boolean isTeacher() {
         return this.role == UserRole.TEACHER;
     }
-
     public boolean isStudent() {
         return this.role == UserRole.STUDENT;
     }
-
     public boolean isParent() {
         return this.role == UserRole.PARENT;
     }
