@@ -23,7 +23,6 @@ public class UserRepository {
     private final DatabaseReference parentsRef;
     private final DatabaseReference studentsRef;
     private final DatabaseReference teachersRef;
-//    private final DatabaseReference classRef;
 
 
     /**
@@ -36,7 +35,6 @@ public class UserRepository {
         studentsRef = db.getReference("students");
         teachersRef = db.getReference("teachers");
         parentsRef = db.getReference("parents");
-//        classRef = db.getReference("parents")
     }
 
     /**
@@ -212,6 +210,7 @@ public class UserRepository {
      */
     public void updateClass(String userID, String classID) {
         studentsRef.child(userID).child("classroom").setValue(classID);
+        //ADD STUDENT TO CLASS VIA CLASSROOM REPOSITORY
     }
 
 //    public void fetchStudentsInClass(String classID, Consumer<List<User>> onSuccess, Consumer<Exception> onError) {
@@ -253,5 +252,4 @@ public class UserRepository {
             onSuccess.accept(childrenIDs);
         });
     }
-
 }
