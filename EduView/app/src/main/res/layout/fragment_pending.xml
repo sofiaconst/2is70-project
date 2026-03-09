@@ -4,11 +4,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp">
+    android:layout_margin="8dp"
+    tools:context=".Pending">
 
-    <!--<androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="450dp"
         android:padding="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -23,7 +24,7 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_top_toTopOf="parent"
+            app:layout_constraintBaseline_toTopOf="parent"
             tools:text="John Doe" />
 
         <TextView
@@ -35,23 +36,23 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_top_toBottomOf="@id/tvStudentName"
+            app:layout_constraintBaseline_toTopOf="parent"
             tools:layout_editor_absoluteY="27dp"
             tools:text="Check out my science project on plant cells!" />
 
         <ImageView
-            android:id="@+id/ivPostImage"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:id="@+id/ivPendingPostImage"
+            android:layout_width="367dp"
+            android:layout_height="269dp"
+            android:layout_marginTop="20dp"
             android:adjustViewBounds="true"
             android:maxHeight="300dp"
             android:scaleType="centerInside"
             android:visibility="visible"
+            app:layout_constraintTop_toBottomOf="@id/tvPendingPostContent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/tvStudentName"
-            app:layout_top_toBottomOf="@id/tvPendingPostContent"
             tools:src="@android:drawable/ic_menu_gallery" />
 
         <LinearLayout
@@ -62,37 +63,42 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_top_toBottomOf="@id/ivPostImage">
+            app:layout_constraintBaseline_toTopOf="parent">
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/layoutModeration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
             android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ivPendingPostImage"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_top_toBottomOf="@id/layoutLike">
+            app:layout_constraintHorizontal_bias="0.497"
+            app:layout_constraintStart_toStartOf="parent">
 
-            <ImageButton
+            <ImageView
                 android:id="@+id/btnDeclinePost"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
                 android:layout_marginEnd="24dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:contentDescription="Reject"
+                android:focusable="true"
                 android:src="@android:drawable/ic_menu_close_clear_cancel"
                 app:tint="@color/black" />
 
-            <ImageButton
+            <ImageView
                 android:id="@+id/btnAcceptPost"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:contentDescription="Accept"
+                android:focusable="true"
                 android:src="@android:drawable/checkbox_on_background"
                 app:tint="#4CAF50" />
         </LinearLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>-->
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

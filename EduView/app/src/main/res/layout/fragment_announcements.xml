@@ -4,9 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp">
+    android:layout_margin="8dp"
+    tools:context=".Announcements">
 
-    <!--<androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
@@ -24,9 +25,9 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_top_toTopOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             tools:layout_editor_absoluteY="1dp"
-            tools:text="John Doe" />
+            tools:text="Ms. Smith" />
 
         <TextView
             android:id="@+id/tvPendingPostContent"
@@ -37,7 +38,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_top_toBottomOf="@id/tvStudentName"
+            app:layout_constraintTop_toBottomOf="@id/tvStudentName"
             tools:layout_editor_absoluteY="35dp"
             tools:text="Check out my science project on plant cells!" />
 
@@ -54,20 +55,7 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvPendingPostContent"
-            app:layout_top_toBottomOf="@id/tvPendingPostContent"
             tools:src="@android:drawable/ic_menu_gallery" />
-
-        <LinearLayout
-            android:id="@+id/layoutLike"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_top_toBottomOf="@id/ivPostImage">
-
-        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/layoutModeration"
@@ -77,8 +65,7 @@
             android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_top_toBottomOf="@id/layoutLike"/>
+            app:layout_constraintStart_toStartOf="parent" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout> -->
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

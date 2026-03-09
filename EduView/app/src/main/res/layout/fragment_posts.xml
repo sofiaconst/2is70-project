@@ -3,12 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_margin="8dp">
+    android:layout_height="match_parent"
+    android:layout_margin="8dp"
+    tools:context=".Posts">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="420dp"
+        android:layout_height="450dp"
         android:padding="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -21,40 +22,34 @@
             android:textColor="@color/design_default_color_primary"
             android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_top_toTopOf="parent"
-            tools:layout_editor_absoluteY="1dp"
+            app:layout_constraintEnd_toEndOf="parent"
             tools:text="John Doe" />
 
         <TextView
-            android:id="@+id/tvPendingPostContent"
+            android:id="@+id/tvPostContent"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textColor="#444444"
             android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintTop_toBottomOf="@id/tvStudentName"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_top_toBottomOf="@id/tvStudentName"
-            tools:layout_editor_absoluteY="35dp"
+            app:layout_constraintEnd_toEndOf="parent"
             tools:text="Check out my science project on plant cells!" />
-
         <ImageView
             android:id="@+id/ivPostImage"
-            android:layout_width="362dp"
-            android:layout_height="259dp"
+            android:layout_width="367dp"
+            android:layout_height="269dp"
             android:layout_marginTop="20dp"
             android:adjustViewBounds="true"
             android:maxHeight="300dp"
             android:scaleType="centerInside"
             android:visibility="visible"
+            app:layout_constraintTop_toBottomOf="@id/tvPostContent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvPendingPostContent"
-            app:layout_top_toBottomOf="@id/tvPendingPostContent"
             tools:src="@android:drawable/ic_menu_gallery" />
 
         <LinearLayout
@@ -65,7 +60,7 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_top_toBottomOf="@id/ivPostImage">
+            app:layout_constraintBaseline_toBottomOf="@id/ivPostImage">
 
         </LinearLayout>
 
@@ -77,16 +72,16 @@
             android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_top_toBottomOf="@id/layoutLike"/>
+            app:layout_constraintStart_toStartOf="parent"/>
 
         <ImageButton
             android:id="@+id/btnLikePost"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:contentDescription="LikeButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_marginStart="162dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_heart"
+            android:src="@drawable/like_button_clickable"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
 
@@ -96,12 +91,13 @@
             android:id="@+id/tvLikeCount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="52dp"
             android:layout_marginBottom="8dp"
             android:text="0"
             android:textColor="#E91E63"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
-            tools:layout_editor_absoluteX="299dp" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
