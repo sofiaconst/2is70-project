@@ -8,10 +8,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ParentSignupFragment extends Fragment {
     private int counter = 1;
+    private List<View> formList = new ArrayList<>();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -25,11 +30,13 @@ public class ParentSignupFragment extends Fragment {
         TextView counterText = view.findViewById(R.id.tv_counter);
 
         counterText.setText(String.valueOf(counter));
+        addForm(view);
 
         minus.setOnClickListener(v -> {
             if (counter > 1) {
                 counter--;
                 counterText.setText(String.valueOf(counter));
+                removeForm(view);
             }
             });
 
@@ -37,9 +44,34 @@ public class ParentSignupFragment extends Fragment {
             if (counter < 5) {
                 counter++;
                 counterText.setText(String.valueOf(counter));
+                addForm(view);
             }
             });
 
         return view;
+    }
+
+    private void addForm(View view) {
+        LinearLayout formContainer = view.findViewById(R.id.formContainer);
+
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View form = inflater.inflate(R.layout.form_child, formContainer, false);
+
+        TextView childNo = form.findViewById(R.id.tv_child_no);
+        childNo.setText(String.valueOf(counter));
+
+        formContainer.addView(form);
+        formList.add(form);
+    }
+
+    private void removeForm(View view) {
+        LinearLayout formContainer = view.findViewById(R.id.formContainer);
+
+        int formCount = formContainer.getChildCount();
+
+        if (formCount > 1) {
+            formContainer.removeViewAt(formCount - 1);
+            formList.remove(formCount - 1);
+        }
     }
 }

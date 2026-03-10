@@ -52,6 +52,11 @@ public class SignupActivity extends AppCompatActivity {
                     .replace(R.id.fragmentContainer, new ParentSignupFragment()).commit();
         });
 
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainer, new ParentSignupFragment()).commit();
+        }
+
         Button btnSignUp = findViewById(R.id.btn_signup);
         EditText etFirstName = findViewById(R.id.et_first_name);
         EditText etLastName = findViewById(R.id.et_last_name);
