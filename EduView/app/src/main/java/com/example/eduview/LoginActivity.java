@@ -62,26 +62,26 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             firebaseAuth.signInWithEmailAndPassword(username, password)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        // Check if user exists in the database
-                        String userId = firebaseAuth.getCurrentUser().getUid();
-                        databaseReference.child(userId).get().addOnCompleteListener(dbTask -> {
-                            if (dbTask.isSuccessful() && dbTask.getResult().exists()) {
-                                tvError.setVisibility(View.GONE);
-                                Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show();
-                                startActivity(new Intent(this, MainActivity.class));
-                                finish();
-                            } else {
-                                tvError.setText("User not found in the database.");
-                                tvError.setVisibility(View.VISIBLE);
-                            }
-                        });
-                    } else {
-                        tvError.setText("Invalid credentials. Please try again.");
-                        tvError.setVisibility(View.VISIBLE);
-                    }
-                });
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            // Check if user exists in the database
+                            String userId = firebaseAuth.getCurrentUser().getUid();
+                            databaseReference.child(userId).get().addOnCompleteListener(dbTask -> {
+                                if (dbTask.isSuccessful() && dbTask.getResult().exists()) {
+                                    tvError.setVisibility(View.GONE);
+                                    Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show();
+                                    startActivity(new Intent(this, MainActivity.class));
+                                    finish();
+                                } else {
+                                    tvError.setText("User not found in the database.");
+                                    tvError.setVisibility(View.VISIBLE);
+                                }
+                            });
+                        } else {
+                            tvError.setText("Invalid credentials. Please try again.");
+                            tvError.setVisibility(View.VISIBLE);
+                        }
+                    });
         });
 
         // Handles forgot password

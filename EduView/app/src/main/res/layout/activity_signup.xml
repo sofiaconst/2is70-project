@@ -191,13 +191,40 @@
                     android:layout_marginTop="12dp"
                     android:textColor="#444444"/>
 
-                <EditText
-                    android:id="@+id/et_password"
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Enter your password"
-                    android:inputType="textPassword"
-                    android:background="@drawable/bg_input_rounded"/>
+                    android:layout_marginTop="4dp"
+                    app:endIconMode="password_toggle">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_password"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Enter your password"
+                        android:inputType="textPassword"/>
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView
+                    android:id="@+id/tv_password_strength"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Password strength"
+                    android:textColor="#666666"
+                    android:textSize="12sp" />
+
+                <ProgressBar
+                    android:id="@+id/progress_password_strength"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="6dp"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressTint="#BDBDBD"
+                    android:progressBackgroundTint="#E0E0E0" />
 
                 <FrameLayout
                     android:id="@+id/fragmentContainer"
