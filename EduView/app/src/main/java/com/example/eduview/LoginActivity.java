@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -48,6 +49,7 @@ public class LoginActivity extends AppCompatActivity {
         TextView tvError = findViewById(R.id.tv_error);
         Button btnLogin = findViewById(R.id.btn_login);
         TextView tvSignup = findViewById(R.id.tv_signup);
+        TextView tvForgotPassword = findViewById(R.id.tv_forgot_password);
 
         btnLogin.setOnClickListener(v -> {
             String username = etUsername.getText().toString().trim();
@@ -80,6 +82,53 @@ public class LoginActivity extends AppCompatActivity {
                         tvError.setVisibility(View.VISIBLE);
                     }
                 });
+        });
+
+        // Handles forgot password
+        tvForgotPassword.setOnClickListener(v -> {
+            // Creates an input box for popup
+            EditText resetEmailInput = new EditText(this);
+            resetEmailInput.setHint("Enter your email");
+            resetEmailInput.setInputType(
+                    // Sets input type to email
+                    android.text.InputType.TYPE_CLASS_TEXT |
+                            android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+            );
+
+            AlertDialog dialog = new AlertDialog.Builder(this)
+                    .setTitle("Reset password")
+                    .setMessage("Enter your email address to receive a password reset link.")
+                    .setView(resetEmailInput)
+                    .setPositiveButton("Send", null)
+                    .setNegativeButton("Cancel", null)
+                    .create();
+
+            dialog.show();
+
+            // Handles positive button click
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(sendView -> {
+                String email = resetEmailInput.getText().toString().trim();
+
+                // Checks if email is empty
+                if (email.isEmpty()) {
+                    resetEmailInput.setError("Email is required.");
+                    return;
+                }
+
+                // Sends password reset email
+                firebaseAuth.sendPasswordResetEmail(email)
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                Toast.makeText(this, "Password reset email sent.", Toast.LENGTH_SHORT).show();
+                                dialog.dismiss();
+                            } else {
+                                String msg = task.getException() != null
+                                        ? task.getException().getMessage()
+                                        : "Failed to send reset email.";
+                                resetEmailInput.setError(msg);
+                            }
+                        });
+            });
         });
 
         tvSignup.setOnClickListener(v -> {
