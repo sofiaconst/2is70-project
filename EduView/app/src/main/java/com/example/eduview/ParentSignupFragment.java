@@ -78,13 +78,17 @@ public class ParentSignupFragment extends Fragment {
 
     public List<String> getChildIds() {
         List<String> childIds = new ArrayList<>();
-        if (etChildFirstName != null && etChildLastName != null) {
-            String firstName = etChildFirstName.getText().toString().trim();
-            String lastName = etChildLastName.getText().toString().trim();
-            if (!firstName.isEmpty() && !lastName.isEmpty()) {
-                // For now, using names as IDs as specified in your example (student_1, etc.)
-                // In a real app, these would be unique IDs from the database.
-                childIds.add(firstName + "_" + lastName);
+        for (View form : formList) {
+            EditText etChildFirstName = form.findViewById(R.id.et_child_first_name);
+            EditText etChildLastName = form.findViewById(R.id.et_child_last_name);
+            if (etChildFirstName != null && etChildLastName != null) {
+                String firstName = etChildFirstName.getText().toString().trim();
+                String lastName = etChildLastName.getText().toString().trim();
+                if (!firstName.isEmpty() && !lastName.isEmpty()) {
+                    // For now, using names as IDs as specified in your example (student_1, etc.)
+                    // In a real app, these would be unique IDs from the database.
+                    childIds.add(firstName + "_" + lastName);
+                }
             }
         }
         return childIds;
