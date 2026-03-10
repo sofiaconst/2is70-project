@@ -252,4 +252,8 @@ public class UserRepository {
             onSuccess.accept(childrenIDs);
         });
     }
+
+    public Object getUser(String uid) {
+        return null;
+    }
 }

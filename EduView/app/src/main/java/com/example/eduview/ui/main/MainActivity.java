@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
@@ -19,6 +20,29 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setupLayout();
+        setupNavigation();
+
+    }
+
+    private void setupViewModel() {
+
+        MainViewModel viewModel =
+                new ViewModelProvider(this).get(MainViewModel.class);
+
+        viewModel.loadCurrentUser();
+    }
+
+    private void setupNavigation() {
+        BottomNavigationView bottomNav = findViewById(R.id.MainBottomNavigationView);
+        NavHostFragment navHostFragment =
+                (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment_container);
+        assert navHostFragment != null;
+        NavController navController = navHostFragment.getNavController();
+        NavigationUI.setupWithNavController(bottomNav,navController);
+    }
+
+    private void setupLayout() {
         EdgeToEdge.enable(this); // app content can extend behind the status bar and navigation bar, modern feel
         setContentView(R.layout.activity_main);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -26,13 +50,5 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
-        BottomNavigationView bottomNav = findViewById(R.id.MainBottomNavigationView);
-        NavHostFragment navHostFragment =
-                (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment_container);
-        assert navHostFragment != null;
-        NavController navController = navHostFragment.getNavController();
-        NavigationUI.setupWithNavController(bottomNav,navController);
-
     }
 }
