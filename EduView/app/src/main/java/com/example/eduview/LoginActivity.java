@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -95,10 +96,23 @@ public class LoginActivity extends AppCompatActivity {
                             android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
             );
 
+            String currentEmail = etUsername.getText().toString().trim();
+            if (!currentEmail.isEmpty()) {
+                resetEmailInput.setText(currentEmail);
+            }
+
+            LinearLayout container = new LinearLayout(this);
+            container.setOrientation(LinearLayout.VERTICAL);
+
+            int padding = (int) (20 * getResources().getDisplayMetrics().density);
+            container.setPadding(padding, padding / 2, padding, 0);
+
+            container.addView(resetEmailInput);
+
             AlertDialog dialog = new AlertDialog.Builder(this)
                     .setTitle("Reset password")
-                    .setMessage("Enter your email address to receive a password reset link.")
-                    .setView(resetEmailInput)
+                    .setMessage("Enter your email to receive a password reset link.")
+                    .setView(container)
                     .setPositiveButton("Send", null)
                     .setNegativeButton("Cancel", null)
                     .create();
@@ -109,9 +123,17 @@ public class LoginActivity extends AppCompatActivity {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(sendView -> {
                 String email = resetEmailInput.getText().toString().trim();
 
+                resetEmailInput.setPadding(20,20,20,20);
+                resetEmailInput.setTextSize(16);
+
                 // Checks if email is empty
                 if (email.isEmpty()) {
                     resetEmailInput.setError("Email is required.");
+                    return;
+                }
+
+                if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    resetEmailInput.setError("Enter a valid email address.");
                     return;
                 }
 
@@ -119,7 +141,9 @@ public class LoginActivity extends AppCompatActivity {
                 firebaseAuth.sendPasswordResetEmail(email)
                         .addOnCompleteListener(task -> {
                             if (task.isSuccessful()) {
-                                Toast.makeText(this, "Password reset email sent.", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(this,
+                                        "If an account with that email exists, a reset link has been sent.",
+                                        Toast.LENGTH_LONG).show();
                                 dialog.dismiss();
                             } else {
                                 String msg = task.getException() != null
