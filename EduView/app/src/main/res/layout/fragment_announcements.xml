@@ -27,7 +27,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:layout_editor_absoluteY="1dp"
-            tools:text="Ms. Smith" />
+            android:text="Ms. Smith" />
 
         <TextView
             android:id="@+id/tvPendingPostContent"
@@ -40,7 +40,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvStudentName"
             tools:layout_editor_absoluteY="35dp"
-            tools:text="Check out my science project on plant cells!" />
+            android:text="Check out my science project on plant cells!" />
 
         <ImageView
             android:id="@+id/ivPostImage"
@@ -55,7 +55,7 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvPendingPostContent"
-            tools:src="@android:drawable/ic_menu_gallery" />
+            android:src="@android:drawable/ic_menu_gallery" />
 
         <LinearLayout
             android:id="@+id/layoutModeration"

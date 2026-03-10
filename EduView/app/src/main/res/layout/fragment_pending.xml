@@ -22,9 +22,10 @@
             android:textColor="@color/design_default_color_primary"
             android:textSize="18sp"
             android:textStyle="bold"
+            app:layout_constraintBaseline_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBaseline_toTopOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             tools:text="John Doe" />
 
         <TextView
@@ -38,7 +39,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintBaseline_toTopOf="parent"
             tools:layout_editor_absoluteY="27dp"
-            tools:text="Check out my science project on plant cells!" />
+            android:text="Check out my science project on plant cells!" />
 
         <ImageView
             android:id="@+id/ivPendingPostImage"
