@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ public class ParentSignupFragment extends Fragment {
                 counterText.setText(String.valueOf(counter));
                 removeForm(view);
             }
-            });
+        });
 
         plus.setOnClickListener(v -> {
             if (counter < 5) {
@@ -46,7 +47,7 @@ public class ParentSignupFragment extends Fragment {
                 counterText.setText(String.valueOf(counter));
                 addForm(view);
             }
-            });
+        });
 
         return view;
     }
@@ -73,5 +74,19 @@ public class ParentSignupFragment extends Fragment {
             formContainer.removeViewAt(formCount - 1);
             formList.remove(formCount - 1);
         }
+    }
+
+    public List<String> getChildIds() {
+        List<String> childIds = new ArrayList<>();
+        if (etChildFirstName != null && etChildLastName != null) {
+            String firstName = etChildFirstName.getText().toString().trim();
+            String lastName = etChildLastName.getText().toString().trim();
+            if (!firstName.isEmpty() && !lastName.isEmpty()) {
+                // For now, using names as IDs as specified in your example (student_1, etc.)
+                // In a real app, these would be unique IDs from the database.
+                childIds.add(firstName + "_" + lastName);
+            }
+        }
+        return childIds;
     }
 }
