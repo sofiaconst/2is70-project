@@ -1,8 +1,4 @@
-package com.example.eduview.Classes;
-
-import static com.example.eduview.Resources.UserRole.*;
-
-import com.example.eduview.Resources.UserRole;
+package com.example.eduview.data.model;
 
 public class User {
     private String userid;

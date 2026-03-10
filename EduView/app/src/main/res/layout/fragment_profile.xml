@@ -4,7 +4,7 @@
     android:id="@+id/profileFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ProfileFragment">
+    tools:context=".ui.profile.ProfileFragment">
 
     <!-- 1) Scroll area -->
     <androidx.core.widget.NestedScrollView

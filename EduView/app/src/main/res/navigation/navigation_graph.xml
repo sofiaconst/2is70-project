@@ -7,17 +7,17 @@
 
     <fragment
         android:id="@+id/feedFragment"
-        android:name="com.example.eduview.FeedFragment"
+        android:name="com.example.eduview.ui.feed.FeedFragment"
         android:label="fragment_feed"
         tools:layout="@layout/fragment_feed" />
     <fragment
         android:id="@+id/createPostFragment"
-        android:name="com.example.eduview.CreatePostFragment"
+        android:name="com.example.eduview.ui.createPost.CreatePostFragment"
         android:label="fragment_create_post"
         tools:layout="@layout/fragment_create_post" />
     <fragment
         android:id="@+id/profileFragment"
-        android:name="com.example.eduview.ProfileFragment"
+        android:name="com.example.eduview.ui.profile.ProfileFragment"
         android:label="fragment_profile"
         tools:layout="@layout/fragment_profile" />
 </navigation>

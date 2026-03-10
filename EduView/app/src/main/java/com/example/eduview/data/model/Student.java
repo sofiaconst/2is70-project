@@ -1,6 +1,6 @@
-package com.example.eduview.Classes;
+package com.example.eduview.data.model;
 
-import static com.example.eduview.Resources.UserRole.STUDENT;
+import static com.example.eduview.data.model.UserRole.STUDENT;
 
 public class Student extends User {
     private String classID;

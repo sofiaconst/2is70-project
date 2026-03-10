@@ -1,4 +1,4 @@
-package com.example.eduview;
+package com.example.eduview.ui.feed;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -15,11 +15,11 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
     @Override
     public Fragment createFragment(int position) {
         switch (position) {
-            case 0: return new Posts();
-            case 1: return new Announcements();
+            case 0: return new PostsFragment();
+            case 1: return new AnnouncementsFragment();
             // add if statement for teacher
-            case 2: return new Pending();
-            default: return new Posts();
+            case 2: return new PendingFragment();
+            default: return new PostsFragment();
         }
     }
 

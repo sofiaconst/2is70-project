@@ -1,4 +1,4 @@
-package com.example.eduview;
+package com.example.eduview.ui.feed;
 
 import android.os.Bundle;
 
@@ -8,7 +8,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class Announcements extends Fragment {
+import com.example.eduview.R;
+
+public class AnnouncementsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {

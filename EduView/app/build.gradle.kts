@@ -64,6 +64,8 @@ dependencies {
     implementation(libs.firebase.database)
     implementation(libs.androidx.core)
     implementation(libs.ext.junit)
+    implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
 //    implementation(libs.androidx.navigation.compose)
 //    implementation(libs.androidx.navigation.dynamic.features.fragment)
 //    androidTestImplementation(libs.androidx.navigation.testing)

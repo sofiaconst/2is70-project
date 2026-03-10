@@ -4,10 +4,11 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.example.eduview.Classes.Parent;
-import com.example.eduview.Classes.Student;
-import com.example.eduview.Classes.Teacher;
-import com.example.eduview.Classes.User;
+import com.example.eduview.data.model.Parent;
+import com.example.eduview.data.model.Student;
+import com.example.eduview.data.model.Teacher;
+import com.example.eduview.data.model.User;
+import com.example.eduview.data.repository.UserRepository;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;

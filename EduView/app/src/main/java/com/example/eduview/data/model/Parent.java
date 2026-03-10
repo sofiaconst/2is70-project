@@ -1,8 +1,7 @@
-package com.example.eduview.Classes;
+package com.example.eduview.data.model;
 
-import static com.example.eduview.Resources.UserRole.PARENT;
+import static com.example.eduview.data.model.UserRole.PARENT;
 
-import java.util.Collection;
 import java.util.List;
 
 public class Parent extends User {

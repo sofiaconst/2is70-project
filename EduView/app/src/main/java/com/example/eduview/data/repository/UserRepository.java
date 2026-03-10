@@ -1,15 +1,13 @@
-package com.example.eduview.Repository;
+package com.example.eduview.data.repository;
 
 
 import androidx.annotation.NonNull;
 
-import com.example.eduview.Classes.Parent;
-import com.example.eduview.Classes.Student;
-import com.example.eduview.Classes.Teacher;
-import com.example.eduview.Classes.User;
-import com.example.eduview.Resources.UserRole;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
+import com.example.eduview.data.model.Parent;
+import com.example.eduview.data.model.Student;
+import com.example.eduview.data.model.Teacher;
+import com.example.eduview.data.model.User;
+import com.example.eduview.data.model.UserRole;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -17,6 +15,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+
+// handles user data from Firebase Realtime Database
 
 public class UserRepository {
     private final DatabaseReference usersRef;
