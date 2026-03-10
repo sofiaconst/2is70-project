@@ -16,6 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ParentSignupFragment extends Fragment {
+    public int getCounter() {
+        return counter;
+    }
+
     private int counter = 1;
     private List<View> formList = new ArrayList<>();
 
