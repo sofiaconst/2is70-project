@@ -54,6 +54,7 @@ public class SignupActivity extends AppCompatActivity {
 
         // Add role tracking
         final String[] selectedRole = {null};
+        selectedRole[0] = "Parent";
 
         buttonTeacher.setOnClickListener(v -> {
             getSupportFragmentManager().beginTransaction()
@@ -116,7 +117,7 @@ public class SignupActivity extends AppCompatActivity {
                 Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
                 if (fragment instanceof ParentSignupFragment) {
                     List<String> childIds = ((ParentSignupFragment) fragment).getChildIds();
-                    if (childIds.isEmpty()) {
+                    if (childIds.size() != ((ParentSignupFragment) fragment).getCounter()) {
                         Toast.makeText(this, "Please provide children information", Toast.LENGTH_SHORT).show();
                         return;
                     }
