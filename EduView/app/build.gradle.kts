@@ -9,7 +9,9 @@ plugins {
 
 android {
     namespace = "com.example.eduview"
-    compileSdk = 36
+    compileSdk {
+        version = release(36)
+    }
 
     buildTypes {
         debug {
@@ -60,6 +62,10 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.firebase.database)
+    implementation(libs.androidx.core)
+    implementation(libs.ext.junit)
+    implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.firebase.auth)
 //    implementation(libs.androidx.navigation.compose)
 //    implementation(libs.androidx.navigation.dynamic.features.fragment)
@@ -71,6 +77,9 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.inline)
 
 }
 

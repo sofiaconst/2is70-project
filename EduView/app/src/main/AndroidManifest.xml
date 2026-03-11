@@ -17,7 +17,7 @@
             android:label="@string/title_activity_signup"
             android:theme="@style/Theme.EduView" />
         <activity
-            android:name=".LoginActivity"
+            android:name="com.example.eduview.ui.login.LoginActivity"
             android:exported="true"
             android:theme="@style/Theme.EduView">
             <intent-filter>
@@ -27,7 +27,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name="com.example.eduview.ui.main.MainActivity"
             android:exported="false" />
     </application>
 

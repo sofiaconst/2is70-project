@@ -1,4 +1,4 @@
-package com.example.eduview;
+package com.example.eduview.ui.login;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,6 +16,10 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.eduview.R;
+
+import com.example.eduview.SignupActivity;
+import com.example.eduview.ui.main.MainActivity;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
