@@ -1,4 +1,4 @@
-package com.example.eduview;
+package com.example.eduview.ui.signup;
 
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -7,10 +7,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,9 +20,10 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
+import com.example.eduview.AuthRepository;
+import com.example.eduview.R;
 import com.example.eduview.ui.login.LoginActivity;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SignupActivity extends AppCompatActivity {
@@ -143,19 +142,19 @@ public class SignupActivity extends AppCompatActivity {
 
         buttonTeacher.setOnClickListener(v -> {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragmentContainer, new com.example.eduview.TeacherSignupFragment()).commit();
+                    .replace(R.id.fragmentContainer, new TeacherSignupFragment()).commit();
             selectedRole[0] = "Teacher";
         });
 
         buttonParent.setOnClickListener(v -> {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragmentContainer, new com.example.eduview.ParentSignupFragment()).commit();
+                    .replace(R.id.fragmentContainer, new ParentSignupFragment()).commit();
             selectedRole[0] = "Parent";
         });
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragmentContainer, new com.example.eduview.ParentSignupFragment()).commit();
+                    .replace(R.id.fragmentContainer, new ParentSignupFragment()).commit();
         }
 
         btnSignUp.setOnClickListener(v -> {
@@ -195,8 +194,8 @@ public class SignupActivity extends AppCompatActivity {
 
             if ("Teacher".equals(selectedRole[0])) {
                 Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
-                if (fragment instanceof com.example.eduview.TeacherSignupFragment) {
-                    String className = ((com.example.eduview.TeacherSignupFragment) fragment).getClassName();
+                if (fragment instanceof TeacherSignupFragment) {
+                    String className = ((TeacherSignupFragment) fragment).getClassName();
                     if (className.isEmpty()) {
                         Toast.makeText(this, "Please enter classroom name", Toast.LENGTH_SHORT).show();
                         return;
@@ -205,9 +204,9 @@ public class SignupActivity extends AppCompatActivity {
                 }
             } else if ("Parent".equals(selectedRole[0])) {
                 Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
-                if (fragment instanceof com.example.eduview.ParentSignupFragment) {
-                    List<String> childIds = ((com.example.eduview.ParentSignupFragment) fragment).getChildIds();
-                    if (childIds.size() != ((com.example.eduview.ParentSignupFragment) fragment).getCounter()) {
+                if (fragment instanceof ParentSignupFragment) {
+                    List<String> childIds = ((ParentSignupFragment) fragment).getChildIds();
+                    if (childIds.size() != ((ParentSignupFragment) fragment).getCounter()) {
                         Toast.makeText(this, "Please provide children information", Toast.LENGTH_SHORT).show();
                         return;
                     }

@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.EduView">
         <activity
-            android:name=".SignupActivity"
+            android:name=".ui.signup.SignupActivity"
             android:exported="true"
             android:label="@string/title_activity_signup"
             android:theme="@style/Theme.EduView" />
