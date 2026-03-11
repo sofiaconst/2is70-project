@@ -1,12 +1,17 @@
 package com.example.eduview;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,6 +26,69 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SignupActivity extends AppCompatActivity {
+
+    private void updatePasswordStrength(String password, TextView tvPasswordStrength, ProgressBar progressPasswordStrength) {
+        boolean hasMinLength = password.length() >= 6;
+        boolean hasUppercase = password.matches(".*[A-Z].*");
+        boolean hasDigit = password.matches(".*\\d.*");
+        boolean hasSymbol = password.matches(".*[^A-Za-z0-9].*");
+
+        int score = 0;
+        if (hasMinLength) score++;
+        if (hasUppercase) score++;
+        if (hasDigit) score++;
+        if (hasSymbol) score++;
+
+        if (password.isEmpty()) {
+            tvPasswordStrength.setText("Password strength");
+            tvPasswordStrength.setTextColor(Color.parseColor("#666666"));
+            progressPasswordStrength.setProgress(0, true);
+            progressPasswordStrength.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#BDBDBD")));
+        } else if (score <= 1) {
+            tvPasswordStrength.setText("Password strength: Weak");
+            tvPasswordStrength.setTextColor(Color.parseColor("#D32F2F"));
+            progressPasswordStrength.setProgress(25, true);
+            progressPasswordStrength.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#D32F2F")));
+        } else if (score <= 3) {
+            tvPasswordStrength.setText("Password strength: Medium");
+            tvPasswordStrength.setTextColor(Color.parseColor("#F9A825"));
+            progressPasswordStrength.setProgress(75, true);
+            progressPasswordStrength.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#F9A825")));
+        } else {
+            tvPasswordStrength.setText("Password strength: Strong");
+            tvPasswordStrength.setTextColor(Color.parseColor("#2E7D32"));
+            progressPasswordStrength.setProgress(100, true);
+            progressPasswordStrength.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#2E7D32")));
+        }
+    }
+
+    private String getPasswordRequirementsMessage(String password) {
+        StringBuilder message = new StringBuilder("Password must contain:");
+
+        if (password.length() < 6) {
+            message.append("\n- At least 6 characters");
+        }
+        if (!password.matches(".*[A-Z].*")) {
+            message.append("\n- At least one capital letter");
+        }
+        if (!password.matches(".*\\d.*")) {
+            message.append("\n- At least one number");
+        }
+        if (!password.matches(".*[^A-Za-z0-9].*")) {
+            message.append("\n- At least one symbol");
+        }
+
+        return message.toString();
+    }
+
+    private boolean isPasswordValid(String password) {
+        boolean hasMinLength = password.length() >= 6;
+        boolean hasUppercase = password.matches(".*[A-Z].*");
+        boolean hasDigit = password.matches(".*\\d.*");
+        boolean hasSymbol = password.matches(".*[^A-Za-z0-9].*");
+
+        return hasMinLength && hasUppercase && hasDigit && hasSymbol;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +115,22 @@ public class SignupActivity extends AppCompatActivity {
         EditText etLastName = findViewById(R.id.et_last_name);
         EditText etEmail = findViewById(R.id.et_email);
         EditText etPassword = findViewById(R.id.et_password);
+        TextView tvPasswordStrength = findViewById(R.id.tv_password_strength);
+        ProgressBar progressPasswordStrength = findViewById(R.id.progress_password_strength);
         TextView tvLogin = findViewById(R.id.tv_login);
+
+        etPassword.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                updatePasswordStrength(s.toString(), tvPasswordStrength, progressPasswordStrength);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) { }
+        });
 
         // Initialize AuthRepository
         AuthRepository authRepository = new AuthRepository();
@@ -86,6 +169,11 @@ public class SignupActivity extends AppCompatActivity {
 
             if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (!isPasswordValid(password)) {
+                Toast.makeText(this, getPasswordRequirementsMessage(password), Toast.LENGTH_LONG).show();
                 return;
             }
 
