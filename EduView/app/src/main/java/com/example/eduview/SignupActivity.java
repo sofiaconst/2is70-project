@@ -3,8 +3,10 @@ package com.example.eduview;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,6 +41,7 @@ public class SignupActivity extends AppCompatActivity {
         // Initialize UI elements
         Button buttonTeacher = findViewById(R.id.btn_role_teacher);
         Button buttonParent = findViewById(R.id.btn_role_parent);
+
         Button btnSignUp = findViewById(R.id.btn_signup);
         EditText etFirstName = findViewById(R.id.et_first_name);
         EditText etLastName = findViewById(R.id.et_last_name);
@@ -51,6 +54,7 @@ public class SignupActivity extends AppCompatActivity {
 
         // Add role tracking
         final String[] selectedRole = {null};
+        selectedRole[0] = "Parent";
 
         buttonTeacher.setOnClickListener(v -> {
             getSupportFragmentManager().beginTransaction()
@@ -63,6 +67,11 @@ public class SignupActivity extends AppCompatActivity {
                     .replace(R.id.fragmentContainer, new ParentSignupFragment()).commit();
             selectedRole[0] = "Parent";
         });
+
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainer, new ParentSignupFragment()).commit();
+        }
 
         btnSignUp.setOnClickListener(v -> {
             if (selectedRole[0] == null) {
@@ -108,7 +117,7 @@ public class SignupActivity extends AppCompatActivity {
                 Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
                 if (fragment instanceof ParentSignupFragment) {
                     List<String> childIds = ((ParentSignupFragment) fragment).getChildIds();
-                    if (childIds.isEmpty()) {
+                    if (childIds.size() != ((ParentSignupFragment) fragment).getCounter()) {
                         Toast.makeText(this, "Please provide children information", Toast.LENGTH_SHORT).show();
                         return;
                     }
