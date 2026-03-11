@@ -78,7 +78,7 @@ public class UserRepository {
                     break;
 
                 case TEACHER:
-                    //fetchTeacher(userId, base, onSuccess, onError);
+                    fetchTeacher(userId, base, onSuccess, onError);
                     break;
 
                 case PARENT:
@@ -139,6 +139,33 @@ public class UserRepository {
             );
 
             finalizeUser(student, base.pfp, onSuccess);
+        });
+    }
+
+    private void fetchTeacher(String userId,
+                              UserBaseData base,
+                              Consumer<User> onSuccess,
+                              Consumer<Exception> onError) {
+
+        teachersRef.child(userId).get().addOnCompleteListener(task -> {
+
+            if (!task.isSuccessful()) {
+                onError.accept(new RuntimeException("Failed to fetch student"));
+                return;
+            }
+
+            DataSnapshot snapshot = task.getResult();
+
+            String classId = snapshot.child("classroom").getValue(String.class);
+
+            Teacher teacher = new Teacher(
+                    userId,
+                    base.firstName,
+                    base.lastName,
+                    classId
+            );
+
+            finalizeUser(teacher, base.pfp, onSuccess);
         });
     }
 

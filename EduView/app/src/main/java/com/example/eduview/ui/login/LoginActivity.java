@@ -48,11 +48,23 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        authRepository = new AuthRepository();
+
+        if (authRepository.getCurrentUser() != null) {
+
+            Log.d(TAG, "Existing session detected, skipping login screen");
+
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+            return;
+        }
+
         setupLayout();
 
         Log.d(TAG, "LoginActivity started");
 
-        authRepository = new AuthRepository();
+
 
         initViews();
         setupListeners();
