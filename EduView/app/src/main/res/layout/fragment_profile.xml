@@ -86,6 +86,7 @@
                     app:strokeWidth="1dp">
 
                     <TextView
+                        android:id="@+id/textViewRole"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:paddingStart="12dp"

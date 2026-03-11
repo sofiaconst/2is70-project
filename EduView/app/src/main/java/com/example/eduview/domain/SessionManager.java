@@ -1,4 +1,4 @@
-package com.example.eduview.data.repository;
+package com.example.eduview.domain;
 
 /*
 who is the logged-in user?

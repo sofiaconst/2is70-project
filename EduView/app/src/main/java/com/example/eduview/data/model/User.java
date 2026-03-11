@@ -1,10 +1,16 @@
 package com.example.eduview.data.model;
 
+import com.google.firebase.database.PropertyName;
+
 public class User {
     private String userid;
+    @PropertyName("first_name")
     private String firstName;
+    @PropertyName("last_name")
     private String lastName;
+    @PropertyName("role")
     private UserRole role;
+    @PropertyName("pfp")
     private String profileImageURL; //Store as URL?
 //    private String bio; //We are removing Bio
 
@@ -19,48 +25,30 @@ public class User {
         this.role = role;
     }
 
-    /*
-    Getters
-     */
-    public String getId() {
-        return userid;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public String getLastName() {
-
-        return lastName;
-    }
-
-    public String getProfileImageURL() {
-
-        return profileImageURL;
-    }
-
-    public UserRole getRole() {
-        return role;
-    }
-
-    /*
-    Setters
-     */
-    public void setProfileImageURL(String profileImageURL) {
-        this.profileImageURL = profileImageURL;
-    }
-
-    /*
-    Methods
-     */
     public boolean isTeacher() {
         return this.role == UserRole.TEACHER;
     }
     public boolean isStudent() {
         return this.role == UserRole.STUDENT;
     }
+
     public boolean isParent() {
         return this.role == UserRole.PARENT;
     }
+
+    // Getters
+    public String getUserId() {
+        return userid;
+    }
+    public String getFirstName() {
+        return firstName;
+    }
+    public String getLastName() {return lastName;}
+    public String getProfileImageURL() {return profileImageURL;}
+    public UserRole getRole() {
+        return role;
+    }
+
+    // Setters
+    public void setProfileImageURL(String profileImageURL) {this.profileImageURL = profileImageURL;}
 }

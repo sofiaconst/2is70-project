@@ -7,6 +7,7 @@ import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.User;
+import com.example.eduview.data.model.UserBaseData;
 import com.example.eduview.data.model.UserRole;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
@@ -37,15 +38,7 @@ public class UserRepository {
         parentsRef = db.getReference("parents");
     }
 
-    /**
-     * Constructor used for unit testing.
-     * Allows injecting mocked DatabaseReference objects instead of using Firebase.
-     *
-     * @param usersRef reference to the users node
-     * @param parentsRef reference to the parents node
-     * @param studentsRef reference to the students node
-     * @param teachersRef reference to the teachers node
-     */
+
     public UserRepository(DatabaseReference usersRef, DatabaseReference parentsRef,
                           DatabaseReference studentsRef, DatabaseReference teachersRef) {
 
@@ -53,6 +46,101 @@ public class UserRepository {
         this.parentsRef = parentsRef;
         this.studentsRef = studentsRef;
         this.teachersRef = teachersRef;
+    }
+
+    public void fetchUser_alt(String userId, Consumer<User> onSuccess, Consumer<Exception> onError) {
+        //Retrieve user information from database, when retrieved execute the task below
+        usersRef.child(userId).get().addOnCompleteListener(task -> {
+
+            if (!task.isSuccessful()) { //If the firebase request fails, return an error
+                onError.accept(new RuntimeException("Failed to fetch user"));
+                return;
+            }
+
+            DataSnapshot snapshot = task.getResult(); //Store firebase results in snapshot
+
+            if (!snapshot.exists()) { //If there is no such user, return an error
+                onError.accept(new RuntimeException("User not found"));
+                return;
+            }
+
+            UserBaseData base;
+
+            try {
+                base = parseBaseUser(snapshot);
+            } catch (Exception e) {
+                onError.accept(e);
+                return;
+            }
+
+            switch (base.role) {
+                case STUDENT:
+                    fetchStudent(userId, base, onSuccess, onError);
+                    break;
+
+                case TEACHER:
+                    //fetchTeacher(userId, base, onSuccess, onError);
+                    break;
+
+                case PARENT:
+                    //fetchParent(userId, base, onSuccess, onError);
+                    break;
+
+                default:
+                    onError.accept(new RuntimeException("Invalid role"));
+                    return;
+            }
+
+        });
+    }
+
+    private UserBaseData parseBaseUser(DataSnapshot snapshot) {
+
+        String firstName = snapshot.child("first_name").getValue(String.class);
+        String lastName = snapshot.child("last_name").getValue(String.class);
+        String roleStr = snapshot.child("role").getValue(String.class);
+        String pfp = snapshot.child("pfp").getValue(String.class);
+
+        if (firstName == null || lastName == null || roleStr == null) {
+            throw new RuntimeException("User information missing");
+        }
+
+        UserRole role;
+
+        try {
+            role = UserRole.valueOf(roleStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid user role: " + roleStr);
+        }
+
+        return new UserBaseData(firstName, lastName, role, pfp);
+    }
+
+    private void fetchStudent(String userId,
+                              UserBaseData base,
+                              Consumer<User> onSuccess,
+                              Consumer<Exception> onError) {
+
+        studentsRef.child(userId).get().addOnCompleteListener(task -> {
+
+            if (!task.isSuccessful()) {
+                onError.accept(new RuntimeException("Failed to fetch student"));
+                return;
+            }
+
+            DataSnapshot snapshot = task.getResult();
+
+            String classId = snapshot.child("classroom").getValue(String.class);
+
+            Student student = new Student(
+                    userId,
+                    base.firstName,
+                    base.lastName,
+                    classId
+            );
+
+            finalizeUser(student, base.pfp, onSuccess);
+        });
     }
 
     /**

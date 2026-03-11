@@ -78,7 +78,7 @@ public class UserRepositoryTest {
         assertTrue(result.get() instanceof Student);
 
         Student student = (Student) result.get();
-        assertEquals("student123", student.getId());
+        assertEquals("student123", student.getUserId());
         assertEquals("Sam", student.getFirstName());
         assertEquals("Smith", student.getLastName());
         assertEquals("classA", student.getClassId());
@@ -125,7 +125,7 @@ public class UserRepositoryTest {
         assertTrue(result.get() instanceof Teacher);
 
         Teacher teacher = (Teacher) result.get();
-        assertEquals("teacher123", teacher.getId());
+        assertEquals("teacher123", teacher.getUserId());
         assertEquals("Tina", teacher.getFirstName());
         assertEquals("Jones", teacher.getLastName());
         assertEquals("classB@emial.com", teacher.getEmail());
@@ -183,7 +183,7 @@ public class UserRepositoryTest {
         assertTrue(result.get() instanceof Parent);
 
         Parent parent = (Parent) result.get();
-        assertEquals("parent123", parent.getId());
+        assertEquals("parent123", parent.getUserId());
         assertEquals("Jane", parent.getFirstName());
         assertEquals("Brown", parent.getLastName());
         assertEquals(2, parent.getChildrenIDs().size());

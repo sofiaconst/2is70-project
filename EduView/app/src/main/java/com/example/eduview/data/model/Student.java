@@ -2,7 +2,10 @@ package com.example.eduview.data.model;
 
 import static com.example.eduview.data.model.UserRole.STUDENT;
 
+import com.google.firebase.database.PropertyName;
+
 public class Student extends User {
+    @PropertyName("classroom")
     private String classID;
 
     //Empty Constructor needed for Firebase
@@ -13,12 +16,6 @@ public class Student extends User {
         this.classID = classID;
     }
 
-    /*
-    Getters
-     */
-    public String getClassID() {
-        return classID;
-    }
 
     /*
         Setters
