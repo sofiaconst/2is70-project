@@ -1,11 +1,13 @@
 package com.example.eduview.ui.profile;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +18,9 @@ import android.widget.TextView;
 import com.example.eduview.R;
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.User;
+import com.example.eduview.ui.login.LoginActivity;
 import com.example.eduview.ui.main.MainViewModel;
+import com.example.eduview.ui.signup.SignupActivity;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.firebase.database.annotations.Nullable;
 
@@ -69,7 +73,12 @@ public class ProfileFragment extends Fragment {
             }
         });
 
-        logoutButton.setOnClickListener(v -> mainViewModel.logout());
+        logoutButton.setOnClickListener(v -> {
+            mainViewModel.logout();
+
+            Log.d("ProfileFragment", "Navigating to SignupActivity");
+            startActivity(new Intent(requireActivity(), LoginActivity.class));
+        });
     }
 
     private void updateUI(User user) {

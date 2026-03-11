@@ -1,4 +1,4 @@
-package com.example.eduview;
+package com.example.eduview.ui.signup;
 
 import android.os.Bundle;
 
@@ -11,6 +11,8 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.example.eduview.R;
 
 import java.util.ArrayList;
 import java.util.List;
