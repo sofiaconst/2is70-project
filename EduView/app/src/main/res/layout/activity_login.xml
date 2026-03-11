@@ -103,6 +103,18 @@
                     android:background="@drawable/bg_input_rounded"/>
 
                 <TextView
+                    android:id="@+id/tv_forgot_password"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="8dp"
+                    android:text="Forgot password?"
+                    android:textColor="#1976D2"
+                    android:textStyle="bold"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
                     android:id="@+id/tv_error"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -135,11 +147,11 @@
                     android:id="@+id/tv_signup"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sign Up"
-                    android:textStyle="bold"
-                    android:textColor="#1976D2"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="2dp"/>
+                    android:layout_marginTop="2dp"
+                    android:text="Sign Up"
+                    android:textColor="#1976D2"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <!-- SUCCESS VIEW -->
