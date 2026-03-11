@@ -1,4 +1,4 @@
-package com.example.eduview.ui.feed;
+package com.example.eduview;
 
 import android.os.Bundle;
 
@@ -8,13 +8,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.example.eduview.R;
+public class Announcements extends Fragment {
+    public Announcements() {
+    }
 
-public class AnnouncementsFragment extends Fragment {
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+    public android.view.View onCreateView(
+            android.view.LayoutInflater inflater,
+            android.view.ViewGroup container,
+            android.os.Bundle savedInstanceState
+    ) {
         return inflater.inflate(R.layout.fragment_announcements, container, false);
     }
 }

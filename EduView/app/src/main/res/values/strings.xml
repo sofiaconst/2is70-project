@@ -4,4 +4,29 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_signup">SignupActivity</string>
+    <string name="feed_title_1">Posts</string>
+    <string name="feed_title_2">Announcements</string>
+    <string name="feed_title_3">Pending</string>
+    <string name="tagline">Connect, Learn Share</string>
+    <string name="welcome_back">Welcome Back</string>
+    <string name="username_email">Username/Email</string>
+    <string name="hint_username_email">Enter your username or email</string>
+    <string name="password">Password</string>
+    <string name="hint_password">Enter your password</string>
+    <string name="wrong_credentials">Wrong Credentials.
+    Try again</string>
+    <string name="log_in">Log In</string>
+    <string name="no_account">Don\'t have an account?</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="class_name">Class Name</string>
+    <string name="enter_class_name">Enter the name of your class</string>
+    <string name="number_of_children">Number of children:</string>
+    <string name="minus1">-1</string>
+    <string name="plus1">+1</string>
+    <string name="_1">1</string>
+    <string name="children_s_information">Children\'s information</string>
+    <string name="first_name">First Name</string>
+    <string name="name">Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="child">Child</string>
 </resources>

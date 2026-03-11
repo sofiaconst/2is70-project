@@ -14,12 +14,12 @@ lifecycleRuntimeKtx = "2.6.1"
 activityCompose = "1.12.4"
 kotlin = "2.0.21"
 composeBom = "2024.09.00"
-googleGmsGoogleServices = "4.4.4"
 firebaseDatabase = "22.0.1"
 core = "1.7.0"
 lifecycleLivedataKtx = "2.10.0"
 lifecycleViewmodelKtx = "2.10.0"
 firebaseAuth = "24.0.1"
+googleServices = "4.4.2"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -55,5 +55,4 @@ firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
-
+google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
