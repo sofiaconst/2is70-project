@@ -22,7 +22,7 @@ import com.google.firebase.database.annotations.Nullable;
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link ProfileFragment#newInstance} factory method to
+ * Use the  factory method to
  * create an instance of this fragment.
  */
 public class ProfileFragment extends Fragment {
