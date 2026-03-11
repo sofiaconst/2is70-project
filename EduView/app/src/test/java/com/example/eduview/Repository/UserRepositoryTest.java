@@ -40,7 +40,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void fetchUser_validStudent_returnsStudent() {
+    public void fetchUser_leo_validStudent_returnsStudent() {
         String userId = "student123";
 
         DatabaseReference userNodeRef = mock(DatabaseReference.class);
@@ -71,7 +71,7 @@ public class UserRepositoryTest {
         AtomicReference<User> result = new AtomicReference<>();
         AtomicReference<Exception> error = new AtomicReference<>();
 
-        repository.fetchUser(userId, result::set, error::set);
+        repository.fetchUser_leo(userId, result::set, error::set);
 
         assertNull(error.get());
         assertNotNull(result.get());
@@ -86,7 +86,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void fetchUser_validTeacher_returnsTeacher() {
+    public void fetchUser_leo_validTeacher_returnsTeacher() {
         String userId = "teacher123";
 
         DatabaseReference userNodeRef = mock(DatabaseReference.class);
@@ -118,7 +118,7 @@ public class UserRepositoryTest {
         AtomicReference<User> result = new AtomicReference<>();
         AtomicReference<Exception> error = new AtomicReference<>();
 
-        repository.fetchUser(userId, result::set, error::set);
+        repository.fetchUser_leo(userId, result::set, error::set);
 
         assertNull(error.get());
         assertNotNull(result.get());
@@ -133,7 +133,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void fetchUser_validParent_returnsParent() {
+    public void fetchUser_leo_validParent_returnsParent() {
         String userId = "parent123";
 
         DatabaseReference userNodeRef = mock(DatabaseReference.class);
@@ -176,7 +176,7 @@ public class UserRepositoryTest {
         AtomicReference<Exception> error = new AtomicReference<>();
 
         assertNotNull(parentsRef.child(userId));
-        repository.fetchUser(userId, result::set, error::set);
+        repository.fetchUser_leo(userId, result::set, error::set);
 
         assertNull(error.get());
         assertNotNull(result.get());
@@ -193,7 +193,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void fetchUser_topLevelFetchFails_callsOnError() {
+    public void fetchUser_topLevelFetchFails_callsOnErrorLeo() {
         String userId = "brokenUser";
 
         DatabaseReference userNodeRef = mock(DatabaseReference.class);
@@ -205,7 +205,7 @@ public class UserRepositoryTest {
         AtomicReference<User> result = new AtomicReference<>();
         AtomicReference<Exception> error = new AtomicReference<>();
 
-        repository.fetchUser(userId, result::set, error::set);
+        repository.fetchUser_leo(userId, result::set, error::set);
 
         assertNull(result.get());
         assertNotNull(error.get());
@@ -213,7 +213,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void fetchUser_userDoesNotExist_callsOnError() {
+    public void fetchUser_userLeoDoesNotExist_callsOnError() {
         String userId = "missingUser";
 
         DatabaseReference userNodeRef = mock(DatabaseReference.class);
@@ -229,7 +229,7 @@ public class UserRepositoryTest {
         AtomicReference<User> result = new AtomicReference<>();
         AtomicReference<Exception> error = new AtomicReference<>();
 
-        repository.fetchUser(userId, result::set, error::set);
+        repository.fetchUser_leo(userId, result::set, error::set);
 
         assertNull(result.get());
         assertNotNull(error.get());

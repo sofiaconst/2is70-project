@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
 
         UserRepository userRepository = new UserRepository();
 
-        userRepository.fetchUser_alt(
+        userRepository.fetchUser(
                 testUserId,
                 user -> {
                     // Success callback

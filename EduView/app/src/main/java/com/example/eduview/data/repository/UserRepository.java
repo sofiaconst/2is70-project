@@ -48,8 +48,7 @@ public class UserRepository {
         this.teachersRef = teachersRef;
     }
 
-    public void fetchUser_alt(String userId, Consumer<User> onSuccess, Consumer<Exception> onError) {
-        //Retrieve user information from database, when retrieved execute the task below
+    public void fetchUser(String userId, Consumer<User> onSuccess, Consumer<Exception> onError) {
         usersRef.child(userId).get().addOnCompleteListener(task -> {
 
             if (!task.isSuccessful()) { //If the firebase request fails, return an error
@@ -154,7 +153,7 @@ public class UserRepository {
      * @param onSuccess callback invoked with the constructed User object
      * @param onError callback invoked if the user cannot be retrieved or parsed
      */
-    public void fetchUser(String userID, Consumer<User> onSuccess, Consumer<Exception> onError) {
+    public void fetchUser_leo(String userID, Consumer<User> onSuccess, Consumer<Exception> onError) {
         //Retrieve user information from database, when retrieved execute the task below
         usersRef.child(userID).get().addOnCompleteListener(task -> {
             //If the firebase request fails, return an error

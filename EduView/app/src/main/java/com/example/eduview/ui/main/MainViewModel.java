@@ -39,30 +39,24 @@ public class MainViewModel extends ViewModel {
     public void loadCurrentUser() {
         FirebaseUser firebaseUser = authRepository.getCurrentUser();
 
-        /*
         if (firebaseUser == null) {
-            //Log.w("MainViewModel", "No user logged in");
-            //return;
-            userId = "student_1";
-            Log.d("MainViewModel", "using userId: " + userId);
-        } else {
-            userId = firebaseUser.getUid();
+            Log.w("MainViewModel", "No Firebase user logged in");
+            currentUser.setValue(null);
+            return;
         }
 
-         */
+        // Normally this would be:
+        // String userId = firebaseUser.getUid();
 
+        // TEMP: hardcoded user for development/testing
         String userId = "student_1";
-        Log.d("MainViewModel", "using userId: " + userId);
 
-        userRepository.fetchUser_alt(
+        Log.d("MainViewModel", "Using userId: " + userId);
+
+        userRepository.fetchUser(
                 userId,
                 user -> {
-                    // Cache in SessionManager
-                    //sessionManager.setCurrentUser(user);
-
-                    // Update LiveData so fragments observing it get notified
                     currentUser.postValue(user);
-
                     Log.d("MainViewModel", "User loaded: " + user.getFirstName() + " " + user.getLastName());
                 },
                 error -> {
