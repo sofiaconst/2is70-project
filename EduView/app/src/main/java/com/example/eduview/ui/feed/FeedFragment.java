@@ -5,6 +5,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.widget.ViewPager2;
 
 import android.util.Log;
@@ -14,10 +15,16 @@ import android.view.ViewGroup;
 
 import com.example.eduview.R;
 import com.example.eduview.ViewPagerAdapter;
+import com.example.eduview.data.model.Student;
+import com.example.eduview.data.model.Teacher;
+import com.example.eduview.ui.main.MainViewModel;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 public class FeedFragment extends Fragment {
+
+    private MainViewModel mainViewModel;
+    private FeedViewModel feedViewModel;
 
     TabLayout teacherTabs;
     ViewPager2 viewPager;
@@ -41,9 +48,48 @@ public class FeedFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        Log.d("FeedFragment","onCreateView is created");
+        Log.d("FeedFragment", "Fragment created");
+
+
+        View view = inflater.inflate(R.layout.fragment_feed, container, false);
+        mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
+        feedViewModel = new ViewModelProvider(this).get(FeedViewModel.class);
+
+        mainViewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
+
+            if (user == null) {
+                Log.e("FeedFragment", "Current user is NULL");
+                return;
+            }
+
+            Log.d("FeedFragment", "User received: " + user.getUserId());
+            Log.d("FeedFragment", "User role: " + user.getRole());
+
+            if (user instanceof Student) {
+
+                Student student = (Student) user;
+                String classroomId = student.getClassId();
+
+                Log.d("FeedFragment", "Loading posts for classroom: " + classroomId);
+
+                feedViewModel.loadPublishedPosts(classroomId);
+            } else if (user instanceof Teacher) {
+
+                Teacher teacher = (Teacher) user;
+                String classroomId = teacher.getClassID();
+
+                Log.d("FeedFragment", "Loading posts for classroom: " + classroomId);
+
+                feedViewModel.loadPublishedPosts(classroomId);
+            }
+
+            else {
+                Log.w("FeedFragment", "User is not a Student, feed not loaded yet");
+            }
+        });
+
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_feed, container, false);
+        return view;
 
     }
 
