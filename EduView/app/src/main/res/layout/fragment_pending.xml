@@ -5,11 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    tools:context=".Pending">
+    tools:context=".ui.feed.Pending">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="450dp"
+        android:layout_height="wrap_content"
         android:padding="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,7 +22,6 @@
             android:textColor="@color/design_default_color_primary"
             android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintBaseline_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -32,73 +31,66 @@
             android:id="@+id/tvPendingPostContent"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:textColor="#444444"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBaseline_toTopOf="parent"
-            tools:layout_editor_absoluteY="27dp"
-            android:text="Check out my science project on plant cells!" />
+            app:layout_constraintTop_toBottomOf="@id/tvStudentName"
+            tools:text="Check out my science project on plant cells!" />
 
         <ImageView
             android:id="@+id/ivPendingPostImage"
-            android:layout_width="367dp"
-            android:layout_height="269dp"
-            android:layout_marginTop="20dp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:adjustViewBounds="true"
             android:maxHeight="300dp"
             android:scaleType="centerInside"
             android:visibility="visible"
-            app:layout_constraintTop_toBottomOf="@id/tvPendingPostContent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvPendingPostContent"
             tools:src="@android:drawable/ic_menu_gallery" />
-
-        <LinearLayout
-            android:id="@+id/layoutLike"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBaseline_toTopOf="parent">
-        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/layoutModeration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/ivPendingPostImage"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.497"
-            app:layout_constraintStart_toStartOf="parent">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ivPendingPostImage">
 
-            <ImageView
+            <TextView
                 android:id="@+id/btnDeclinePost"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:layout_marginEnd="24dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="32dp"
+                android:background="?attr/selectableItemBackground"
                 android:clickable="true"
-                android:contentDescription="Reject"
                 android:focusable="true"
-                android:src="@android:drawable/ic_menu_close_clear_cancel"
-                app:tint="@color/black" />
+                android:padding="8dp"
+                android:text="Decline"
+                android:textColor="@color/reject_post"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-            <ImageView
+            <TextView
                 android:id="@+id/btnAcceptPost"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
                 android:clickable="true"
-                android:contentDescription="Accept"
                 android:focusable="true"
-                android:src="@android:drawable/checkbox_on_background"
-                app:tint="#4CAF50" />
+                android:padding="8dp"
+                android:text="Accept"
+                android:textColor="#4CAF50"
+                android:textSize="18sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
