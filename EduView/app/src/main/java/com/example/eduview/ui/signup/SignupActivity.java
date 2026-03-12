@@ -205,12 +205,12 @@ public class SignupActivity extends AppCompatActivity {
             } else if ("Parent".equals(selectedRole[0])) {
                 Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
                 if (fragment instanceof ParentSignupFragment) {
-                    List<String> childIds = ((ParentSignupFragment) fragment).getChildIds();
-                    if (childIds.size() != ((ParentSignupFragment) fragment).getCounter()) {
+                    List<AuthRepository.ChildInfo> childrenInfo = ((ParentSignupFragment) fragment).getChildrenInfo();
+                    if (childrenInfo.size() != ((ParentSignupFragment) fragment).getCounter()) {
                         Toast.makeText(this, "Please provide children information", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    authRepository.signUpParent(firstName, lastName, email, password, childIds, callback);
+                    authRepository.signUpParent(firstName, lastName, email, password, childrenInfo, callback);
                 }
             }
         });

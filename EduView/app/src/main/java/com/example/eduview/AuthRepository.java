@@ -4,6 +4,9 @@ import android.util.Log;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import org.jetbrains.annotations.UnknownNullability;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -85,32 +88,52 @@ public class AuthRepository {
             });
     }
 
-    public void signUpParent(String firstName, String lastName, String email, String password, List<String> childIds, AuthCallback callback) {
+    public void signUpParent(String firstName, String lastName, String email, String password, List<ChildInfo> children, AuthCallback callback) {
+        // First, create the parent account
         firebaseAuth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     String parentId = firebaseAuth.getCurrentUser().getUid();
 
-                    // 1. Store in users table
-                    User user = new User(firstName, lastName, email, "Parent");
-                    rootRef.child("users").child(parentId).setValue(user)
+                    // 1. Store Parent in users table
+                    User parentUser = new User(firstName, lastName, email, "Parent");
+                    rootRef.child("users").child(parentId).setValue(parentUser)
                         .addOnCompleteListener(userTask -> {
                             if (userTask.isSuccessful()) {
-                                // 2. Store in parents table
-                                // Map child IDs to custom keys (student_1, student_2, etc.)
-                                Map<String, String> childrenMap = new HashMap<>();
-                                for (int i = 0; i < childIds.size(); i++) {
-                                    childrenMap.put("student_" + (i + 1), childIds.get(i));
-                                }
-
-                                rootRef.child("parents").child(parentId).child("children").setValue(childrenMap)
-                                    .addOnCompleteListener(parentTask -> {
-                                        if (parentTask.isSuccessful()) {
-                                            callback.onSuccess();
-                                        } else {
-                                            callback.onFailure(parentTask.getException());
+                                // Now create accounts for each child
+                                signUpChildrenSequentially(children, password, 0, new ArrayList<>(), new ChildAuthCallback() {
+                                    @Override
+                                    public void onAllChildrenSignedUp(List<String> childUids) {
+                                        // 2. Store in parents table with child IDs
+                                        Map<String, String> childrenMap = new HashMap<>();
+                                        for (int i = 0; i < childUids.size(); i++) {
+                                            childrenMap.put("student_" + (i + 1), childUids.get(i));
                                         }
-                                    });
+
+                                        rootRef.child("parents").child(parentId).child("children").setValue(childrenMap)
+                                            .addOnCompleteListener(parentTask -> {
+                                                if (parentTask.isSuccessful()) {
+                                                    // IMPORTANT: After creating children, the last child is logged in.
+                                                    // We need to log back in as the parent so the app state is correct.
+                                                    firebaseAuth.signInWithEmailAndPassword(email, password)
+                                                        .addOnCompleteListener(reAuthTask -> {
+                                                            if (reAuthTask.isSuccessful()) {
+                                                                callback.onSuccess();
+                                                            } else {
+                                                                callback.onFailure(reAuthTask.getException());
+                                                            }
+                                                        });
+                                                } else {
+                                                    callback.onFailure(parentTask.getException());
+                                                }
+                                            });
+                                    }
+
+                                    @Override
+                                    public void onError(Exception e) {
+                                        callback.onFailure(e);
+                                    }
+                                });
                             } else {
                                 callback.onFailure(userTask.getException());
                             }
@@ -121,9 +144,70 @@ public class AuthRepository {
             });
     }
 
+    private void signUpChildrenSequentially(List<ChildInfo> children, String password, int index, List<String> childUids, ChildAuthCallback callback) {
+        if (index >= children.size()) {
+            callback.onAllChildrenSignedUp(childUids);
+            return;
+        }
+
+        ChildInfo child = children.get(index);
+        firebaseAuth.createUserWithEmailAndPassword(child.email, password)
+            .addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    String childUid = firebaseAuth.getCurrentUser().getUid();
+                    childUids.add(childUid);
+
+                    // 1. Store in users table
+                    User childUser = new User(child.firstName, child.lastName, child.email, "Student");
+                    childUser.bio = "";
+                    childUser.pfp = "";
+                    
+                    rootRef.child("users").child(childUid).setValue(childUser)
+                        .addOnCompleteListener(dbTask -> {
+                            if (dbTask.isSuccessful()) {
+                                // 2. Store in students table
+                                Map<String, Object> studentData = new HashMap<>();
+                                studentData.put("classroom", "");
+                                
+                                rootRef.child("students").child(childUid).setValue(studentData)
+                                    .addOnCompleteListener(studentTask -> {
+                                        if (studentTask.isSuccessful()) {
+                                            // Proceed to next child
+                                            signUpChildrenSequentially(children, password, index + 1, childUids, callback);
+                                        } else {
+                                            callback.onError(studentTask.getException());
+                                        }
+                                    });
+                            } else {
+                                callback.onError(dbTask.getException());
+                            }
+                        });
+                } else {
+                    callback.onError(task.getException());
+                }
+            });
+    }
+
+    private interface ChildAuthCallback {
+        void onAllChildrenSignedUp(List<String> childUids);
+        void onError(Exception e);
+    }
+
     public interface AuthCallback {
         void onSuccess();
         void onFailure(Exception e);
+    }
+
+    public static class ChildInfo {
+        public String firstName;
+        public String lastName;
+        public String email;
+
+        public ChildInfo(String firstName, String lastName, String email) {
+            this.firstName = firstName;
+            this.lastName = lastName;
+            this.email = email;
+        }
     }
 
     public static class User {
@@ -131,6 +215,8 @@ public class AuthRepository {
         public String last_name;
         public String email;
         public String role;
+        public String bio;
+        public String pfp;
 
         public User(String first_name, String last_name, String email, String role) {
             this.first_name = first_name;
@@ -163,6 +249,7 @@ public class AuthRepository {
         public String first_name;
         public String last_name;
         public String parentId;
+        public String classroom;
 
         public Student(String first_name, String last_name) {
             this.first_name = first_name;

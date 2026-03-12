@@ -12,6 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.eduview.AuthRepository;
 import com.example.eduview.R;
 
 import java.util.ArrayList;
@@ -82,21 +83,23 @@ public class ParentSignupFragment extends Fragment {
         }
     }
 
-    public List<String> getChildIds() {
-        List<String> childIds = new ArrayList<>();
+    public List<AuthRepository.ChildInfo> getChildrenInfo() {
+        List<AuthRepository.ChildInfo> children = new ArrayList<>();
         for (View form : formList) {
             EditText etChildFirstName = form.findViewById(R.id.et_child_first_name);
             EditText etChildLastName = form.findViewById(R.id.et_child_last_name);
-            if (etChildFirstName != null && etChildLastName != null) {
+            EditText etChildEmail = form.findViewById(R.id.et_child_email);
+            
+            if (etChildFirstName != null && etChildLastName != null && etChildEmail != null) {
                 String firstName = etChildFirstName.getText().toString().trim();
                 String lastName = etChildLastName.getText().toString().trim();
-                if (!firstName.isEmpty() && !lastName.isEmpty()) {
-                    // For now, using names as IDs as specified in your example (student_1, etc.)
-                    // In a real app, these would be unique IDs from the database.
-                    childIds.add(firstName + "_" + lastName);
+                String email = etChildEmail.getText().toString().trim();
+                
+                if (!firstName.isEmpty() && !lastName.isEmpty() && !email.isEmpty()) {
+                    children.add(new AuthRepository.ChildInfo(firstName, lastName, email));
                 }
             }
         }
-        return childIds;
+        return children;
     }
 }
