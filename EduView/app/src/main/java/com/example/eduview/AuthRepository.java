@@ -58,11 +58,11 @@ public class AuthRepository {
                         .addOnCompleteListener(userTask -> {
                             if (userTask.isSuccessful()) {
                                 // 2. Store in teachers table
-                                rootRef.child("teachers").child(userId).setValue(new Teacher(className, classroomId))
+                                rootRef.child("teachers").child(userId).setValue(new Teacher(classroomId))
                                     .addOnCompleteListener(teacherTask -> {
                                         if (teacherTask.isSuccessful()) {
                                             // 3. Store in classrooms table
-                                            Classroom classroom = new Classroom(className, firstName + " " + lastName);
+                                            Classroom classroom = new Classroom(className, userId);
                                             rootRef.child("classrooms").child(classroomId).setValue(classroom)
                                                 .addOnCompleteListener(classroomTask -> {
                                                     if (classroomTask.isSuccessful()) {
@@ -176,11 +176,9 @@ public class AuthRepository {
 
     public static class Teacher {
         public String classroom;
-        public String classroomId;
 
-        public Teacher(String classroom, String classroomId) {
+        public Teacher(String classroom) {
             this.classroom = classroom;
-            this.classroomId = classroomId;
         }
     }
 

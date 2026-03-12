@@ -1,6 +1,7 @@
 package com.example.eduview.ui.login;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.graphics.Insets;
@@ -18,16 +20,11 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.eduview.R;
-
 import com.example.eduview.data.repository.AuthCallback;
 import com.example.eduview.data.repository.AuthRepository;
 import com.example.eduview.ui.signup.SignupActivity;
 import com.example.eduview.ui.main.MainActivity;
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -42,9 +39,7 @@ public class LoginActivity extends AppCompatActivity {
     private TextView tvSignup;
     private TextView tvForgotPassword;
 
-    private FirebaseAuth firebaseAuth;
-    private DatabaseReference databaseReference;
-
+    @RequiresApi(api = Build.VERSION_CODES.GINGERBREAD)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,27 +47,21 @@ public class LoginActivity extends AppCompatActivity {
         authRepository = new AuthRepository();
 
         if (authRepository.getCurrentUser() != null) {
-
             Log.d(TAG, "Existing session detected, skipping login screen");
-
             startActivity(new Intent(this, MainActivity.class));
             finish();
             return;
         }
 
         setupLayout();
-
         Log.d(TAG, "LoginActivity started");
-
-
 
         initViews();
         setupListeners();
-
     }
 
     private void setupLayout() {
-        EdgeToEdge.enable(this); // app content can extend behind the status bar and navigation bar, modern feel
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -85,14 +74,13 @@ public class LoginActivity extends AppCompatActivity {
         etUsername = findViewById(R.id.et_username);
         etPassword = findViewById(R.id.et_password);
         tvError = findViewById(R.id.tv_error);
-
         btnLogin = findViewById(R.id.btn_login);
         tvSignup = findViewById(R.id.tv_signup);
         tvForgotPassword = findViewById(R.id.tv_forgot_password);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.GINGERBREAD)
     private void setupListeners() {
-
         btnLogin.setOnClickListener(v -> attemptLogin());
 
         tvSignup.setOnClickListener(v -> {
@@ -103,8 +91,8 @@ public class LoginActivity extends AppCompatActivity {
         tvForgotPassword.setOnClickListener(v -> openResetDialog());
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.GINGERBREAD)
     private void attemptLogin() {
-
         String email = etUsername.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
@@ -116,20 +104,12 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         authRepository.login(email, password, new AuthCallback() {
-
             @Override
             public void onSuccess(FirebaseUser user) {
-
                 Log.d(TAG, "Login successful for user: " + user.getUid());
-
                 runOnUiThread(() -> {
-
                     tvError.setVisibility(View.GONE);
-
-                    Toast.makeText(LoginActivity.this,
-                            "Login Successful!",
-                            Toast.LENGTH_SHORT).show();
-
+                    Toast.makeText(LoginActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(LoginActivity.this, MainActivity.class));
                     finish();
                 });
@@ -137,9 +117,7 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(String errorMessage) {
-
                 Log.e(TAG, "Login failed: " + errorMessage);
-
                 runOnUiThread(() -> showError(errorMessage));
             }
         });
@@ -150,8 +128,8 @@ public class LoginActivity extends AppCompatActivity {
         tvError.setVisibility(View.VISIBLE);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.GINGERBREAD)
     private void openResetDialog() {
-
         Log.d(TAG, "Opening password reset dialog");
 
         EditText resetEmailInput = new EditText(this);
@@ -185,48 +163,36 @@ public class LoginActivity extends AppCompatActivity {
         dialog.show();
 
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-
             String email = resetEmailInput.getText().toString().trim();
-
             if (email.isEmpty()) {
                 resetEmailInput.setError("Email is required.");
                 return;
             }
-
             if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 resetEmailInput.setError("Enter a valid email address.");
                 return;
             }
-
             sendPasswordReset(email, resetEmailInput, dialog);
         });
     }
 
     private void sendPasswordReset(String email, EditText input, AlertDialog dialog) {
-
         Log.d(TAG, "Requesting password reset for: " + email);
-
         authRepository.sendPasswordReset(email, new AuthCallback() {
-
             @Override
             public void onSuccess(FirebaseUser user) {
-
                 Log.d(TAG, "Password reset email sent");
-
                 runOnUiThread(() -> {
                     Toast.makeText(LoginActivity.this,
                             "If an account with that email exists, a reset link has been sent.",
                             Toast.LENGTH_LONG).show();
-
                     dialog.dismiss();
                 });
             }
 
             @Override
             public void onFailure(String errorMessage) {
-
                 Log.e(TAG, "Password reset failed: " + errorMessage);
-
                 runOnUiThread(() -> input.setError(errorMessage));
             }
         });
