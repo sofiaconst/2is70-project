@@ -57,7 +57,7 @@ public class AuthRepository {
      * @return UID if logged in, null otherwise.
      */
     public String getCurrentUserId() {
-        FirebaseUser user = firebaseAuth.getCurrentUser();
+        FirebaseUser user = getCurrentUser();
         return user != null ? user.getUid() : null;
     }
 
