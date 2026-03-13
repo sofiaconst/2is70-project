@@ -91,6 +91,7 @@ public class LoginActivity extends AppCompatActivity {
         tvForgotPassword.setOnClickListener(v -> openResetDialog());
     }
 
+    /*
     @RequiresApi(api = Build.VERSION_CODES.GINGERBREAD)
     private void attemptLogin() {
         String email = etUsername.getText().toString().trim();
@@ -121,6 +122,45 @@ public class LoginActivity extends AppCompatActivity {
                 runOnUiThread(() -> showError(errorMessage));
             }
         });
+    }
+
+     */
+
+    public void attemptLogin() {
+        String email = etUsername.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
+
+        Log.d(TAG, "Login button clicked");
+
+        if (email.isEmpty() || password.isEmpty()) {
+            showError("Please fill in all fields.");
+            return;
+        }
+
+        authRepository.login(email, password)
+                .addOnSuccessListener(authResult -> {
+
+                    FirebaseUser user = authResult.getUser();
+
+                    if (user == null) {
+                        showError("Authentication error.");
+                        return;
+                    }
+
+                    Log.d(TAG, "Login successful for user: " + user.getUid());
+
+                    tvError.setVisibility(View.GONE);
+                    Toast.makeText(LoginActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
+
+                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                    finish();
+                })
+                .addOnFailureListener(e -> {
+
+                    Log.e(TAG, "Login failed", e);
+                    showError("Invalid credentials.");
+
+                });
     }
 
     private void showError(String message) {
