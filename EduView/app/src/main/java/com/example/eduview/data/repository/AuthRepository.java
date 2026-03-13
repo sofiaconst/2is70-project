@@ -94,32 +94,13 @@ public class AuthRepository {
     }
 
     /**
-     * Sends a password reset email.
+     * Sends a password reset email to the provided address.
      *
-     * @param email account email
-     * @return Firebase task indicating success or failure
-     */
-    public void sendPasswordReset(String email, AuthCallback callback) {
-
-        Log.d(TAG, "Sending password reset email to: " + email);
-
-        firebaseAuth.sendPasswordResetEmail(email)
-                .addOnCompleteListener(task -> {
-
-                    if (task.isSuccessful()) {
-                        Log.d(TAG, "Password reset email sent.");
-                        callback.onSuccess(null);
-                    } else {
-                        Log.e(TAG, "Password reset failed", task.getException());
-                        callback.onFailure("Failed to send reset email.");
-                    }
-                });
-    }
-
-    /**
-     * Sends a password reset email.
+     * @param email the user's email
+     * @return Task representing the asynchronous Firebase operation
      */
     public Task<Void> sendPasswordResetEmail(String email) {
+        Log.d(TAG, "Sending password reset email to: " + email);
         return firebaseAuth.sendPasswordResetEmail(email);
     }
 
