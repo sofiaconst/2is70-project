@@ -9,6 +9,8 @@ what features do they have access to?
 stores app-level session data
  */
 
+import com.example.eduview.data.model.User;
+import com.example.eduview.data.model.UserRole;
 import com.google.firebase.auth.FirebaseUser;
 
 /**
@@ -72,7 +74,10 @@ public class SessionManager {
      *
      * @return FirebaseUser if logged in, null otherwise
      */
-    public FirebaseUser getCurrentUser() {return null;};
+    public User getCurrentUser() {return null;};
+
+
+    public UserRole getCurrentUserRole() {return null;};
 
     /**
      * Returns the UID of the currently authenticated user.

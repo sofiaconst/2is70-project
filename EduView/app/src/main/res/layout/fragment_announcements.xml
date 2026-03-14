@@ -43,7 +43,7 @@
             android:text="Check out my science project on plant cells!" />
 
         <ImageView
-            android:id="@+id/ivPostImage"
+            android:id="@+id/ImageBox"
             android:layout_width="362dp"
             android:layout_height="259dp"
             android:layout_marginTop="20dp"

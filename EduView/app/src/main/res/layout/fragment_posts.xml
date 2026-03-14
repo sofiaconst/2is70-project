@@ -49,7 +49,7 @@
             app:layout_constraintEnd_toEndOf="parent"/>
 
         <ImageView
-            android:id="@+id/ivPostImage"
+            android:id="@+id/ImageBox"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginTop="20dp"
@@ -73,7 +73,7 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBaseline_toBottomOf="@id/ivPostImage">
+            app:layout_constraintBaseline_toBottomOf="@id/ImageBox">
 
         </LinearLayout>
 

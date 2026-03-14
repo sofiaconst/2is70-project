@@ -2,65 +2,303 @@ package com.example.eduview.ui.createPost;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.example.eduview.R;
+import com.example.eduview.data.model.Parent;
+import com.example.eduview.data.model.PostType;
+import com.example.eduview.data.model.*;
+import com.example.eduview.data.repository.SessionManager;
+import com.example.eduview.ui.main.MainActivity;
+import com.example.eduview.ui.createpost.CreatePostViewModel;
+import com.example.eduview.ui.main.MainViewModel;
+
 
 /**
- * A simple {@link Fragment} subclass.
- * Use the {@link CreatePostFragment#newInstance} factory method to
- * create an instance of this fragment.
+ * Fragment for the "Create Post" screen.
+ *
+ * This class handles:
+ * - what happens when the user types in the prompt box
+ * - what happens when the user taps the image area
+ * - what happens when the user presses send
+ * - restoring the screen state after rotation through the ViewModel
  */
 public class CreatePostFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    // ViewModel that remembers the user's draft even if the screen rotates
+    private CreatePostViewModel viewModel;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    // SessionManager is treated as a black box from your teammate
+    private SessionManager sessionManager;
+
+    // Views from fragment_create_post.xml
+    private ImageButton sendButton;
+    private View layoutAnnouncement;
+    private CheckBox announcementCheckBox;
+    private EditText promptEditTextBox;
+    private View layoutImageContainer;
+    private ImageView postImage;
+    private ImageView imagePlaceholderIcon;
 
     public CreatePostFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment CreatePostFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static CreatePostFragment newInstance(String param1, String param2) {
-        CreatePostFragment fragment = new CreatePostFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
+    @Nullable
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+        // Inflate the XML layout for this screen
         return inflater.inflate(R.layout.fragment_create_post, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // Connect this screen to its ViewModel.
+        // This is what allows the typed text and image URL to survive rotation.
+        viewModel = new ViewModelProvider(this).get(CreatePostViewModel.class);
+
+        // Get the current session manager instance from the mainactivity getter.
+        MainActivity main =(MainActivity) requireActivity();
+        MainViewModel model = main.getMainViewModel();
+        sessionManager = model.getSessionManager();
+
+        // Link all Java fields to the views in the XML
+        bindViews(view);
+
+        // Configure the UI based on the user's role
+        configureUiForUserRole();
+
+        // Set up all click listeners and text listeners
+        setupListeners();
+
+        // Watch the ViewModel so the UI always reflects the saved draft state
+        observeViewModel();
+    }
+
+    /**
+     * Finds all the views from the XML and stores them in fields
+     * so we can use them in the rest of the Fragment.
+     */
+    private void bindViews(@NonNull View view) {
+        sendButton = view.findViewById(R.id.SendButton);
+        layoutAnnouncement = view.findViewById(R.id.layoutAnnouncement);
+        announcementCheckBox = view.findViewById(R.id.AnnouncementCheckBox);
+        promptEditTextBox = view.findViewById(R.id.PromptEditTextBox);
+        layoutImageContainer = view.findViewById(R.id.layoutImageContainer);
+        postImage = view.findViewById(R.id.PostImage);
+        imagePlaceholderIcon = view.findViewById(R.id.ImagePlaceholderIcon);
+    }
+
+    /**
+     * Sets up what should happen when the user interacts with the screen.
+     */
+    private void setupListeners() {
+
+        // Every time the user types, save that text into the ViewModel.
+        // That way, if the screen rotates, the draft caption is still there.
+        promptEditTextBox.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Nothing needed here
+            }
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Nothing needed here
+            }
+            @Override
+            public void afterTextChanged(Editable s) {
+                viewModel.setCaption(s.toString());
+            }
+        });
+
+        // The image container is where CameraX will later be opened.
+        // For now we just leave placeholder behavior here.
+        layoutImageContainer.setOnClickListener(v -> {
+            Toast.makeText(requireContext(), "CameraX hookup comes later", Toast.LENGTH_SHORT).show();
+
+            // Optional test line if you want to simulate an image being selected:
+            viewModel.setImageUrl("https://example.com/test.jpg");
+        });
+
+        // Pressing send should attempt to create the post
+        sendButton.setOnClickListener(v -> submitPost());
+    }
+
+    /**
+     * Observes the ViewModel so the UI stays in sync with the saved draft.
+     *
+     * This is the part that makes rotation work properly.
+     */
+    private void observeViewModel() {
+
+        // Restore caption text whenever the saved caption changes.
+        // This matters especially after rotation.
+        viewModel.getCaption().observe(getViewLifecycleOwner(), caption -> {
+            String safeCaption = caption == null ? "" : caption;
+            String currentText = promptEditTextBox.getText().toString();
+
+            // Only reset the text if it is actually different.
+            // Stop the cursor from resetting every time
+            if (!currentText.equals(safeCaption)) {
+                promptEditTextBox.setText(safeCaption);
+                promptEditTextBox.setSelection(promptEditTextBox.getText().length());
+            }
+        });
+
+        // Restore image state whenever the saved image URL changes.
+        // Right now we are only showing or hiding the placeholder,
+        // since the real image loading will come later.
+        viewModel.getImageUrl().observe(getViewLifecycleOwner(), imageUrl -> {
+            boolean hasImage = imageUrl != null && !imageUrl.trim().isEmpty();
+
+            if (hasImage) {
+                imagePlaceholderIcon.setVisibility(View.GONE);
+                postImage.setVisibility(View.VISIBLE);
+
+                // Real image loading can be added here later
+                // using Glide / Picasso / Coil / teammate's image logic.
+            } else {
+                imagePlaceholderIcon.setVisibility(View.VISIBLE);
+                postImage.setImageDrawable(null);
+            }
+        });
+
+        // If the ViewModel reports that the post was created successfully,
+        // clear the screen so the user can start fresh.
+        viewModel.getPostCreated().observe(getViewLifecycleOwner(), created -> {
+            if (Boolean.TRUE.equals(created)) {
+                Toast.makeText(requireContext(), "Post created", Toast.LENGTH_SHORT).show();
+                clearFieldsAfterPost();
+                viewModel.clearPostCreatedFlag();
+            }
+        });
+
+        // If the ViewModel reports an error, show it to the user.
+        viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
+            if (error != null && !error.isEmpty()) {
+                Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
+                viewModel.clearErrorMessage();
+            }
+        });
+    }
+
+    /**
+     * Reads the needed information and asks the ViewModel to create the post.
+     *
+     * The Fragment does not talk to Firebase directly.
+     * It just gathers UI/session info and passes it on.
+     */
+    private void submitPost() {
+        String classId = null;
+        // Adjust these method names if your teammate named them differently.
+        String authorId = sessionManager.getCurrentUserId();
+        User user = sessionManager.getCurrentUser();
+
+        if (user.getRole() == UserRole.PARENT) {
+            return;
+        }
+        if (user.getRole() == UserRole.TEACHER) {
+            Teacher teacher = (Teacher) user;
+            classId = teacher.getClassID();
+        }
+        if (user.getRole() == UserRole.STUDENT) {
+            Student student = (Student) user;
+            classId = student.getClassId();
+        }
+
+        if (authorId == null || authorId.trim().isEmpty()) {
+            Toast.makeText(requireContext(), "No logged-in user found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (classId == null || classId.trim().isEmpty()) {
+            Toast.makeText(requireContext(), "No classroom found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Decide whether this post is an announcement or a normal post.
+        // If the announcement area is shown and the box is checked, use ANNOUNCEMENT.
+        // Otherwise, default to PENDING for student-style posts.
+        PostType type = getSelectedPostType(user);
+
+        viewModel.createPost(type, classId, authorId);
+    }
+
+    /**
+     * Decides what kind of post the user is making.
+     *
+     * Current logic:
+     * - checked announcement box -> ANNOUNCEMENT
+     * - otherwise -> PENDING
+     *
+     * If later you want teachers to post directly to published_posts,
+     * this is one of the places you would update.
+     */
+    private PostType getSelectedPostType(User user) {
+        if (user.getRole() == UserRole.STUDENT) {
+            return PostType.PENDING;
+        }
+
+        if (user.getRole() == UserRole.TEACHER) {
+            if (announcementCheckBox.isChecked()) {
+                return PostType.ANNOUNCEMENT;
+            }
+            return PostType.PUBLISHED;
+        }
+
+        throw new IllegalStateException("Parents cannot create posts");
+    }
+
+
+    /**
+     * Clears the UI and ViewModel after a successful post.
+     *
+     * This is important because if we only cleared the UI and not the ViewModel,
+     * the old text could come back after rotation.
+     */
+    private void clearFieldsAfterPost() {
+        // Clear what the ViewModel is holding
+        viewModel.setCaption("");
+        viewModel.setImageUrl("");
+
+        // Clear what the user sees
+        promptEditTextBox.setText("");
+        announcementCheckBox.setChecked(false);
+        postImage.setImageDrawable(null);
+        imagePlaceholderIcon.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Shows or hides teacher-only Announcments box.
+     * Teachers can choose to post an announcement, so they should see the announcement checkbox area. Other users should not.
+     */
+    private void configureUiForUserRole() {
+        User user = sessionManager.getCurrentUser();
+
+        if (user != null && user.getRole() == UserRole.TEACHER) {
+            layoutAnnouncement.setVisibility(View.VISIBLE);
+        } else {
+            layoutAnnouncement.setVisibility(View.GONE);
+            announcementCheckBox.setChecked(false);
+        }
     }
 }

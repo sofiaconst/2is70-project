@@ -5,15 +5,15 @@ import static com.example.eduview.data.model.UserRole.STUDENT;
 import com.google.firebase.database.PropertyName;
 
 public class Student extends User {
-    @PropertyName("classroom")
-    private String classID;
+//    @PropertyName("classroom")
+    private String classroom;
 
     //Empty Constructor needed for Firebase
     public Student() {}
 
-    public Student(String id, String firstName, String lastName, String classID){
+    public Student(String id, String firstName, String lastName, String classroom){
         super(id, firstName, lastName, STUDENT);
-        this.classID = classID;
+        this.classroom = classroom;
     }
 
 
@@ -21,11 +21,11 @@ public class Student extends User {
         Setters
          */
     public void setClassID(String classID) {
-        this.classID = classID;
+        this.classroom = classID;
     }
 
 
     public String getClassId() {
-        return classID;
+        return classroom;
     }
 }

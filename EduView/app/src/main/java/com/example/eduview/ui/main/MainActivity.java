@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
@@ -15,11 +16,12 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.example.eduview.R;
 import com.example.eduview.data.model.Student;
+import com.example.eduview.data.repository.AuthRepository;
+import com.example.eduview.data.repository.SessionManager;
 import com.example.eduview.data.repository.UserRepository;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,7 +32,14 @@ public class MainActivity extends AppCompatActivity {
         //testUserRepository();
 
         setupViewModel();
+    }
 
+    private void setupViewModel() {
+
+        MainViewModel viewModel =
+                new ViewModelProvider(this).get(MainViewModel.class);
+
+        viewModel.loadCurrentUser();
     }
 
     private void setupViewModel() {
@@ -86,4 +95,5 @@ public class MainActivity extends AppCompatActivity {
                 }
         );
     }
+
 }
