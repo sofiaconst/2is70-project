@@ -20,7 +20,6 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.eduview.R;
-import com.example.eduview.data.repository.AuthCallback;
 import com.example.eduview.data.repository.AuthRepository;
 import com.example.eduview.ui.signup.SignupActivity;
 import com.example.eduview.ui.main.MainActivity;
@@ -39,10 +38,10 @@ public class LoginActivity extends AppCompatActivity {
     private TextView tvSignup;
     private TextView tvForgotPassword;
 
-    @RequiresApi(api = Build.VERSION_CODES.GINGERBREAD)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "Creating LoginActivity...");
 
         authRepository = new AuthRepository();
 
@@ -54,32 +53,12 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         setupLayout();
-        Log.d(TAG, "LoginActivity started");
-
         initViews();
         setupListeners();
+
+        Log.d(TAG, "LoginActivity started");
     }
 
-    private void setupLayout() {
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_login);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-    }
-
-    private void initViews() {
-        etUsername = findViewById(R.id.et_username);
-        etPassword = findViewById(R.id.et_password);
-        tvError = findViewById(R.id.tv_error);
-        btnLogin = findViewById(R.id.btn_login);
-        tvSignup = findViewById(R.id.tv_signup);
-        tvForgotPassword = findViewById(R.id.tv_forgot_password);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.GINGERBREAD)
     private void setupListeners() {
         btnLogin.setOnClickListener(v -> attemptLogin());
 
@@ -91,8 +70,7 @@ public class LoginActivity extends AppCompatActivity {
         tvForgotPassword.setOnClickListener(v -> openResetDialog());
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.GINGERBREAD)
-    private void attemptLogin() {
+    public void attemptLogin() {
         String email = etUsername.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
@@ -103,24 +81,30 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        authRepository.login(email, password, new AuthCallback() {
-            @Override
-            public void onSuccess(FirebaseUser user) {
-                Log.d(TAG, "Login successful for user: " + user.getUid());
-                runOnUiThread(() -> {
+        authRepository.login(email, password)
+                .addOnSuccessListener(authResult -> {
+
+                    FirebaseUser user = authResult.getUser();
+
+                    if (user == null) {
+                        showError("Authentication error.");
+                        return;
+                    }
+
+                    Log.d(TAG, "Login successful for user: " + user.getUid());
+
                     tvError.setVisibility(View.GONE);
                     Toast.makeText(LoginActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
+
                     startActivity(new Intent(LoginActivity.this, MainActivity.class));
                     finish();
-                });
-            }
+                })
+                .addOnFailureListener(e -> {
 
-            @Override
-            public void onFailure(String errorMessage) {
-                Log.e(TAG, "Login failed: " + errorMessage);
-                runOnUiThread(() -> showError(errorMessage));
-            }
-        });
+                    Log.e(TAG, "Login failed", e);
+                    showError("Invalid credentials.");
+
+                });
     }
 
     private void showError(String message) {
@@ -128,8 +112,8 @@ public class LoginActivity extends AppCompatActivity {
         tvError.setVisibility(View.VISIBLE);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.GINGERBREAD)
     private void openResetDialog() {
+
         Log.d(TAG, "Opening password reset dialog");
 
         EditText resetEmailInput = new EditText(this);
@@ -139,6 +123,7 @@ public class LoginActivity extends AppCompatActivity {
                         android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         );
 
+        // Prefill with current email if available
         String currentEmail = etUsername.getText().toString().trim();
         if (!currentEmail.isEmpty()) {
             resetEmailInput.setText(currentEmail);
@@ -163,38 +148,65 @@ public class LoginActivity extends AppCompatActivity {
         dialog.show();
 
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+
             String email = resetEmailInput.getText().toString().trim();
-            if (email.isEmpty()) {
-                resetEmailInput.setError("Email is required.");
-                return;
-            }
-            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+
+            if (!isValidEmail(email)) {
                 resetEmailInput.setError("Enter a valid email address.");
                 return;
             }
+
+            v.setEnabled(false); // prevent multiple clicks
+
             sendPasswordReset(email, resetEmailInput, dialog);
         });
     }
 
-    private void sendPasswordReset(String email, EditText input, AlertDialog dialog) {
-        Log.d(TAG, "Requesting password reset for: " + email);
-        authRepository.sendPasswordReset(email, new AuthCallback() {
-            @Override
-            public void onSuccess(FirebaseUser user) {
-                Log.d(TAG, "Password reset email sent");
-                runOnUiThread(() -> {
-                    Toast.makeText(LoginActivity.this,
-                            "If an account with that email exists, a reset link has been sent.",
-                            Toast.LENGTH_LONG).show();
-                    dialog.dismiss();
-                });
-            }
+    private boolean isValidEmail(String email) {
+        return !email.isEmpty() &&
+                android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
 
-            @Override
-            public void onFailure(String errorMessage) {
-                Log.e(TAG, "Password reset failed: " + errorMessage);
-                runOnUiThread(() -> input.setError(errorMessage));
-            }
+    private void sendPasswordReset(String email, EditText input, AlertDialog dialog) {
+
+        Log.d(TAG, "Requesting password reset for: " + email);
+
+        authRepository.sendPasswordResetEmail(email)
+                .addOnSuccessListener(unused -> {
+
+                    Log.d(TAG, "Password reset email sent");
+
+                    Toast.makeText(
+                            LoginActivity.this,
+                            "If an account with that email exists, a reset link has been sent.",
+                            Toast.LENGTH_LONG
+                    ).show();
+
+                    dialog.dismiss();
+                })
+                .addOnFailureListener(e -> {
+
+                    Log.e(TAG, "Password reset failed", e);
+
+                    input.setError("Failed to send reset email.");
+                });
+    }
+
+    private void setupLayout() {
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_login);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
         });
+    }
+    private void initViews() {
+        etUsername = findViewById(R.id.et_username);
+        etPassword = findViewById(R.id.et_password);
+        tvError = findViewById(R.id.tv_error);
+        btnLogin = findViewById(R.id.btn_login);
+        tvSignup = findViewById(R.id.tv_signup);
+        tvForgotPassword = findViewById(R.id.tv_forgot_password);
     }
 }
