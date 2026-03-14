@@ -9,6 +9,9 @@ what features do they have access to?
 stores app-level session data
  */
 
+import com.example.eduview.data.model.Student;
+import com.example.eduview.data.model.Teacher;
+import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.User;
 import com.example.eduview.data.model.UserRole;
 import com.google.firebase.auth.FirebaseUser;
@@ -54,63 +57,106 @@ import com.google.firebase.auth.FirebaseUser;
  */
 public class SessionManager {
 
+    private static SessionManager instance;
+
     private final AuthRepository authRepository;
+    private final UserRepository userRepository;
+    private User cachedUser;
 
-    private FirebaseUser cachedUser;
+    private SessionManager(AuthRepository authRepo, UserRepository userRepo) {
+        this.authRepository = authRepo;
+        this.userRepository = userRepo;
+    }
 
-    public SessionManager(AuthRepository authRepository) {
-        this.authRepository=authRepository;
+    public static SessionManager getInstance(AuthRepository authRepo, UserRepository userRepo) {
+        if (instance == null) instance = new SessionManager(authRepo, userRepo);
+        return instance;
     }
 
     /**
-     * Checks whether a user is currently authenticated.
-     *
-     * @return true if a user session exists, false otherwise
+     * Initializes the session once.
+     * Safe to call multiple times; will return cached user if already loaded.
      */
-    public boolean isLoggedIn() {return true;};
+    public void initializeSession(SessionCallback callback) {
+        // Rotation-safe: return cached user if already loaded
+        if (cachedUser != null) {
+            callback.onSuccess(cachedUser);
+            return;
+        }
 
-    /**
-     * Returns the currently authenticated Firebase user.
-     *
-     * @return FirebaseUser if logged in, null otherwise
-     */
-    public User getCurrentUser() {return null;};
+        FirebaseUser firebaseUser = authRepository.getCurrentFirebaseUser();
+        if (firebaseUser == null) {
+            callback.onError(new IllegalStateException("User not logged in"));
+            return;
+        }
 
+        String uid = firebaseUser.getUid();
 
-    public UserRole getCurrentUserRole() {return null;};
+        // Fetch user from repository
+        userRepository.getUserById(uid, new UserRepository.UserCallback() {
+            @Override
+            public void onSuccess(User user) {
+                cachedUser = user;
 
-    /**
-     * Returns the UID of the currently authenticated user.
-     *
-     * @return user UID if logged in, null otherwise
-     */
-    public String getCurrentUserId() {return null;};
+                // Load role-specific data asynchronously
+                loadRoleSpecificData(user, callback);
+            }
 
-    /**
-     * Initializes the session when the app starts.
-     * This may cache the Firebase user if one exists.
-     */
-    public void initializeSession() {};
+            @Override
+            public void onFailure(String error) {
+                callback.onError(new Exception(error));
+            }
+        });
+    }
 
-    /**
-     * Logs out the currently authenticated user and
-     * clears any cached session information.
-     */
-    public void logout() {};
+    private void loadRoleSpecificData(User user, SessionCallback callback) {
+        switch (user.getRole()) {
+            case STUDENT:
+                Student student = (Student) user;
+                userRepository.getParentForStudent(student.getUid(), parent -> { // no exiy
+                    student.setParent(parent);
+                    callback.onSuccess(student);
+                }, e -> callback.onError(e));
+                break;
 
-    /**
-     * Refreshes session state from FirebaseAuth.
-     *
-     * Useful if authentication state may have changed.
-     */
-    public void refreshSession() {};
+            case TEACHER:
+                Teacher teacher = (Teacher) user;
+                userRepository.getStudentsForTeacher(teacher.getUid(), students -> { // no exist
+                    teacher.setStudents(students);
+                    callback.onSuccess(teacher);
+                }, e -> callback.onError(e));
+                break;
 
-    /**
-     * Ensures that the user is authenticated before accessing
-     * protected areas of the app.
-     *
-     * @throws IllegalStateException if no authenticated session exists
-     */
-    public void requireLogin() {};
+            case PARENT:
+                Parent parent = (Parent) user;
+                userRepository.getChildrenForParent(parent.getUid(), children -> {
+                    parent.setChildren(children);
+                    callback.onSuccess(parent);
+                }, e -> callback.onError(e));
+                break;
 
+            default:
+                // No extra role-specific data
+                callback.onSuccess(user);
+        }
+    }
+    public boolean isLoggedIn() {
+        return cachedUser != null;
+    }
+
+    public User getCurrentUser() {
+        requireLogin();
+        return cachedUser;
+    }
+
+    public void requireLogin() {
+        if (cachedUser == null) {
+            throw new IllegalStateException("User is not logged in.");
+        }
+    }
+
+    public UserRole getCurrentUserRole() {
+        requireLogin();
+        return cachedUser.getRole();
+    }
 }
