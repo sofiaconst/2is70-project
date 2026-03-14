@@ -20,70 +20,68 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
 
+    private MainViewModel mainViewModel;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setupLayout();
         setupNavigation();
-
-        // ---- Test UserRepository here ----
-        //testUserRepository();
-
         setupViewModel();
+    }
 
+    public MainViewModel getMainViewmodel() {
+        return this.mainViewModel;
     }
 
     private void setupViewModel() {
 
-        MainViewModel viewModel =
-                new ViewModelProvider(this).get(MainViewModel.class);
-
-        viewModel.loadCurrentUser();
+        MainViewModel viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+        viewModel.startSession();  // initializeSession() runs here
+        viewModel.getCurrentUser().observe(this, user -> {
+            if(user != null){
+                Log.d("SESSION", "Loaded user: " + user.getFirstName());
+            }
+        });
     }
 
     private void setupNavigation() {
         BottomNavigationView bottomNav = findViewById(R.id.MainBottomNavigationView);
+
         NavHostFragment navHostFragment =
-                (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment_container);
+                (NavHostFragment) getSupportFragmentManager()
+                        .findFragmentById(R.id.nav_host_fragment_container);
+
         assert navHostFragment != null;
+
         NavController navController = navHostFragment.getNavController();
-        NavigationUI.setupWithNavController(bottomNav,navController);
+
+        NavigationUI.setupWithNavController(bottomNav, navController);
     }
 
     private void setupLayout() {
-        EdgeToEdge.enable(this); // app content can extend behind the status bar and navigation bar, modern feel
+        EdgeToEdge.enable(this);
+
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-    }
 
-    private void testUserRepository() {
-        // Hardcoded test user
-        String testUserId = "student_1";
+        ViewCompat.setOnApplyWindowInsetsListener(
+                findViewById(R.id.main),
+                (v, insets) -> {
 
-        UserRepository userRepository = new UserRepository();
+                    Insets systemBars =
+                            insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
-        userRepository.fetchUser(
-                testUserId,
-                user -> {
-                    // Success callback
-                    Log.d("UserRepositoryTest", "User fetched successfully!");
-                    Log.d("UserRepositoryTest", "ID: " + user.getUserId());
-                    Log.d("UserRepositoryTest", "Name: " + user.getFirstName() + " " + user.getLastName());
-                    Log.d("UserRepositoryTest", "Role: " + user.getRole());
+                    v.setPadding(
+                            systemBars.left,
+                            systemBars.top,
+                            systemBars.right,
+                            systemBars.bottom
+                    );
 
-                    if (user instanceof Student) {
-                        Student s = (Student) user;
-                        Log.d("UserRepositoryTest", "Classroom: " + s.getClassId());
-                    }
-                },
-                error -> {
-                    // Error callback
-                    Log.e("UserRepositoryTest", "Failed to fetch user", error);
+                    return insets;
                 }
         );
     }
+
 }
