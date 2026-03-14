@@ -207,6 +207,60 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <TextView
+                    android:id="@+id/tv_password_error"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="#D32F2F"
+                    android:textSize="12sp"
+                    android:visibility="gone"/>
+
+
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Password must contain:"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:textColor="#333333"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="• At least 6 characters"
+                    android:textSize="14sp"
+                    android:textColor="#333333"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="• 1 uppercase letter (A–Z)"
+                    android:textSize="14sp"
+                    android:textColor="#333333"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="• 1 lowercase letter (a–z)"
+                    android:textSize="14sp"
+                    android:textColor="#333333"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="• 1 number (0–9)"
+                    android:textSize="14sp"
+                    android:textColor="#333333"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="• 1 symbol (!@#$%)"
+                    android:textSize="14sp"
+                    android:textColor="#333333"/>
+
+                <TextView
                     android:id="@+id/tv_password_strength"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
