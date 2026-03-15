@@ -25,9 +25,7 @@
             android:orientation="vertical"
             android:paddingBottom="24dp">
 
-            <!-- HEADER AREA: keep your existing header ConstraintLayout here -->
-
-            <!-- Role fragment container (grows as needed) -->
+            <!-- HEADER AREA -->
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/profileHeader"
                 android:layout_width="match_parent"
@@ -174,6 +172,88 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
+            <!-- QR Code Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="16dp"
+                app:cardBackgroundColor="#F9F7F3"
+                app:cardCornerRadius="18dp"
+                app:strokeColor="#D9D2C3"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:id="@+id/tvQRLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/robotomono"
+                        android:text="Class QR Code"
+                        android:textColor="#1F1F1F"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
+                    <TextView
+                        android:id="@+id/tvQRSubtext"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="Students can scan this code to join the class."
+                        android:textColor="#666666"
+                        android:textSize="13sp"
+                        tools:visibility="visible" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="220dp"
+                        android:layout_height="220dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="16dp"
+                        app:cardBackgroundColor="@android:color/white"
+                        app:cardCornerRadius="16dp"
+                        app:strokeColor="#E0E0E0"
+                        app:strokeWidth="1dp">
+
+                        <ImageView
+                            android:id="@+id/ivQRCode"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:padding="18dp"
+                            android:scaleType="fitCenter"
+                            android:visibility="gone"
+                            tools:src="@drawable/ic_launcher_foreground"
+                            tools:visibility="visible" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonScanQR"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="20dp"
+                        android:backgroundTint="@color/aqua"
+                        android:text="Scan Class QR"
+                        android:textAllCaps="false"
+                        android:textColor="@android:color/white"
+                        android:textSize="16sp"
+                        android:visibility="gone"
+                        app:cornerRadius="14dp"
+                        app:icon="@android:drawable/ic_menu_camera"
+                        app:iconGravity="textStart"
+                        app:iconPadding="10dp"
+                        app:iconTint="@android:color/white"
+                        tools:visibility="visible" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/profileFragmentContainer"
                 android:layout_width="match_parent"
@@ -224,4 +304,3 @@
     </androidx.core.widget.NestedScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

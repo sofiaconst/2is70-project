@@ -1,34 +1,43 @@
 package com.example.eduview.ui.profile;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.eduview.R;
+import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.User;
+import com.example.eduview.data.model.UserRole;
 import com.example.eduview.ui.login.LoginActivity;
 import com.example.eduview.ui.main.MainViewModel;
-import com.example.eduview.ui.signup.SignupActivity;
 import com.google.android.material.imageview.ShapeableImageView;
-import com.google.firebase.database.annotations.Nullable;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.journeyapps.barcodescanner.BarcodeEncoder;
+import com.journeyapps.barcodescanner.ScanContract;
+import com.journeyapps.barcodescanner.ScanOptions;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the  factory method to
- * create an instance of this fragment.
- */
 public class ProfileFragment extends Fragment {
 
     private MainViewModel mainViewModel;
@@ -40,6 +49,25 @@ public class ProfileFragment extends Fragment {
     private EditText aboutMeEditText;
     private Button logoutButton;
 
+    private TextView tvQRLabel;
+    private ImageView ivQRCode;
+    private Button buttonScanQR;
+
+    private final ActivityResultLauncher<ScanOptions> qrCodeLauncher = registerForActivityResult(
+            new ScanContract(),
+            result -> {
+                if (result.getContents() != null) {
+                    String scannedCode = result.getContents();
+                    Log.d("ProfileFragment", "Scanned QR code = " + scannedCode);
+                    checkClassAndJoin(scannedCode);
+                }
+            }
+    );
+
+    public ProfileFragment() {
+        // Required empty public constructor
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -48,13 +76,16 @@ public class ProfileFragment extends Fragment {
 
         View root = inflater.inflate(R.layout.fragment_profile, container, false);
 
-        // Bind views
         profileImage = root.findViewById(R.id.profileImage);
         userNameText = root.findViewById(R.id.User_name_text);
         roleText = root.findViewById(R.id.materialCardView).findViewById(R.id.textViewRole);
         classText = root.findViewById(R.id.Teacher_Class_Text);
         aboutMeEditText = root.findViewById(R.id.etAboutMe);
         logoutButton = root.findViewById(R.id.buttonLogout);
+
+        tvQRLabel = root.findViewById(R.id.tvQRLabel);
+        ivQRCode = root.findViewById(R.id.ivQRCode);
+        buttonScanQR = root.findViewById(R.id.buttonScanQR);
 
         return root;
     }
@@ -63,98 +94,184 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Get shared MainViewModel from activity
         mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
-        // Observe user LiveData
         mainViewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
                 updateUI(user);
+            } else {
+                Log.e("ProfileFragment", "Current user is null");
             }
         });
 
         logoutButton.setOnClickListener(v -> {
             mainViewModel.logout();
-
-            Log.d("ProfileFragment", "Navigating to SignupActivity");
+            Log.d("ProfileFragment", "Navigating to LoginActivity");
             startActivity(new Intent(requireActivity(), LoginActivity.class));
+            requireActivity().finish();
         });
+
+        buttonScanQR.setOnClickListener(v -> startScanner());
     }
 
     private void updateUI(User user) {
-        // Set name
+        Log.d("ProfileFragment",
+                "updateUI role=" + user.getRole()
+                        + ", firstName=" + user.getFirstName()
+                        + ", lastName=" + user.getLastName()
+                        + ", class=" + user.getClass().getSimpleName());
+
         userNameText.setText(user.getFirstName() + " " + user.getLastName());
-
-        /*
-        // Set profile picture if URL exists
-        String pfpUrl = user.getProfileImageURL();
-        if (pfpUrl != null && !pfpUrl.isEmpty()) {
-            // Using Glide or similar library
-            Glide.with(this)
-                    .load(pfpUrl)
-                    .placeholder(R.drawable.pfp_photo_button_icon)
-                    .circleCrop()
-                    .into(profileImage);
-        }
-
-         */
-
-        // Set role
         roleText.setText(user.getRole().name());
 
-        /*
-        // Show extra info depending on type
-        if (user instanceof Student student) {
-            classText.setText("Class: " + student.getClassID());
-        } else if (user instanceof Teacher teacher) {
-            classText.setText("Class: " + teacher.getClassID());
-        } else if (user instanceof Parent parent) {
-            classText.setText("Children: " + parent.getChildrenIDs().size());
+        tvQRLabel.setVisibility(View.GONE);
+        ivQRCode.setVisibility(View.GONE);
+        buttonScanQR.setVisibility(View.GONE);
+
+        if (user.getRole() == UserRole.TEACHER) {
+            String currentUid = FirebaseAuth.getInstance().getCurrentUser() != null
+                    ? FirebaseAuth.getInstance().getCurrentUser().getUid()
+                    : null;
+
+            Log.d("ProfileFragment", "Logged in teacher UID = " + currentUid);
+
+            if (currentUid == null) {
+                classText.setText("Class: None");
+                Log.e("ProfileFragment", "Teacher UID is null");
+                return;
+            }
+
+            FirebaseDatabase.getInstance()
+                    .getReference("teachers")
+                    .child(currentUid)
+                    .child("classroom")
+                    .get()
+                    .addOnCompleteListener(task -> {
+                        boolean exists = task.isSuccessful() && task.getResult().exists();
+                        Log.d("ProfileFragment",
+                                "Teacher classroom fetch success=" + task.isSuccessful()
+                                        + ", exists=" + exists);
+
+                        if (exists) {
+                            String classId = task.getResult().getValue(String.class);
+                            Log.d("ProfileFragment", "Fetched classroom = " + classId);
+
+                            if (classId == null || classId.trim().isEmpty()) {
+                                classText.setText("Class: None");
+                                Log.e("ProfileFragment", "Fetched classroom is null or empty");
+                                return;
+                            }
+
+                            DatabaseReference classRef =
+                                    FirebaseDatabase.getInstance().getReference("classrooms").child(classId);
+
+                            classRef.child("name").get().addOnCompleteListener(classTask -> {
+
+                                if (classTask.isSuccessful() && classTask.getResult().exists()) {
+                                    String className = classTask.getResult().getValue(String.class);
+                                    classText.setText("Class: " + className);
+                                } else {
+                                    classText.setText("Class: " + classId); // fallback
+                                }
+
+                                Bitmap qrBitmap = generateQRCode(classId);
+                                if (qrBitmap != null) {
+                                    ivQRCode.setImageBitmap(qrBitmap);
+                                    tvQRLabel.setVisibility(View.VISIBLE);
+                                    ivQRCode.setVisibility(View.VISIBLE);
+                                }
+                            });
+
+                            Bitmap qrBitmap = generateQRCode(classId);
+                            if (qrBitmap != null) {
+                                ivQRCode.setImageBitmap(qrBitmap);
+                                tvQRLabel.setVisibility(View.VISIBLE);
+                                ivQRCode.setVisibility(View.VISIBLE);
+                            } else {
+                                Log.e("ProfileFragment", "QR bitmap generation returned null");
+                            }
+                        } else {
+                            classText.setText("Class: None");
+                            Log.e("ProfileFragment", "No classroom found for teacher at teachers/" + currentUid + "/classroom");
+                        }
+                    });
+
+        } else if (user.getRole() == UserRole.STUDENT || user.getRole() == UserRole.PARENT) {
+            buttonScanQR.setVisibility(View.VISIBLE);
+
+            if (user instanceof Student) {
+                classText.setText("Class: " + ((Student) user).getClassId());
+            } else if (user instanceof Parent) {
+                classText.setText("Parent Profile");
+            } else {
+                classText.setText("Profile");
+            }
+        }
+    }
+
+    private Bitmap generateQRCode(String classCode) {
+        Log.d("ProfileFragment", "Generating QR for classCode = " + classCode);
+
+        if (classCode == null || classCode.trim().isEmpty()) {
+            return null;
         }
 
-         */
-
-        // TODO: set bio if you re-add it later
-    }
-
-    public ProfileFragment() {
-        // Required empty public constructor
-    }
-
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ProfileFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    /*
-    public static ProfileFragment newInstance(String param1, String param2) {
-        ProfileFragment fragment = new ProfileFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+        try {
+            BitMatrix bitMatrix = new MultiFormatWriter().encode(
+                    classCode,
+                    BarcodeFormat.QR_CODE,
+                    500,
+                    500
+            );
+            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+            return barcodeEncoder.createBitmap(bitMatrix);
+        } catch (WriterException e) {
+            Log.e("ProfileFragment", "Error generating QR code", e);
+            return null;
         }
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_profile, container, false);
+    private void startScanner() {
+        ScanOptions options = new ScanOptions();
+        options.setPrompt("Scan the Classroom QR Code");
+        options.setBeepEnabled(true);
+        options.setOrientationLocked(true);
+        qrCodeLauncher.launch(options);
     }
-    */
+
+    private void checkClassAndJoin(String classCode) {
+        String userId = FirebaseAuth.getInstance().getCurrentUser() != null
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid()
+                : null;
+
+        if (userId == null) {
+            Toast.makeText(getContext(), "User not logged in.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        DatabaseReference classroomsRef = FirebaseDatabase.getInstance().getReference("classrooms");
+        DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("users");
+
+        classroomsRef.child(classCode).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                classroomsRef.child(classCode).child("students").child(userId).setValue(true)
+                        .addOnSuccessListener(aVoid ->
+                                usersRef.child(userId).child("classroom").setValue(classCode)
+                                        .addOnSuccessListener(aVoid1 ->
+                                                Toast.makeText(getContext(),
+                                                        "Joined class " + classCode + " successfully!",
+                                                        Toast.LENGTH_SHORT).show())
+                                        .addOnFailureListener(e ->
+                                                Toast.makeText(getContext(),
+                                                        "Joined class, but failed to update profile.",
+                                                        Toast.LENGTH_SHORT).show()))
+                        .addOnFailureListener(e ->
+                                Toast.makeText(getContext(),
+                                        "Failed to join class.",
+                                        Toast.LENGTH_SHORT).show());
+            } else {
+                Toast.makeText(getContext(), "Invalid Class Code!", Toast.LENGTH_LONG).show();
+            }
+        });
+    }
 }
