@@ -229,4 +229,7 @@ public class UserRepository {
             onSuccess.accept(childrenIDs);
         });
     }
+
+    public interface UserCallback {
+    }
 }
