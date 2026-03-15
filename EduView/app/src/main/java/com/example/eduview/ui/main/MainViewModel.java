@@ -10,7 +10,6 @@ import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.User;
 import com.example.eduview.data.repository.AuthRepository;
-import com.example.eduview.data.repository.SessionCallback;
 import com.example.eduview.data.repository.SessionManager;
 import com.example.eduview.data.repository.ClassroomRepository;
 import com.example.eduview.data.repository.UserRepository;
@@ -26,7 +25,7 @@ public class MainViewModel extends ViewModel {
     }
 
     public void startSession() {
-        sessionManager.initializeSession(new SessionCallback() {
+        sessionManager.initializeSession(new SessionManager.SessionCallback() {
             @Override
             public void onSuccess(User user) {
                 currentUser.postValue(user);

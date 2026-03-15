@@ -76,7 +76,7 @@ public class FeedFragment extends Fragment {
             } else if (user instanceof Teacher) {
 
                 Teacher teacher = (Teacher) user;
-                String classroomId = teacher.getClassID();
+                String classroomId = teacher.getClassId();
 
                 Log.d("FeedFragment", "Loading posts for classroom: " + classroomId);
 

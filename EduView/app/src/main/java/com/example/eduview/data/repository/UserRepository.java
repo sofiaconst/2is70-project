@@ -40,18 +40,18 @@ public class UserRepository {
         this.teachersRef = teachersRef;
     }
 
-    public void fetchUser(String userId, Consumer<User> onSuccess, Consumer<Exception> onError) {
+    public void getUserById(String userId, UserCallback callback) {
         usersRef.child(userId).get().addOnCompleteListener(task -> {
 
             if (!task.isSuccessful()) {
-                onError.accept(new RuntimeException("Failed to fetch user"));
+                callback.onError(new RuntimeException("Failed to fetch user"));
                 return;
             }
 
             DataSnapshot snapshot = task.getResult();
 
             if (!snapshot.exists()) {
-                onError.accept(new RuntimeException("User not found"));
+                callback.onError(new RuntimeException("User not found"));
                 return;
             }
 
@@ -59,25 +59,25 @@ public class UserRepository {
             try {
                 base = parseBaseUser(snapshot);
             } catch (Exception e) {
-                onError.accept(e);
+                callback.onError(e);
                 return;
             }
 
             switch (base.role) {
                 case STUDENT:
-                    fetchStudent(userId, base, onSuccess, onError);
+                    fetchStudent(userId, base, callback);
                     break;
 
                 case TEACHER:
-                    fetchTeacher(userId, base, onSuccess, onError);
+                    fetchTeacher(userId, base, callback);
                     break;
 
                 case PARENT:
-                    fetchParent(userId, base, onSuccess, onError);
+                    fetchParent(userId, base, callback);
                     break;
 
                 default:
-                    onError.accept(new RuntimeException("Invalid role"));
+                    callback.onError(new RuntimeException("Invalid role"));
                     break;
             }
         });
@@ -103,20 +103,23 @@ public class UserRepository {
         return new UserBaseData(firstName, lastName, role, pfp);
     }
 
-    private void fetchStudent(String userId,
-                              UserBaseData base,
-                              Consumer<User> onSuccess,
-                              Consumer<Exception> onError) {
-
+    private void fetchStudent(String userId, UserBaseData base, UserCallback callback) {
         studentsRef.child(userId).get().addOnCompleteListener(task -> {
             if (!task.isSuccessful()) {
-                onError.accept(new RuntimeException("Failed to fetch student"));
+                callback.onError(new RuntimeException("Failed to fetch student"));
                 return;
             }
 
             DataSnapshot snapshot = task.getResult();
+            if (!snapshot.exists()) {
+                callback.onError(new RuntimeException("Student not found"));
+                return;
+            }
+
+            // Extract classroom ID or any other role-specific fields
             String classId = snapshot.child("classroom").getValue(String.class);
 
+            // Create Student object using base info + role-specific info
             Student student = new Student(
                     userId,
                     base.firstName,
@@ -124,25 +127,29 @@ public class UserRepository {
                     classId
             );
 
-            finalizeUser(student, base.pfp, onSuccess);
+            // Return via callback
+            callback.onSuccess(student);
         });
     }
 
-    private void fetchTeacher(String userId,
-                              UserBaseData base,
-                              Consumer<User> onSuccess,
-                              Consumer<Exception> onError) {
-
+    private void fetchTeacher(String userId, UserBaseData base, UserCallback callback) {
         teachersRef.child(userId).get().addOnCompleteListener(task -> {
             if (!task.isSuccessful()) {
-                onError.accept(new RuntimeException("Failed to fetch teacher"));
+                callback.onError(new RuntimeException("Failed to fetch teacher"));
                 return;
             }
 
             DataSnapshot snapshot = task.getResult();
+            if (!snapshot.exists()) {
+                callback.onError(new RuntimeException("Teacher not found"));
+                return;
+            }
+
+            // Role-specific fields
             String classId = snapshot.child("classroom").getValue(String.class);
             String email = snapshot.child("email").getValue(String.class);
 
+            // Create Teacher object
             Teacher teacher = new Teacher(
                     userId,
                     base.firstName,
@@ -151,25 +158,29 @@ public class UserRepository {
                     classId
             );
 
-            finalizeUser(teacher, base.pfp, onSuccess);
+            // Return via callback
+            callback.onSuccess(teacher);
         });
     }
 
-    private void fetchParent(String userId,
-                             UserBaseData base,
-                             Consumer<User> onSuccess,
-                             Consumer<Exception> onError) {
-
+    private void fetchParent(String userId, UserBaseData base, UserCallback callback) {
         parentsRef.child(userId).get().addOnCompleteListener(task -> {
             if (!task.isSuccessful()) {
-                onError.accept(new RuntimeException("Failed to fetch parent"));
+                callback.onError(new RuntimeException("Failed to fetch parent"));
                 return;
             }
 
             DataSnapshot snapshot = task.getResult();
-            List<String> childrenIDs = getChildrenIds(snapshot);
-            String email = snapshot.child("email").getValue(String.class);
+            if (!snapshot.exists()) {
+                callback.onError(new RuntimeException("Parent not found"));
+                return;
+            }
 
+            // Role-specific fields
+            String email = snapshot.child("email").getValue(String.class);
+            List<String> childrenIDs = getChildrenIds(snapshot); // assumes a helper method
+
+            // Create Parent object
             Parent parent = new Parent(
                     userId,
                     base.firstName,
@@ -178,7 +189,8 @@ public class UserRepository {
                     childrenIDs
             );
 
-            finalizeUser(parent, base.pfp, onSuccess);
+            // Return via callback
+            callback.onSuccess(parent);
         });
     }
 
@@ -187,17 +199,15 @@ public class UserRepository {
         DataSnapshot childrenSnapshot = parentSnapshot.child("children");
         List<String> childrenIDs = new ArrayList<>();
 
-        for (DataSnapshot childSnapshot : childrenSnapshot.getChildren()) {
-            childrenIDs.add(childSnapshot.getKey());
+        if (childrenSnapshot.exists()) {
+            for (DataSnapshot childSnapshot : childrenSnapshot.getChildren()) {
+                if (childSnapshot.getKey() != null) {
+                    childrenIDs.add(childSnapshot.getKey());
+                }
+            }
         }
-        return childrenIDs;
-    }
 
-    private void finalizeUser(User user, String pfp, Consumer<User> onSuccess) {
-        if (pfp != null) {
-            user.setProfileImageURL(pfp);
-        }
-        onSuccess.accept(user);
+        return childrenIDs;
     }
 
     public void updateProfilePicture(String userID, String imageUrl) {
@@ -231,5 +241,7 @@ public class UserRepository {
     }
 
     public interface UserCallback {
+        void onSuccess(User user);
+        void onError(Exception e);
     }
 }

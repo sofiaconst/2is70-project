@@ -6,26 +6,22 @@ import com.google.firebase.database.PropertyName;
 
 public class Student extends User {
     @PropertyName("classroom")
-    private String classID;
+    private String classroomId;
 
     //Empty Constructor needed for Firebase
     public Student() {}
 
-    public Student(String id, String firstName, String lastName, String classID){
+    public Student(String id, String firstName, String lastName, String classroomId){
         super(id, firstName, lastName, STUDENT);
-        this.classID = classID;
+        this.classroomId = classroomId;
     }
-
-
-    /*
-        Setters
-         */
-    public void setClassID(String classID) {
-        this.classID = classID;
-    }
-
 
     public String getClassId() {
-        return classID;
+        return classroomId;
+    }
+
+    // Setters
+    public void setClassroomId(String classroomId) {
+        this.classroomId = classroomId;
     }
 }

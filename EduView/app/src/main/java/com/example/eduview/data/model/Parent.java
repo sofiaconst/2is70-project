@@ -6,26 +6,23 @@ import java.util.List;
 
 public class Parent extends User {
     private String email;
-    private List<String> childID;
+    private List<String> children;
 
 
     //Empty Constructor needed for Firebase
     public Parent() {}
 
-    public Parent(String id, String firstName, String lastName, String email, List<String> childID ){
+    public Parent(String id, String firstName, String lastName, String email, List<String> children){
         super(id, firstName, lastName, PARENT);
         this.email = email;
-        this.childID = childID;
+        this.children = children;
     }
 
-    /*
-    Getters
-     */
     public String getEmail() {
         return email;
     }
     public List<String> getChildrenIDs() {
-        return childID;
+        return children;
     }
 
 }
