@@ -5,57 +5,117 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    tools:context=".Announcements">
+    tools:context="ui.feed.Announcements">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
+        android:background="@drawable/feed_posts_border"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
+
+        <View
+            android:id="@+id/pfp"
+            android:layout_height="40dp"
+            android:layout_width="40dp"
+            android:background="@drawable/feed_profile_picture"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
 
         <TextView
             android:id="@+id/tvStudentName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/design_default_color_primary"
-            android:textSize="18sp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="5dp"
+            android:text="Emily Smith"
+            android:textColor="@color/black"
+            android:textSize="20sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/pfp"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/materialCardView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
+            android:layout_marginTop="6dp"
+            app:cardBackgroundColor="#E2B35A"
+            app:cardCornerRadius="10dp"
+            app:layout_constraintStart_toEndOf="@+id/tvStudentName"
             app:layout_constraintTop_toTopOf="parent"
-            tools:layout_editor_absoluteY="1dp"
-            android:text="Ms. Smith" />
+            app:strokeColor="@android:color/black"
+            app:strokeWidth="1dp">
+
+            <TextView
+                android:id="@+id/textViewRole"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="12dp"
+                android:paddingTop="3dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="4dp"
+                android:text="Teacher"
+                android:textColor="@android:color/black"
+                android:textSize="12sp" />
+
+        </com.google.android.material.card.MaterialCardView>
 
         <TextView
-            android:id="@+id/tvPendingPostContent"
-            android:layout_width="0dp"
+            android:id="@+id/tvPostContent"
             android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="Check out John's science project on plant cells!"
+            android:textAlignment="viewStart"
             android:textColor="#444444"
             android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvStudentName"
-            tools:layout_editor_absoluteY="35dp"
-            android:text="Check out my science project on plant cells!" />
+            app:layout_constraintTop_toBottomOf="@id/pfp" />
+
+        <View
+            android:id="@+id/divider1"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:background="#DDDDDD"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvPostContent" />
 
         <ImageView
             android:id="@+id/ivPostImage"
-            android:layout_width="362dp"
-            android:layout_height="259dp"
+            android:contentDescription="Image"
+            android:layout_width="366dp"
+            android:layout_height="160dp"
             android:layout_marginTop="20dp"
             android:adjustViewBounds="true"
             android:maxHeight="300dp"
             android:scaleType="centerInside"
+            android:src="@android:drawable/ic_menu_gallery"
             android:visibility="visible"
+            android:background="@drawable/feed_image_bg"
+            app:layout_constraintBottom_toBottomOf="@+id/layoutModeration"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvPendingPostContent"
-            android:src="@android:drawable/ic_menu_gallery" />
+            app:layout_constraintTop_toBottomOf="@id/tvPostContent"
+            app:layout_constraintVertical_bias="0.0"
+            app:tint="@color/black" />
+
+        <LinearLayout
+            android:id="@+id/layoutLike"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintBaseline_toBottomOf="@id/ivPostImage"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/layoutModeration"
