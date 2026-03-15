@@ -29,10 +29,12 @@ public class MainActivity extends AppCompatActivity {
         setupLayout();
         setupNavigation();
         setupViewModel();
+
     }
 
     private void setupViewModel() {
 
+        Log.d("SESSION", "test123");
         mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
         mainViewModel.startSession();  // initializeSession() runs here
         mainViewModel.getCurrentUser().observe(this, user -> {

@@ -9,6 +9,8 @@ what features do they have access to?
 stores app-level session data
  */
 
+import android.util.Log;
+
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.Parent;
@@ -91,6 +93,7 @@ public class SessionManager {
             @Override
             public void onSuccess(User user) {
                 currentUser = user;
+                callback.onSuccess(currentUser);
                 //loadRoleSpecificData(user, callback);
             }
 

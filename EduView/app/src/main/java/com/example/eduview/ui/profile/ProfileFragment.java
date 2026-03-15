@@ -106,52 +106,19 @@ public class ProfileFragment extends Fragment {
                 Log.e("ProfileFragment", "Current user is null");
             }
         });
-/*
-        mainViewModel.getClassroomName().observe(getViewLifecycleOwner(), name -> {
-            User user = mainViewModel.getCurrentUser().getValue();
-            if (name != null && user != null) {
-                if (user.getRole() == UserRole.TEACHER || user.getRole() == UserRole.STUDENT) {
-                    classText.setText("Class: " + name);
-                }
-            }
-        });
 
-        mainViewModel.getJoinStatus().observe(getViewLifecycleOwner(), status -> {
-            if (status != null) {
-                Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
-            }
-        });
-*/
         logoutButton.setOnClickListener(v -> {
             mainViewModel.logout();
             Log.d("ProfileFragment", "Navigating to LoginActivity");
             startActivity(new Intent(requireActivity(), LoginActivity.class));
             requireActivity().finish();
         });
-/*
-        buttonScanQR.setOnClickListener(v -> startScanner());
 
-        buttonGenerateQR.setOnClickListener(v -> {
-            User user = mainViewModel.getCurrentUser().getValue();
-            if (user instanceof Teacher) {
-                String classId = ((Teacher) user).getClassId();
-
-                Bitmap qrBitmap = generateQRCode(classId);
-                if (qrBitmap != null) {
-                    ivQRCode.setImageBitmap(qrBitmap);
-                    tvQRLabel.setVisibility(View.VISIBLE);
-                    ivQRCode.setVisibility(View.VISIBLE);
-                } else {
-                    Toast.makeText(getContext(), "Could not generate QR code.", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-         */
     }
 
     private void updateUI(User user) {
         userNameText.setText(user.getFirstName() + " " + user.getLastName());
+        Log.d("UI", user.getFirstName() + " " + user.getLastName());
         roleText.setText(user.getRole().name());
 
         tvQRLabel.setVisibility(View.GONE);
