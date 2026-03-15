@@ -81,6 +81,9 @@ dependencies {
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.inline)
 
+    // ZXing for QR Code generation and scanning
+    implementation(libs.zxing.core)
+    implementation(libs.zxing.android.embedded)
 }
 
 jacoco {

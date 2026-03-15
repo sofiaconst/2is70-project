@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -31,6 +32,7 @@ public class SignupActivity extends AppCompatActivity {
     private void updatePasswordStrength(String password, TextView tvPasswordStrength, ProgressBar progressPasswordStrength) {
         boolean hasMinLength = password.length() >= 6;
         boolean hasUppercase = password.matches(".*[A-Z].*");
+        boolean hasLowercase = password.matches(".*[a-z].*");
         boolean hasDigit = password.matches(".*\\d.*");
         boolean hasSymbol = password.matches(".*[^A-Za-z0-9].*");
 
@@ -39,18 +41,19 @@ public class SignupActivity extends AppCompatActivity {
         if (hasUppercase) score++;
         if (hasDigit) score++;
         if (hasSymbol) score++;
+        if (hasLowercase) score++;
 
         if (password.isEmpty()) {
             tvPasswordStrength.setText("Password strength");
             tvPasswordStrength.setTextColor(Color.parseColor("#666666"));
             progressPasswordStrength.setProgress(0, true);
             progressPasswordStrength.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#BDBDBD")));
-        } else if (score <= 1) {
+        } else if (score <= 2) {
             tvPasswordStrength.setText("Password strength: Weak");
             tvPasswordStrength.setTextColor(Color.parseColor("#D32F2F"));
             progressPasswordStrength.setProgress(25, true);
             progressPasswordStrength.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#D32F2F")));
-        } else if (score <= 3) {
+        } else if (score <= 4) {
             tvPasswordStrength.setText("Password strength: Medium");
             tvPasswordStrength.setTextColor(Color.parseColor("#F9A825"));
             progressPasswordStrength.setProgress(75, true);
@@ -72,6 +75,9 @@ public class SignupActivity extends AppCompatActivity {
         if (!password.matches(".*[A-Z].*")) {
             message.append("\n- At least one capital letter");
         }
+        if (!password.matches(".*[a-z].*")) {
+            message.append("\n- At least one lowercase letter");
+        }
         if (!password.matches(".*\\d.*")) {
             message.append("\n- At least one number");
         }
@@ -85,10 +91,11 @@ public class SignupActivity extends AppCompatActivity {
     private boolean isPasswordValid(String password) {
         boolean hasMinLength = password.length() >= 6;
         boolean hasUppercase = password.matches(".*[A-Z].*");
+        boolean hasLowercase = password.matches(".*[a-z].*");
         boolean hasDigit = password.matches(".*\\d.*");
         boolean hasSymbol = password.matches(".*[^A-Za-z0-9].*");
 
-        return hasMinLength && hasUppercase && hasDigit && hasSymbol;
+        return hasMinLength && hasUppercase && hasLowercase && hasDigit && hasSymbol;
     }
 
     @Override
@@ -116,6 +123,7 @@ public class SignupActivity extends AppCompatActivity {
         EditText etLastName = findViewById(R.id.et_last_name);
         EditText etEmail = findViewById(R.id.et_email);
         EditText etPassword = findViewById(R.id.et_password);
+        TextView tvPasswordError = findViewById(R.id.tv_password_error);
         TextView tvPasswordStrength = findViewById(R.id.tv_password_strength);
         ProgressBar progressPasswordStrength = findViewById(R.id.progress_password_strength);
         TextView tvLogin = findViewById(R.id.tv_login);
@@ -127,6 +135,7 @@ public class SignupActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 updatePasswordStrength(s.toString(), tvPasswordStrength, progressPasswordStrength);
+                tvPasswordError.setVisibility(View.GONE);
             }
 
             @Override
@@ -174,8 +183,11 @@ public class SignupActivity extends AppCompatActivity {
             }
 
             if (!isPasswordValid(password)) {
-                Toast.makeText(this, getPasswordRequirementsMessage(password), Toast.LENGTH_LONG).show();
+                tvPasswordError.setText(getPasswordRequirementsMessage(password));
+                tvPasswordError.setVisibility(View.VISIBLE);
                 return;
+            } else {
+                tvPasswordError.setVisibility(View.GONE);
             }
 
             AuthRepository.AuthCallback callback = new AuthRepository.AuthCallback() {

@@ -110,4 +110,6 @@ public class AuthRepository {
     public boolean isLoggedIn() {
         return firebaseAuth.getCurrentUser() != null;
     }
+
+    public FirebaseUser getCurrentFirebaseUser() {return firebaseAuth.getCurrentUser();}
 }

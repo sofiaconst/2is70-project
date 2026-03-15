@@ -31,15 +31,11 @@ public class MainActivity extends AppCompatActivity {
         setupViewModel();
     }
 
-    public MainViewModel getMainViewmodel() {
-        return this.mainViewModel;
-    }
-
     private void setupViewModel() {
 
-        MainViewModel viewModel = new ViewModelProvider(this).get(MainViewModel.class);
-        viewModel.startSession();  // initializeSession() runs here
-        viewModel.getCurrentUser().observe(this, user -> {
+        mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
+        mainViewModel.startSession();  // initializeSession() runs here
+        mainViewModel.getCurrentUser().observe(this, user -> {
             if(user != null){
                 Log.d("SESSION", "Loaded user: " + user.getFirstName());
             }
@@ -84,4 +80,7 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
+    public MainViewModel getMainViewmodel() {
+        return this.mainViewModel;
+    }
 }

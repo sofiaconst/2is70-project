@@ -1,34 +1,41 @@
 package com.example.eduview.ui.profile;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.eduview.R;
+import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.Student;
+import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.User;
+import com.example.eduview.data.model.UserRole;
 import com.example.eduview.ui.login.LoginActivity;
 import com.example.eduview.ui.main.MainViewModel;
-import com.example.eduview.ui.signup.SignupActivity;
 import com.google.android.material.imageview.ShapeableImageView;
-import com.google.firebase.database.annotations.Nullable;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.journeyapps.barcodescanner.BarcodeEncoder;
+import com.journeyapps.barcodescanner.ScanContract;
+import com.journeyapps.barcodescanner.ScanOptions;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the  factory method to
- * create an instance of this fragment.
- */
 public class ProfileFragment extends Fragment {
 
     private MainViewModel mainViewModel;
@@ -40,6 +47,26 @@ public class ProfileFragment extends Fragment {
     private EditText aboutMeEditText;
     private Button logoutButton;
 
+    private TextView tvQRLabel;
+    private ImageView ivQRCode;
+    private Button buttonScanQR;
+    private Button buttonGenerateQR;
+
+    private final ActivityResultLauncher<ScanOptions> qrCodeLauncher = registerForActivityResult(
+            new ScanContract(),
+            result -> {
+                if (result.getContents() != null) {
+                    String scannedCode = result.getContents();
+                    Log.d("ProfileFragment", "Scanned QR code = " + scannedCode);
+                    mainViewModel.joinClass(scannedCode);
+                }
+            }
+    );
+
+    public ProfileFragment() {
+        // Required empty public constructor
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -48,13 +75,17 @@ public class ProfileFragment extends Fragment {
 
         View root = inflater.inflate(R.layout.fragment_profile, container, false);
 
-        // Bind views
         profileImage = root.findViewById(R.id.profileImage);
         userNameText = root.findViewById(R.id.User_name_text);
         roleText = root.findViewById(R.id.materialCardView).findViewById(R.id.textViewRole);
         classText = root.findViewById(R.id.Teacher_Class_Text);
         aboutMeEditText = root.findViewById(R.id.etAboutMe);
         logoutButton = root.findViewById(R.id.buttonLogout);
+
+        tvQRLabel = root.findViewById(R.id.tvQRLabel);
+        ivQRCode = root.findViewById(R.id.ivQRCode);
+        buttonScanQR = root.findViewById(R.id.buttonScanQR);
+        buttonGenerateQR = root.findViewById(R.id.buttonGenerateQR);
 
         return root;
     }
@@ -63,98 +94,114 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Get shared MainViewModel from activity
         mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
-        // Observe user LiveData
         mainViewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
                 updateUI(user);
+            } else {
+                Log.e("ProfileFragment", "Current user is null");
+            }
+        });
+
+        mainViewModel.getClassroomName().observe(getViewLifecycleOwner(), name -> {
+            User user = mainViewModel.getCurrentUser().getValue();
+            if (name != null && user != null) {
+                if (user.getRole() == UserRole.TEACHER || user.getRole() == UserRole.STUDENT) {
+                    classText.setText("Class: " + name);
+                }
+            }
+        });
+
+        mainViewModel.getJoinStatus().observe(getViewLifecycleOwner(), status -> {
+            if (status != null) {
+                Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
             }
         });
 
         logoutButton.setOnClickListener(v -> {
             mainViewModel.logout();
-
-            Log.d("ProfileFragment", "Navigating to SignupActivity");
+            Log.d("ProfileFragment", "Navigating to LoginActivity");
             startActivity(new Intent(requireActivity(), LoginActivity.class));
+            requireActivity().finish();
+        });
+
+        buttonScanQR.setOnClickListener(v -> startScanner());
+
+        buttonGenerateQR.setOnClickListener(v -> {
+            User user = mainViewModel.getCurrentUser().getValue();
+            if (user instanceof Teacher) {
+                String classId = ((Teacher) user).getClassID();
+
+                Bitmap qrBitmap = generateQRCode(classId);
+                if (qrBitmap != null) {
+                    ivQRCode.setImageBitmap(qrBitmap);
+                    tvQRLabel.setVisibility(View.VISIBLE);
+                    ivQRCode.setVisibility(View.VISIBLE);
+                } else {
+                    Toast.makeText(getContext(), "Could not generate QR code.", Toast.LENGTH_SHORT).show();
+                }
+            }
         });
     }
 
     private void updateUI(User user) {
-        // Set name
         userNameText.setText(user.getFirstName() + " " + user.getLastName());
-
-        /*
-        // Set profile picture if URL exists
-        String pfpUrl = user.getProfileImageURL();
-        if (pfpUrl != null && !pfpUrl.isEmpty()) {
-            // Using Glide or similar library
-            Glide.with(this)
-                    .load(pfpUrl)
-                    .placeholder(R.drawable.pfp_photo_button_icon)
-                    .circleCrop()
-                    .into(profileImage);
-        }
-
-         */
-
-        // Set role
         roleText.setText(user.getRole().name());
 
-        /*
-        // Show extra info depending on type
-        if (user instanceof Student student) {
-            classText.setText("Class: " + student.getClassID());
-        } else if (user instanceof Teacher teacher) {
-            classText.setText("Class: " + teacher.getClassID());
-        } else if (user instanceof Parent parent) {
-            classText.setText("Children: " + parent.getChildrenIDs().size());
-        }
+        tvQRLabel.setVisibility(View.GONE);
+        ivQRCode.setVisibility(View.GONE);
+        buttonScanQR.setVisibility(View.GONE);
+        buttonGenerateQR.setVisibility(View.GONE);
 
-         */
+        if (user.getRole() == UserRole.TEACHER && user instanceof Teacher) {
+            String classId = ((Teacher) user).getClassID();
 
-        // TODO: set bio if you re-add it later
-    }
+            if (classId != null && !classId.isEmpty()) {
+                buttonGenerateQR.setVisibility(View.VISIBLE);
+            } else {
+                classText.setText("Class: None");
+            }
 
-    public ProfileFragment() {
-        // Required empty public constructor
-    }
+        } else if (user.getRole() == UserRole.STUDENT || user.getRole() == UserRole.PARENT) {
+            buttonScanQR.setVisibility(View.VISIBLE);
 
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ProfileFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    /*
-    public static ProfileFragment newInstance(String param1, String param2) {
-        ProfileFragment fragment = new ProfileFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+            if (user instanceof Student) {
+                String classId = ((Student) user).getClassId();
+                classText.setText("Class: " + (classId != null ? classId : "None"));
+            } else if (user instanceof Parent) {
+                classText.setText("Parent Profile");
+            } else {
+                classText.setText("Profile");
+            }
         }
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_profile, container, false);
+    private Bitmap generateQRCode(String classCode) {
+        if (classCode == null || classCode.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            BitMatrix bitMatrix = new MultiFormatWriter().encode(
+                    classCode,
+                    BarcodeFormat.QR_CODE,
+                    500,
+                    500
+            );
+            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+            return barcodeEncoder.createBitmap(bitMatrix);
+        } catch (WriterException e) {
+            Log.e("ProfileFragment", "Error generating QR code", e);
+            return null;
+        }
     }
-    */
+
+    private void startScanner() {
+        ScanOptions options = new ScanOptions();
+        options.setPrompt("Scan the Classroom QR Code");
+        options.setBeepEnabled(true);
+        options.setOrientationLocked(true);
+        qrCodeLauncher.launch(options);
+    }
 }

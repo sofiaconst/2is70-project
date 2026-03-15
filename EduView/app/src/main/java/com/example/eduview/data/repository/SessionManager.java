@@ -63,22 +63,17 @@ public class SessionManager {
     private final UserRepository userRepository;
     private User cachedUser;
 
-    private SessionManager(AuthRepository authRepo, UserRepository userRepo) {
-        this.authRepository = authRepo;
-        this.userRepository = userRepo;
+    private SessionManager() {
+        this.authRepository = new AuthRepository();
+        this.userRepository = new UserRepository();
     }
 
-    public static SessionManager getInstance(AuthRepository authRepo, UserRepository userRepo) {
-        if (instance == null) instance = new SessionManager(authRepo, userRepo);
+    public static SessionManager getInstance() {
+        if (instance == null) instance = new SessionManager();
         return instance;
     }
 
-    /**
-     * Initializes the session once.
-     * Safe to call multiple times; will return cached user if already loaded.
-     */
     public void initializeSession(SessionCallback callback) {
-        // Rotation-safe: return cached user if already loaded
         if (cachedUser != null) {
             callback.onSuccess(cachedUser);
             return;
@@ -92,13 +87,10 @@ public class SessionManager {
 
         String uid = firebaseUser.getUid();
 
-        // Fetch user from repository
         userRepository.getUserById(uid, new UserRepository.UserCallback() {
             @Override
             public void onSuccess(User user) {
                 cachedUser = user;
-
-                // Load role-specific data asynchronously
                 loadRoleSpecificData(user, callback);
             }
 
@@ -113,16 +105,16 @@ public class SessionManager {
         switch (user.getRole()) {
             case STUDENT:
                 Student student = (Student) user;
-                userRepository.getParentForStudent(student.getUid(), parent -> { // no exiy
-                    student.setParent(parent);
+                userRepository.getClassroomById(student.getUid(), parent -> { // no exiy
+                    student.setClassID(parent);
                     callback.onSuccess(student);
                 }, e -> callback.onError(e));
                 break;
 
             case TEACHER:
-                Teacher teacher = (Teacher) user;
-                userRepository.getStudentsForTeacher(teacher.getUid(), students -> { // no exist
-                    teacher.setStudents(students);
+                Teacher teacher = (teacher) user;
+                userRepository.getClassroomById(teacher.getUid(), parent -> { // no exiy
+                    teacher.setClassID(parent);
                     callback.onSuccess(teacher);
                 }, e -> callback.onError(e));
                 break;
@@ -158,5 +150,11 @@ public class SessionManager {
     public UserRole getCurrentUserRole() {
         requireLogin();
         return cachedUser.getRole();
+    }
+
+    public void setCurrentUser(Object o) {
+    }
+
+    public void logoutCurrentUser(Object o) {
     }
 }
