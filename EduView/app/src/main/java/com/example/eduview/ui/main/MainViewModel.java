@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.User;
@@ -13,6 +14,10 @@ import com.example.eduview.data.repository.AuthRepository;
 import com.example.eduview.data.repository.ClassroomRepository;
 import com.example.eduview.data.repository.UserRepository;
 import com.google.firebase.auth.FirebaseUser;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MainViewModel extends ViewModel {
 
@@ -23,6 +28,7 @@ public class MainViewModel extends ViewModel {
     private final MutableLiveData<User> currentUser = new MutableLiveData<>();
     private final MutableLiveData<String> classroomName = new MutableLiveData<>();
     private final MutableLiveData<String> joinStatus = new MutableLiveData<>();
+    private final MutableLiveData<List<Student>> childrenData = new MutableLiveData<>();
 
     public MainViewModel(AuthRepository authRepository,
                          UserRepository userRepository,
@@ -50,6 +56,10 @@ public class MainViewModel extends ViewModel {
         return joinStatus;
     }
 
+    public LiveData<List<Student>> getChildrenData() {
+        return childrenData;
+    }
+
     public void loadCurrentUser() {
         FirebaseUser firebaseUser = authRepository.getCurrentUser();
 
@@ -57,6 +67,7 @@ public class MainViewModel extends ViewModel {
             Log.w("MainViewModel", "No Firebase user logged in");
             currentUser.setValue(null);
             classroomName.setValue(null);
+            childrenData.setValue(null);
             return;
         }
 
@@ -73,12 +84,54 @@ public class MainViewModel extends ViewModel {
                     } else if (user instanceof Student) {
                         String classId = ((Student) user).getClassId();
                         loadClassroomName(classId);
+                    } else if (user instanceof Parent) {
+                        loadChildrenData((Parent) user);
+                        classroomName.postValue(null);
                     } else {
                         classroomName.postValue(null);
                     }
                 },
                 error -> Log.e("MainViewModel", "Failed to fetch user", error)
         );
+    }
+
+    public void updateBio(String bio) {
+        String userId = authRepository.getCurrentUserId();
+        if (userId == null) return;
+
+        userRepository.updateBio(userId, bio, () -> {
+            Log.d("MainViewModel", "Bio updated successfully");
+            loadCurrentUser();
+        }, error -> {
+            Log.e("MainViewModel", "Failed to update bio", error);
+        });
+    }
+
+    private void loadChildrenData(Parent parent) {
+        List<String> childrenIds = parent.getChildrenIDs();
+        if (childrenIds == null || childrenIds.isEmpty()) {
+            childrenData.postValue(new ArrayList<>());
+            return;
+        }
+
+        List<Student> students = new ArrayList<>();
+        AtomicInteger remaining = new AtomicInteger(childrenIds.size());
+
+        for (String id : childrenIds) {
+            userRepository.fetchUser(id, user -> {
+                if (user instanceof Student) {
+                    students.add((Student) user);
+                }
+                if (remaining.decrementAndGet() == 0) {
+                    childrenData.postValue(students);
+                }
+            }, error -> {
+                Log.e("MainViewModel", "Failed to fetch child: " + id, error);
+                if (remaining.decrementAndGet() == 0) {
+                    childrenData.postValue(students);
+                }
+            });
+        }
     }
 
     private void loadClassroomName(String classId) {
@@ -119,5 +172,6 @@ public class MainViewModel extends ViewModel {
         authRepository.logout();
         currentUser.setValue(null);
         classroomName.setValue(null);
+        childrenData.setValue(null);
     }
 }

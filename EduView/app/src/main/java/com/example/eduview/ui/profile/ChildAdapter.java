@@ -61,15 +61,7 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
 
         public void bind(Student child, ClassroomRepository classroomRepository) {
             tvName.setText(child.getFirstName() + " " + child.getLastName());
-            
-            // For now, since Student model doesn't have email in this snippet, 
-            // but the prompt says to show email. 
-            // Assuming User model has getEmail() or it's added.
-            // If Student doesn't have it, we might need to fetch it or add it to Student model.
-            // For now I'll use a placeholder or check if it's available.
-            // Based on earlier read_file, Student doesn't have it but Parent does.
-            // I'll add email to User model in the next step to be safe.
-            tvEmail.setText("Fetching email..."); 
+            tvEmail.setText(child.getEmail() != null ? child.getEmail() : "No email");
 
             String classId = child.getClassId();
             if (classId == null || classId.isEmpty()) {

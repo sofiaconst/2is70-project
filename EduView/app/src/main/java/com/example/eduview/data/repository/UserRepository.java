@@ -88,6 +88,8 @@ public class UserRepository {
         String lastName = snapshot.child("last_name").getValue(String.class);
         String roleStr = snapshot.child("role").getValue(String.class);
         String pfp = snapshot.child("pfp").getValue(String.class);
+        String email = snapshot.child("email").getValue(String.class);
+        String bio = snapshot.child("bio").getValue(String.class);
 
         if (firstName == null || lastName == null || roleStr == null) {
             throw new RuntimeException("User information missing");
@@ -100,7 +102,10 @@ public class UserRepository {
             throw new RuntimeException("Invalid user role: " + roleStr);
         }
 
-        return new UserBaseData(firstName, lastName, role, pfp);
+        UserBaseData base = new UserBaseData(firstName, lastName, role, pfp);
+        base.email = email;
+        base.bio = bio;
+        return base;
     }
 
     private void fetchStudent(String userId,
@@ -124,7 +129,7 @@ public class UserRepository {
                     classId
             );
 
-            finalizeUser(student, base.pfp, onSuccess);
+            finalizeUser(student, base, onSuccess);
         });
     }
 
@@ -151,7 +156,7 @@ public class UserRepository {
                     classId
             );
 
-            finalizeUser(teacher, base.pfp, onSuccess);
+            finalizeUser(teacher, base, onSuccess);
         });
     }
 
@@ -178,7 +183,7 @@ public class UserRepository {
                     childrenIDs
             );
 
-            finalizeUser(parent, base.pfp, onSuccess);
+            finalizeUser(parent, base, onSuccess);
         });
     }
 
@@ -188,14 +193,20 @@ public class UserRepository {
         List<String> childrenIDs = new ArrayList<>();
 
         for (DataSnapshot childSnapshot : childrenSnapshot.getChildren()) {
-            childrenIDs.add(childSnapshot.getKey());
+            childrenIDs.add(childSnapshot.getValue(String.class));
         }
         return childrenIDs;
     }
 
-    private void finalizeUser(User user, String pfp, Consumer<User> onSuccess) {
-        if (pfp != null) {
-            user.setProfileImageURL(pfp);
+    private void finalizeUser(User user, UserBaseData base, Consumer<User> onSuccess) {
+        if (base.pfp != null) {
+            user.setProfileImageURL(base.pfp);
+        }
+        if (base.email != null) {
+            user.setEmail(base.email);
+        }
+        if (base.bio != null) {
+            user.setBio(base.bio);
         }
         onSuccess.accept(user);
     }
@@ -206,6 +217,12 @@ public class UserRepository {
 
     public void updateClass(String userID, String classID) {
         studentsRef.child(userID).child("classroom").setValue(classID);
+    }
+
+    public void updateBio(String userId, String bio, Runnable onSuccess, Consumer<Exception> onError) {
+        usersRef.child(userId).child("bio").setValue(bio)
+                .addOnSuccessListener(aVoid -> onSuccess.run())
+                .addOnFailureListener(onError::accept);
     }
 
     public void fetchChildrenOfParent(String parentID,

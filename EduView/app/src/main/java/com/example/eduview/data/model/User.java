@@ -12,7 +12,8 @@ public class User {
     private UserRole role;
     @PropertyName("pfp")
     private String profileImageURL; //Store as URL?
-//    private String bio; //We are removing Bio
+    private String bio;
+    private String email;
 
     //Empty Constructor needed for Firebase
     public User() {}
@@ -23,6 +24,7 @@ public class User {
         this.firstName = firstName;
         this.lastName = lastName;
         this.role = role;
+        this.bio = "";
     }
 
     public boolean isTeacher() {
@@ -48,7 +50,11 @@ public class User {
     public UserRole getRole() {
         return role;
     }
+    public String getBio() { return bio; }
+    public String getEmail() { return email; }
 
     // Setters
     public void setProfileImageURL(String profileImageURL) {this.profileImageURL = profileImageURL;}
+    public void setBio(String bio) { this.bio = bio; }
+    public void setEmail(String email) { this.email = email; }
 }
