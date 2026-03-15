@@ -51,7 +51,7 @@ public class ProfileFragment extends Fragment {
     private ImageView ivQRCode;
     private Button buttonScanQR;
     private Button buttonGenerateQR;
-/*
+
     private final ActivityResultLauncher<ScanOptions> qrCodeLauncher = registerForActivityResult(
             new ScanContract(),
             result -> {
@@ -62,8 +62,6 @@ public class ProfileFragment extends Fragment {
                 }
             }
     );
-
- */
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -94,7 +92,6 @@ public class ProfileFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-
         super.onViewCreated(view, savedInstanceState);
 
         mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
@@ -107,6 +104,21 @@ public class ProfileFragment extends Fragment {
             }
         });
 
+        mainViewModel.getClassroomName().observe(getViewLifecycleOwner(), name -> {
+            User user = mainViewModel.getCurrentUser().getValue();
+            if (name != null && user != null) {
+                if (user.getRole() == UserRole.TEACHER || user.getRole() == UserRole.STUDENT) {
+                    classText.setText("Class: " + name);
+                }
+            }
+        });
+
+        mainViewModel.getJoinStatus().observe(getViewLifecycleOwner(), status -> {
+            if (status != null) {
+                Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
+            }
+        });
+
         logoutButton.setOnClickListener(v -> {
             mainViewModel.logout();
             Log.d("ProfileFragment", "Navigating to LoginActivity");
@@ -114,11 +126,27 @@ public class ProfileFragment extends Fragment {
             requireActivity().finish();
         });
 
+        buttonScanQR.setOnClickListener(v -> startScanner());
+
+        buttonGenerateQR.setOnClickListener(v -> {
+            User user = mainViewModel.getCurrentUser().getValue();
+            if (user instanceof Teacher) {
+                String classId = ((Teacher) user).getClassID();
+
+                Bitmap qrBitmap = generateQRCode(classId);
+                if (qrBitmap != null) {
+                    ivQRCode.setImageBitmap(qrBitmap);
+                    tvQRLabel.setVisibility(View.VISIBLE);
+                    ivQRCode.setVisibility(View.VISIBLE);
+                } else {
+                    Toast.makeText(getContext(), "Could not generate QR code.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private void updateUI(User user) {
         userNameText.setText(user.getFirstName() + " " + user.getLastName());
-        Log.d("UI", user.getFirstName() + " " + user.getLastName());
         roleText.setText(user.getRole().name());
 
         tvQRLabel.setVisibility(View.GONE);
@@ -174,6 +202,6 @@ public class ProfileFragment extends Fragment {
         options.setPrompt("Scan the Classroom QR Code");
         options.setBeepEnabled(true);
         options.setOrientationLocked(true);
-        //qrCodeLauncher.launch(options);
+        qrCodeLauncher.launch(options);
     }
 }

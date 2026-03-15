@@ -94,7 +94,6 @@ public class SessionManager {
             public void onSuccess(User user) {
                 currentUser = user;
                 callback.onSuccess(currentUser);
-                //loadRoleSpecificData(user, callback);
             }
 
             @Override
@@ -103,39 +102,7 @@ public class SessionManager {
             }
         });
     }
-/*
-    private void loadRoleSpecificData(User user, SessionCallback callback) {
-        switch (user.getRole()) {
-            case STUDENT:
-                Student student = (Student) user;
-                userRepository.getClassroomForStudent(student.getUserId(), classroomId -> {
-                    student.setClassroomId(classroomId);
-                    callback.onSuccess(student);
-                }, callback::onError);
-                break;
 
-            case TEACHER:
-                Teacher teacher = (Teacher) user;
-                userRepository.getClassroomForTeacher(teacher.getUserId(), classroomId -> {
-                    teacher.setClassId(classroomId);
-                    callback.onSuccess(teacher);
-                }, callback::onError);
-                break;
-
-            case PARENT:
-                Parent parent = (Parent) user;
-                userRepository.getChildrenForParent(parent.getUserId(), children -> {
-                    parent.setChildren(children);
-                    callback.onSuccess(parent);
-                }, callback::onError);
-                break;
-
-            default:
-                callback.onSuccess(user); // no extra data needed
-        }
-    }
-
- */
     public boolean isLoggedIn() {
         return currentUser != null;
     }

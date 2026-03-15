@@ -29,7 +29,6 @@ public class MainActivity extends AppCompatActivity {
         setupLayout();
         setupNavigation();
         setupViewModel();
-
     }
 
     private void setupViewModel() {

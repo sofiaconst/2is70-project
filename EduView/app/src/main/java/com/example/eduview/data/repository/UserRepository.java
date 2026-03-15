@@ -30,16 +30,6 @@ public class UserRepository {
         parentsRef = db.getReference("parents");
     }
 
-    public UserRepository(DatabaseReference usersRef,
-                          DatabaseReference parentsRef,
-                          DatabaseReference studentsRef,
-                          DatabaseReference teachersRef) {
-        this.usersRef = usersRef;
-        this.parentsRef = parentsRef;
-        this.studentsRef = studentsRef;
-        this.teachersRef = teachersRef;
-    }
-
     public void getUserById(String userId, UserCallback callback) {
         usersRef.child(userId).get().addOnCompleteListener(task -> {
 
