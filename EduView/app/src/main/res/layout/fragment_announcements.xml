@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    tools:context=".Announcements">
+    tools:context="ui.feed.Announcements">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
