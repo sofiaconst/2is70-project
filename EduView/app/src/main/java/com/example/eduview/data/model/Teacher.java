@@ -6,8 +6,9 @@ import static com.example.eduview.data.model.UserRole.TEACHER;
 import com.google.firebase.database.PropertyName;
 
 public class Teacher extends User {
-    @PropertyName("classroom")
     private String email;
+
+    @PropertyName("classroom")
     private String classID;
 
     //Empty Constructor needed for Firebase

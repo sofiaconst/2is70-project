@@ -93,14 +93,24 @@
                     android:layout_marginTop="12dp"
                     android:textColor="#444444"/>
 
-                <EditText
-                    android:id="@+id/et_password"
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:autofillHints="password"
-                    android:hint="Enter your password"
-                    android:inputType="textPassword"
-                    android:background="@drawable/bg_input_rounded"/>
+                    android:layout_marginTop="4dp"
+                    app:endIconMode="password_toggle"
+                    app:hintEnabled="false">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_password"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:autofillHints="password"
+                        android:hint="Enter your password"
+                        android:inputType="textPassword"
+                        android:background="@drawable/bg_input_rounded"
+                        android:padding="12dp"/>
+
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <TextView
                     android:id="@+id/tv_forgot_password"
