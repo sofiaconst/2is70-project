@@ -13,7 +13,6 @@ import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.User;
-import com.example.eduview.data.model.UserRole;
 import com.google.firebase.auth.FirebaseUser;
 
 /**
@@ -57,12 +56,13 @@ import com.google.firebase.auth.FirebaseUser;
  */
 public class SessionManager {
 
-    private static SessionManager instance;
-
+    // Repositories
     private final AuthRepository authRepository;
     private final UserRepository userRepository;
-    private User cachedUser;
+    private User currentUser;
 
+    // Singleton
+    private static SessionManager instance;
     private SessionManager() {
         this.authRepository = new AuthRepository();
         this.userRepository = new UserRepository();
@@ -74,8 +74,8 @@ public class SessionManager {
     }
 
     public void initializeSession(SessionCallback callback) {
-        if (cachedUser != null) {
-            callback.onSuccess(cachedUser);
+        if (currentUser != null) {
+            callback.onSuccess(currentUser);
             return;
         }
 
@@ -90,71 +90,76 @@ public class SessionManager {
         userRepository.getUserById(uid, new UserRepository.UserCallback() {
             @Override
             public void onSuccess(User user) {
-                cachedUser = user;
-                loadRoleSpecificData(user, callback);
+                currentUser = user;
+                //loadRoleSpecificData(user, callback);
             }
 
             @Override
-            public void onFailure(String error) {
+            public void onError(Exception error) {
                 callback.onError(new Exception(error));
             }
         });
     }
-
+/*
     private void loadRoleSpecificData(User user, SessionCallback callback) {
         switch (user.getRole()) {
             case STUDENT:
                 Student student = (Student) user;
-                userRepository.getClassroomById(student.getUid(), parent -> { // no exiy
-                    student.setClassID(parent);
+                userRepository.getClassroomForStudent(student.getUserId(), classroomId -> {
+                    student.setClassroomId(classroomId);
                     callback.onSuccess(student);
-                }, e -> callback.onError(e));
+                }, callback::onError);
                 break;
 
             case TEACHER:
-                Teacher teacher = (teacher) user;
-                userRepository.getClassroomById(teacher.getUid(), parent -> { // no exiy
-                    teacher.setClassID(parent);
+                Teacher teacher = (Teacher) user;
+                userRepository.getClassroomForTeacher(teacher.getUserId(), classroomId -> {
+                    teacher.setClassId(classroomId);
                     callback.onSuccess(teacher);
-                }, e -> callback.onError(e));
+                }, callback::onError);
                 break;
 
             case PARENT:
                 Parent parent = (Parent) user;
-                userRepository.getChildrenForParent(parent.getUid(), children -> {
+                userRepository.getChildrenForParent(parent.getUserId(), children -> {
                     parent.setChildren(children);
                     callback.onSuccess(parent);
-                }, e -> callback.onError(e));
+                }, callback::onError);
                 break;
 
             default:
-                // No extra role-specific data
-                callback.onSuccess(user);
+                callback.onSuccess(user); // no extra data needed
         }
     }
+
+ */
     public boolean isLoggedIn() {
-        return cachedUser != null;
+        return currentUser != null;
     }
 
-    public User getCurrentUser() {
-        requireLogin();
-        return cachedUser;
+    public void logoutCurrentUser(SessionCallback callback) {
+        currentUser = null;
+        authRepository.logout();
+        if(callback != null) {
+            callback.onSuccess(null); // notify logout complete
+        }
     }
 
     public void requireLogin() {
-        if (cachedUser == null) {
+        if (currentUser == null) {
             throw new IllegalStateException("User is not logged in.");
         }
     }
 
-    public UserRole getCurrentUserRole() {
+    public User getCurrentUser() {
         requireLogin();
-        return cachedUser.getRole();
+        return currentUser;
     }
 
-    public void setCurrentUser(Object o) {
-    }
+    public interface SessionCallback {
+        void onSuccess(User user);
+        void onError(Exception e);
 
-    public void logoutCurrentUser(Object o) {
     }
 }
+
