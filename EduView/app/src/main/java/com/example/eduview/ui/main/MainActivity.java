@@ -14,6 +14,8 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.eduview.R;
+import com.example.eduview.data.model.UserRole;
+import com.example.eduview.data.repository.SessionManager;
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.repository.UserRepository;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -44,6 +46,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupNavigation() {
         BottomNavigationView bottomNav = findViewById(R.id.MainBottomNavigationView);
+
+        bottomNav.getMenu().clear();
+        if(SessionManager.getInstance().getCurrentUserRole() == UserRole.PARENT) {
+            bottomNav.inflateMenu(R.menu.bottom_nav_parent);
+        } else {
+            bottomNav.inflateMenu(R.menu.bottom_nav_main);
+        }
 
         NavHostFragment navHostFragment =
                 (NavHostFragment) getSupportFragmentManager()
