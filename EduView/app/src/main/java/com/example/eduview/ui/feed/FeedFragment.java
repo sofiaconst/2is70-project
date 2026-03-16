@@ -107,7 +107,7 @@ public class FeedFragment extends Fragment {
         new TabLayoutMediator(teacherTabs, viewPager, (tab, position) -> {
             if (position == 0) tab.setText(getString(R.string.feed_title_1)); // Posts
             else if (position == 1) tab.setText(getString(R.string.feed_title_2)); // Announcements
-            else if (position == 2 && SessionManager.getInstance().getCurrentUser().getRole() == UserRole.TEACHER) tab.setText(getString(R.string.feed_title_3)); // Pending
+            else if (position == 2) tab.setText(getString(R.string.feed_title_3)); // Pending
         }).attach();
     }
 }

@@ -14,6 +14,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.eduview.R;
+import com.example.eduview.data.model.User;
 import com.example.eduview.data.model.UserRole;
 import com.example.eduview.data.repository.SessionManager;
 import com.example.eduview.data.model.Student;
@@ -29,7 +30,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setupLayout();
-        setupNavigation();
         setupViewModel();
     }
 
@@ -41,15 +41,18 @@ public class MainActivity extends AppCompatActivity {
         mainViewModel.getCurrentUser().observe(this, user -> {
             if(user != null){
                 Log.d("SESSION", "Loaded user: " + user.getFirstName());
+                setupNavigation(user);
             }
         });
     }
 
-    private void setupNavigation() {
+    private void setupNavigation(User user) {
+
         BottomNavigationView bottomNav = findViewById(R.id.MainBottomNavigationView);
 
         bottomNav.getMenu().clear();
-        if(SessionManager.getInstance().getCurrentUser().getRole() == UserRole.PARENT) {
+
+        if(user.getRole() == UserRole.PARENT) {
             bottomNav.inflateMenu(R.menu.bottom_nav_parent);
         } else {
             bottomNav.inflateMenu(R.menu.bottom_nav_main);
@@ -59,7 +62,10 @@ public class MainActivity extends AppCompatActivity {
                 (NavHostFragment) getSupportFragmentManager()
                         .findFragmentById(R.id.nav_host_fragment_container);
 
-        assert navHostFragment != null;
+        if (navHostFragment == null) {
+            Log.e("NAV", "NavHostFragment not found!");
+            return;
+        }
 
         NavController navController = navHostFragment.getNavController();
 
