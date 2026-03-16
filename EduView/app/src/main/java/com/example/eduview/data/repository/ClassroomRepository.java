@@ -1,55 +1,40 @@
 package com.example.eduview.data.repository;
 
+import com.example.eduview.data.model.Classroom;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import java.util.function.Consumer;
-
 public class ClassroomRepository {
+
     private final DatabaseReference classroomsRef;
-    private final DatabaseReference teachersRef;
-    private final DatabaseReference studentsRef;
 
     public ClassroomRepository() {
-        FirebaseDatabase db = FirebaseDatabase.getInstance();
-        classroomsRef = db.getReference("classrooms");
-        teachersRef = db.getReference("teachers");
-        studentsRef = db.getReference("students");
+        classroomsRef = FirebaseDatabase.getInstance().getReference("classrooms");
     }
 
-    public void getClassroomName(String classId, Consumer<String> onSuccess, Consumer<Exception> onError) {
-        classroomsRef.child(classId).child("name").get().addOnCompleteListener(task -> {
+    // Fetch classroom by ID
+    public void getClassroomName(String classId, ClassroomCallback<Classroom> classroomCallback) {
+        classroomsRef.child(classId).get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult().exists()) {
-                onSuccess.accept(task.getResult().getValue(String.class));
+                Classroom classroom = task.getResult().getValue(Classroom.class);
+                classroomCallback.onSuccess(classroom);
             } else {
-                onError.accept(new RuntimeException("Classroom name not found"));
+                classroomCallback.onError(new RuntimeException("Classroom not found"));
             }
         });
     }
 
-    public void getTeacherClassroom(String teacherId, Consumer<String> onSuccess, Consumer<Exception> onError) {
-        teachersRef.child(teacherId).child("classroom").get().addOnCompleteListener(task -> {
-            if (task.isSuccessful() && task.getResult().exists()) {
-                onSuccess.accept(task.getResult().getValue(String.class));
-            } else {
-                onError.accept(new RuntimeException("No classroom found for teacher"));
-            }
-        });
+    // Add student to classroom
+    public void joinClassroom(String studentId, String classId, ClassroomCallback<Void> classroomCallback) {
+        classroomsRef.child(classId).child("students").child(studentId)
+                .setValue(true)
+                .addOnSuccessListener(aVoid -> classroomCallback.onSuccess(null))
+                .addOnFailureListener(classroomCallback::onError);
     }
 
-    public void joinClassroom(String studentId, String classCode, Runnable onSuccess, Consumer<Exception> onError) {
-        classroomsRef.child(classCode).get().addOnCompleteListener(task -> {
-            if (task.isSuccessful() && task.getResult().exists()) {
-                classroomsRef.child(classCode).child("students").child(studentId).setValue(true)
-                        .addOnSuccessListener(aVoid ->
-                                studentsRef.child(studentId).child("classroom").setValue(classCode)
-                                        .addOnSuccessListener(aVoid1 -> onSuccess.run())
-                                        .addOnFailureListener(onError::accept)
-                        )
-                        .addOnFailureListener(onError::accept);
-            } else {
-                onError.accept(new RuntimeException("Invalid Class Code!"));
-            }
-        });
+    // Generic callback interface
+    public interface ClassroomCallback<T> {
+        void onSuccess(T result);
+        void onError(Exception e);
     }
 }
