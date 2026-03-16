@@ -80,7 +80,8 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    public MainViewModel getMainViewmodel() {
+    public MainViewModel getMainViewModel() {
         return this.mainViewModel;
     }
+
 }

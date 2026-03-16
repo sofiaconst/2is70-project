@@ -103,7 +103,7 @@ public class CreatePostViewModel extends ViewModel {
             return;
         }
 
-        Post post = new Post(authorId, currentImageUrl, currentCaption);
+        Post post = new Post(authorId, currentCaption, currentImageUrl);
 
         postRepository.createPost(
                 type,

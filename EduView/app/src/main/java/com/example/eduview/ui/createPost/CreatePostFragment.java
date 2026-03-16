@@ -210,15 +210,14 @@ public class CreatePostFragment extends Fragment {
     private void submitPost() {
         String classId = null;
         // Adjust these method names if your teammate named them differently.
-        String authorId = sessionManager.getCurrentUserId();
         User user = sessionManager.getCurrentUser();
-
+        String authorId = user.getUserId();
         if (user.getRole() == UserRole.PARENT) {
             return;
         }
         if (user.getRole() == UserRole.TEACHER) {
             Teacher teacher = (Teacher) user;
-            classId = teacher.getClassID();
+            classId = teacher.getClassId();
         }
         if (user.getRole() == UserRole.STUDENT) {
             Student student = (Student) user;

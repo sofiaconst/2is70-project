@@ -32,7 +32,7 @@ public class Teacher extends User {
         return email;
     }
 
-    public String getClassID() {
+    public String getClassId() {
         return classroom;
     }
 

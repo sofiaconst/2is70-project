@@ -8,21 +8,21 @@ import com.example.eduview.data.repository.UserRepository;
 import com.google.firebase.database.Exclude;
 
 public class Post {
+    private String authorId;
     private String caption;
     private String imageUrl;
-    private String authorId;
+
 //    @Exclude
 //    private User author;
     @Exclude
     private PostType postType;
 
-
     public Post() {}
 
-    public Post(String caption, String imageUrl, String authorId){
+    public Post(String authorId, String caption, String imageUrl) {
+        this.authorId = authorId;
         this.caption = caption;
         this.imageUrl = imageUrl;
-        this.authorId = authorId;
     }
 
     public PostType getPostType() {
