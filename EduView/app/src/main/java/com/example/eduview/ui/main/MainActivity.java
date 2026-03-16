@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView bottomNav = findViewById(R.id.MainBottomNavigationView);
 
         bottomNav.getMenu().clear();
-        if(SessionManager.getInstance().getCurrentUserRole() == UserRole.PARENT) {
+        if(SessionManager.getInstance().getCurrentUser().getRole() == UserRole.PARENT) {
             bottomNav.inflateMenu(R.menu.bottom_nav_parent);
         } else {
             bottomNav.inflateMenu(R.menu.bottom_nav_main);
