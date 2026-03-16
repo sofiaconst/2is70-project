@@ -14,151 +14,151 @@ import com.example.eduview.data.model.Classroom;
 import com.example.eduview.data.repository.ClassroomRepository;
 import com.example.eduview.data.repository.SessionManager;
 import com.example.eduview.data.repository.UserRepository;
+import com.example.eduview.domain.usecase.FetchClassroomNameUseCase;
+import com.example.eduview.domain.usecase.GenerateQRCodeUseCase;
 import com.example.eduview.domain.utils.QRCodeGenerator;
 public class ProfileViewModel extends ViewModel {
 
     private final SessionManager sessionManager;
-    private final ClassroomRepository classroomRepository;
+    private final FetchClassroomNameUseCase fetchClassroomNameUseCase;
+    private final GenerateQRCodeUseCase generateQRCodeUseCase;
+
     private final MutableLiveData<ProfileUIState> uiState = new MutableLiveData<>();
 
+
+    // Default constructor (production)
     public ProfileViewModel() {
         this.sessionManager = SessionManager.getInstance();
-        this.classroomRepository = new ClassroomRepository();
+
+        ClassroomRepository repository = new ClassroomRepository();
+        this.fetchClassroomNameUseCase = new FetchClassroomNameUseCase(repository);
+        this.generateQRCodeUseCase = new GenerateQRCodeUseCase();
+
         observeUser();
     }
 
-    // DO NOT DELETE, NEEDED FOR TESTING
-    public ProfileViewModel(SessionManager sessionManager, ClassroomRepository classroomRepository) {
+
+    // Constructor for testing / dependency injection
+    public ProfileViewModel(SessionManager sessionManager,
+                            FetchClassroomNameUseCase fetchClassroomNameUseCase,
+                            GenerateQRCodeUseCase generateQRCodeUseCase) {
+
         this.sessionManager = sessionManager;
-        this.classroomRepository = classroomRepository;
+        this.fetchClassroomNameUseCase = fetchClassroomNameUseCase;
+        this.generateQRCodeUseCase = generateQRCodeUseCase;
+
         observeUser();
     }
+
 
     private void observeUser() {
+
         User user = sessionManager.getCurrentUser();
+
         if (user == null) return;
 
-        // Post initial state with placeholder for class name
-        ProfileUIState initialState = mapUserToState(user, null, "Loading...");
-        uiState.postValue(initialState);
+        // Initial placeholder state
+        uiState.postValue(mapUserToState(user, null, "Loading..."));
 
-        // Fetch classroom name asynchronously
         fetchClassroomName(user);
     }
 
-    private void fetchClassroomName(User user) { // bad, should be in domain
-        String classId;
-        boolean isTeacher;
 
-        if (user instanceof Teacher) {
-            classId = ((Teacher) user).getClassId();
-            isTeacher = true;
-        } else {
-            isTeacher = false;
-            if (user instanceof Student) {
-                classId = ((Student) user).getClassId();
-            } else {
-                classId = null;
-            }
-        }
+    private void fetchClassroomName(User user) {
+
+        String classId = extractClassId(user);
 
         if (classId == null || classId.isEmpty()) return;
 
-        classroomRepository.getClassroomName(classId, new ClassroomRepository.ClassroomCallback<Classroom>() {
+        fetchClassroomNameUseCase.execute(classId, new FetchClassroomNameUseCase.Callback<String>() {
+
             @Override
-            public void onSuccess(Classroom result) {
-                postUpdatedClassroomName(user, result.getName(), isTeacher);
+            public void onSuccess(String className) {
+                updateClassroomName(user, className);
             }
 
             @Override
             public void onError(Exception e) {
-                postUpdatedClassroomName(user, classId, isTeacher);
+                updateClassroomName(user, classId); // fallback
             }
         });
-
-
     }
 
-    private void postUpdatedClassroomName(User user, String className, boolean isTeacher) {
+
+    private void updateClassroomName(User user, String className) {
+
         ProfileUIState current = uiState.getValue();
-        if (current == null) current = mapUserToState(user, null, className);
 
-        ProfileUIState updated = mapUserToState(user, current.qrBitmap, className);
-        uiState.postValue(updated);
+        Bitmap qr = current != null ? current.qrBitmap : null;
+
+        uiState.postValue(mapUserToState(user, qr, className));
     }
 
 
+    private String extractClassId(User user) {
 
-//    private ProfileUIState mapUserToState(User user, Bitmap qrBitmap, String className) {
-//        String displayName = user.getFirstName() + " " + user.getLastName();
-//        String roleText = user.getRole().name();
-//
-//        String classText;
-//        boolean showScan = false;
-//        boolean showGenerate = false;
-//
-//        switch (user.getRole()) {
-//            case TEACHER:
-//                classText = "Class: " + (className != null ? className : "None");
-//                showGenerate = className != null && !className.isEmpty();
-//                break;
-//
-//            case STUDENT:
-//                classText = "Class: " + (className != null ? className : "None");
-//                showScan = true;
-//                break;
-//
-//            case PARENT:
-//                classText = "Parent Profile";
-//                showScan = true;
-//                break;
-//
-//            default:
-//                classText = "Profile";
-//        }
-//
-//        return new ProfileUIState(
-//                displayName,
-//                roleText,
-//                classText,
-//                showScan,
-//                showGenerate,
-//                qrBitmap
-//        );
-//    }
+        if (user instanceof Teacher) {
+            return ((Teacher) user).getClassId();
+        }
+
+        if (user instanceof Student) {
+            return ((Student) user).getClassId();
+        }
+
+        return null;
+    }
+
 
     private ProfileUIState mapUserToState(User user, Bitmap qrBitmap, String className) {
+
         String displayName = user.getFirstName() + " " + user.getLastName();
         String roleText = user.getRole().name();
-        String classText;
+
         boolean showScan = user instanceof Student || user instanceof Parent;
         boolean showGenerate = user instanceof Teacher && className != null;
 
-        if(user instanceof Teacher || user instanceof Student) {
+        String classText;
+
+        if (user instanceof Teacher || user instanceof Student) {
             classText = "Class: " + (className != null ? className : "None");
-        } else if(user instanceof Parent) {
+        }
+        else if (user instanceof Parent) {
             classText = "Parent Profile";
-        } else {
+        }
+        else {
             classText = "Profile";
         }
 
-        return new ProfileUIState(displayName, roleText, classText, showScan, showGenerate, qrBitmap);
+        return new ProfileUIState(
+                displayName,
+                roleText,
+                classText,
+                showScan,
+                showGenerate,
+                qrBitmap
+        );
     }
+
 
     public LiveData<ProfileUIState> getUIState() {
         return uiState;
     }
 
+
     public void generateQRCode() {
+
         User user = sessionManager.getCurrentUser();
+
         if (!(user instanceof Teacher)) return;
 
         String classId = ((Teacher) user).getClassId();
+
         if (classId == null || classId.isEmpty()) return;
 
-        Bitmap qrBitmap = QRCodeGenerator.generate(classId);
+        Bitmap qrBitmap = generateQRCodeUseCase.execute(classId);
 
         ProfileUIState current = uiState.getValue();
+
         if (current == null) return;
 
         ProfileUIState updated = new ProfileUIState(
@@ -172,6 +172,7 @@ public class ProfileViewModel extends ViewModel {
 
         uiState.postValue(updated);
     }
+
 
     public void logout() {
         sessionManager.logoutCurrentUser(null);
