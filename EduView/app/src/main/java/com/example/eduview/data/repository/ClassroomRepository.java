@@ -27,6 +27,18 @@ public class ClassroomRepository {
         });
     }
 
+    // Gets teacher id for the classroom (NOT THE NAME)
+    public void getClassroomTeacher(
+            String classId, Consumer<String> onSuccess, Consumer<Exception> onError) {
+        classroomsRef.child(classId).child("teacher").get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                onSuccess.accept(task.getResult().getValue(String.class));
+            } else {
+                onError.accept(new RuntimeException("Teacher id not found for this classroom"));
+            }
+        });
+    }
+
     public void getTeacherClassroom(String teacherId, Consumer<String> onSuccess, Consumer<Exception> onError) {
         teachersRef.child(teacherId).child("classroom").get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult().exists()) {

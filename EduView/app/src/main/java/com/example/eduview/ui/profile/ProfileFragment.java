@@ -71,6 +71,14 @@ public class ProfileFragment extends Fragment {
     private Button buttonScanQR; // Used by Student to scan class QR
     private View btnAddChild; // Used by Parent to open dialog
 
+    // Student Class Info
+    private MaterialCardView cardClassInfo;
+    private TextView tvTeacherName;
+    private TextView tvClassName;
+    private TextView tvNotRegistered;
+
+    private final ClassroomRepository classroomRepository = new ClassroomRepository();
+
     private final ActivityResultLauncher<ScanOptions> qrCodeLauncher = registerForActivityResult(
             new ScanContract(),
             result -> {
@@ -112,6 +120,12 @@ public class ProfileFragment extends Fragment {
         rvChildren = root.findViewById(R.id.rvChildren);
         tvNoChildren = root.findViewById(R.id.tvNoChildren);
         btnAddChild = root.findViewById(R.id.btnAddChild);
+
+        // Student class info
+        cardClassInfo = root.findViewById(R.id.cardClassInfo);
+        tvTeacherName = root.findViewById(R.id.tvTeacherName);
+        tvClassName = root.findViewById(R.id.tvClassName);
+        tvNotRegistered = root.findViewById(R.id.tvNotRegistered);
 
         setupRecyclerView();
 
@@ -265,6 +279,7 @@ public class ProfileFragment extends Fragment {
         cardQRCode.setVisibility(View.GONE);
         cardMyChildren.setVisibility(View.GONE);
         classText.setVisibility(View.GONE);
+        cardClassInfo.setVisibility(View.GONE);
 
         if (user.getRole() == UserRole.TEACHER && user instanceof Teacher) {
             cardQRCode.setVisibility(View.VISIBLE);
@@ -283,9 +298,40 @@ public class ProfileFragment extends Fragment {
             classText.setVisibility(View.VISIBLE);
             buttonScanQR.setVisibility(View.VISIBLE);
             buttonGenerateQR.setVisibility(View.GONE);
+            cardClassInfo.setVisibility(View.VISIBLE);
             
             String classId = ((Student) user).getClassId();
             classText.setText("Class: " + (classId != null ? classId : "None"));
+
+            // one or?
+            // Student is not registered in a class
+            if (classId == null || classId.isEmpty()) {
+                tvNotRegistered.setVisibility(View.VISIBLE);
+                tvTeacherName.setVisibility(View.GONE);
+                tvClassName.setVisibility(View.GONE);
+            }
+            // Student is registered in a class
+            else {
+                tvNotRegistered.setVisibility(View.GONE);
+                tvTeacherName.setVisibility(View.VISIBLE);
+                tvClassName.setVisibility(View.VISIBLE);
+
+                classroomRepository.getClassroomName(
+                        classId,
+                        name -> tvClassName.setText("Class: " + name),
+                        e -> {
+                            Log.e("ProfileFragment", "Error loading class name", e);
+                        }
+                );
+
+                classroomRepository.getClassroomTeacher(
+                        classId,
+                        id -> tvTeacherName.setText("Teacher: " + id),
+                        e -> {
+                            Log.e("ProfileFragment", "Error loading teacher name", e);
+                        }
+                );
+            }
 
         } else if (user.getRole() == UserRole.PARENT) {
             cardMyChildren.setVisibility(View.VISIBLE);

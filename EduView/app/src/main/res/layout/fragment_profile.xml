@@ -341,6 +341,66 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+        <!--Student class info-->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardClassInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="16dp"
+            app:cardBackgroundColor="#F9F7F3"
+            app:cardCornerRadius="18dp"
+            app:strokeColor="#D9D2C3"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+                
+                <TextView
+                    android:id="@+id/tvClassInfoTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/robotomono"
+                    android:text="@string/class_information"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#1F1F1F"/>
+
+                <TextView
+                    android:id="@+id/tvTeacherName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Teacher:"
+                    android:textSize="16sp"
+                    android:textColor="#444444"/>
+
+                <TextView
+                    android:id="@+id/tvClassName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Class: "
+                    android:textSize="16sp"
+                    android:textColor="#444444"/>
+
+                <TextView
+                    android:id="@+id/tvNotRegistered"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:text="@string/not_registered"
+                    android:textColor="#666666"
+                    android:visibility="gone"/>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
             <!-- Buttons inside scroll -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonLogout"

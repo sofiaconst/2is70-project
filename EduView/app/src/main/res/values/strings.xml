@@ -29,4 +29,6 @@
     <string name="name">Name</string>
     <string name="last_name">Last Name</string>
     <string name="child">Child</string>
+    <string name="class_information">Class Information</string>
+    <string name="not_registered">You are currently not registered in a class. Scan your teacher\'s QR code to join.</string>
 </resources>
