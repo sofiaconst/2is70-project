@@ -34,6 +34,7 @@ import com.example.eduview.ui.main.MainViewModel;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import com.bumptech.glide.Glide;
 
 
 /**
@@ -184,10 +185,14 @@ public class CreatePostFragment extends Fragment {
                 imagePlaceholderIcon.setVisibility(View.GONE);
                 postImage.setVisibility(View.VISIBLE);
 
-                // Real image loading can be added here later
-                // using Glide / Picasso / Coil / teammate's image logic.
+                Glide.with(this)
+                        .load(imageUrl)
+                        .centerCrop()
+                        .into(postImage);
+
             } else {
                 imagePlaceholderIcon.setVisibility(View.VISIBLE);
+                postImage.setVisibility(View.GONE);
                 postImage.setImageDrawable(null);
             }
         });
@@ -222,6 +227,7 @@ public class CreatePostFragment extends Fragment {
         // Adjust these method names if your teammate named them differently.
         User user = sessionManager.getCurrentUser();
         String authorId = user.getUserId();
+
         if (user.getRole() == UserRole.PARENT) {
             return;
         }
