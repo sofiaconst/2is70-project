@@ -14,10 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.eduview.R;
-import com.example.eduview.data.model.Student;
-import com.example.eduview.data.model.Teacher;
+import com.example.eduview.data.model.User;
 import com.example.eduview.data.model.UserRole;
-import com.example.eduview.data.repository.SessionManager;
 import com.example.eduview.ui.main.MainViewModel;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
@@ -26,10 +24,11 @@ public class FeedFragment extends Fragment {
 
     private MainViewModel mainViewModel;
     private FeedViewModel feedViewModel;
+    private User user;
 
     TabLayout teacherTabs;
     ViewPager2 viewPager;
-    ViewPagerAdapter viewPagerAdapter;
+    FeedTabViewAdapter feedTabViewAdapter;
 
     public FeedFragment() {
         // Required empty public constructor
@@ -55,47 +54,8 @@ public class FeedFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_feed, container, false);
         mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
         feedViewModel = new ViewModelProvider(this).get(FeedViewModel.class);
-/*
-        mainViewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
 
-            if (user == null) {
-                Log.e("FeedFragment", "Current user is NULL");
-                return;
-            }
-
-            Log.d("FeedFragment", "User received: " + user.getUserId());
-            Log.d("FeedFragment", "User role: " + user.getRole());
-
-            if (user instanceof Student) {
-
-                Student student = (Student) user;
-                String classroomId = student.getClassId();
-
-                Log.d("FeedFragment", "Loading posts for classroom: " + classroomId);
-
-                feedViewModel.loadPublishedPosts(classroomId);
-            } else if (user instanceof Teacher) {
-
-                Teacher teacher = (Teacher) user;
-                String classroomId = teacher.getClassId();
-
-                Log.d("FeedFragment", "Loading posts for classroom: " + classroomId);
-
-                feedViewModel.loadPublishedPosts(classroomId);
-            }
-
-            else {
-                Log.w("FeedFragment", "User is not a Student, feed not loaded yet");
-            }
-        });
-
-        // Inflate the layout for this fragment
-        
- */
         return view;
-
-
-
     }
 
     @Override
@@ -105,12 +65,26 @@ public class FeedFragment extends Fragment {
         TabLayout teacherTabs = view.findViewById(R.id.TeacherTabs);
         ViewPager2 viewPager = view.findViewById(R.id.viewPager);
 
-        viewPager.setAdapter(new ViewPagerAdapter(this));
+        user = mainViewModel.getCurrentUser();
+        if (user == null) {
+            Log.e("FeedFragment", "Current user is NULL, session not ready yet");
+            return;
+        }
+        Log.d("FeedFragment", "User received: " + user.getUserId());
+        Log.d("FeedFragment", "User role: " + user.getRole());
+
+        boolean isTeacher = user.getRole() == UserRole.TEACHER;
+
+        viewPager.setAdapter(new FeedTabViewAdapter(this, isTeacher));
 
         new TabLayoutMediator(teacherTabs, viewPager, (tab, position) -> {
             if (position == 0) tab.setText(getString(R.string.feed_title_1)); // Posts
             else if (position == 1) tab.setText(getString(R.string.feed_title_2)); // Announcements
-            else if (position == 2) tab.setText(getString(R.string.feed_title_3)); // Pending
+            else if (position == 2 && isTeacher) tab.setText(getString(R.string.feed_title_3)); // Pending
         }).attach();
+
+        feedViewModel.loadPostsForUser(user);
     }
+
+
 }

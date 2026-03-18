@@ -47,6 +47,9 @@ public class FeedRepository {
                 );
     }
 
+    public void fetchPendingPosts(String classroomId) {
+
+    }
 
     private void fetchPost(String postId) {
 
