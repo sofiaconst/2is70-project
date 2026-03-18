@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -23,16 +24,19 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.eduview.R;
+import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.PostType;
 import com.example.eduview.data.model.*;
 import com.example.eduview.data.repository.MediaRepository;
 import com.example.eduview.data.repository.SessionManager;
 import com.example.eduview.ui.main.MainActivity;
+import com.example.eduview.ui.createPost.CreatePostViewModel;
 import com.example.eduview.ui.main.MainViewModel;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import com.bumptech.glide.Glide;
 
 import android.net.Uri;
 import android.app.AlertDialog;
@@ -287,10 +291,14 @@ public class CreatePostFragment extends Fragment {
                 cameraButton.setVisibility(View.GONE);
                 postImage.setVisibility(View.VISIBLE);
 
-                // Real image loading can be added here later
-                // using Glide / Picasso / Coil / teammate's image logic.
+                Glide.with(this)
+                        .load(imageUrl)
+                        .centerCrop()
+                        .into(postImage);
+
             } else {
                 cameraButton.setVisibility(View.VISIBLE);
+                postImage.setVisibility(View.GONE);
                 postImage.setImageDrawable(null);
             }
         });
@@ -325,6 +333,7 @@ public class CreatePostFragment extends Fragment {
         // Adjust these method names if your teammate named them differently.
         User user = sessionManager.getCurrentUser();
         String authorId = user.getUserId();
+
         if (user.getRole() == UserRole.PARENT) {
             return;
         }
