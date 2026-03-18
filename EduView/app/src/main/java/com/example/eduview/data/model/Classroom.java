@@ -1,10 +1,13 @@
 package com.example.eduview.data.model;
 
+import com.google.firebase.database.PropertyName;
+
 import java.util.List;
 
 public class Classroom {
     private String id;
     private String name;
+    @PropertyName("teacher")
     private String teacherId;
     private List<String> studentIds;
 
@@ -19,6 +22,9 @@ public class Classroom {
 
     public String getId() { return id; }
     public String getName() { return name; }
+    @PropertyName("teacher")
     public String getTeacherId() { return teacherId; }
     public List<String> getStudentIds() { return studentIds; }
+    @PropertyName("teacher")
+    public void setTeacherId(String teacherId) {this.teacherId = teacherId;}
 }
