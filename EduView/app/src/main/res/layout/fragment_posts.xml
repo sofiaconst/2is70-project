@@ -5,38 +5,49 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="8dp"
-    tools:context=".Posts">
+    tools:context="ui.feed.Posts">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="450dp"
+        android:layout_height="wrap_content"
         android:padding="16dp"
+        android:background="@drawable/feed_posts_border"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
+
+        <View
+            android:id="@+id/pfp"
+            android:layout_height="40dp"
+            android:layout_width="40dp"
+            android:background="@drawable/feed_profile_picture"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
 
         <TextView
             android:id="@+id/tvStudentName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/design_default_color_primary"
-            android:textSize="18sp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="5dp"
+            android:text="John Doe"
+            android:textColor="@color/black"
+            android:textSize="20sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:text="John Doe" />
+            app:layout_constraintStart_toEndOf="@+id/pfp"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/tvPostContent"
-            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="Check out my science project on plant cells!"
+            android:textAlignment="viewStart"
             android:textColor="#444444"
             android:textSize="16sp"
-            app:layout_constraintTop_toBottomOf="@id/tvStudentName"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:text="Check out my science project on plant cells!" />
+            app:layout_constraintTop_toBottomOf="@id/pfp" />
 
         <View
             android:id="@+id/divider1"
@@ -44,26 +55,28 @@
             android:layout_height="1dp"
             android:layout_marginTop="8dp"
             android:background="#DDDDDD"
-            app:layout_constraintTop_toBottomOf="@id/tvPostContent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_constraintTop_toBottomOf="@id/tvPostContent" />
 
         <ImageView
             android:id="@+id/ivPostImage"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:contentDescription="Image"
+            android:layout_width="366dp"
+            android:layout_height="160dp"
             android:layout_marginTop="20dp"
-            android:layout_marginBottom="50dp"
             android:adjustViewBounds="true"
             android:maxHeight="300dp"
             android:scaleType="centerInside"
             android:src="@android:drawable/ic_menu_gallery"
             android:visibility="visible"
+            android:background="@drawable/feed_image_bg"
             app:layout_constraintBottom_toBottomOf="@+id/layoutModeration"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvPostContent" />
+            app:layout_constraintTop_toBottomOf="@id/tvPostContent"
+            app:layout_constraintVertical_bias="0.0"
+            app:tint="@color/black" />
 
         <LinearLayout
             android:id="@+id/layoutLike"
@@ -72,8 +85,8 @@
             android:layout_marginTop="12dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBaseline_toBottomOf="@id/ivPostImage">
+            app:layout_constraintBaseline_toBottomOf="@id/ivPostImage"
+            app:layout_constraintEnd_toEndOf="parent">
 
         </LinearLayout>
 
@@ -85,32 +98,26 @@
             android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"/>
+            app:layout_constraintStart_toStartOf="parent" />
 
-        <ImageButton
-            android:id="@+id/btnLikePost"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/ButtonLikePost"
+            android:layout_width="110dp"
+            android:layout_height="37dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/feed_like_button"
             android:contentDescription="LikeButton"
-            android:src="@drawable/like_button_clickable"
+            android:text="Like"
+            android:textColor="@color/black"
+            app:backgroundTint="@color/not_liked_like_button_background"
+            app:icon="@drawable/like_button_icon_24"
+            app:iconGravity="textStart"
+            app:iconPadding="12dp"
+            app:iconSize="20dp"
+            app:iconTint="@color/black"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-
-            app:tint="#E91E63" />
-
-        <TextView
-            android:id="@+id/tvLikeCount"
-            android:layout_width="20dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="52dp"
-            android:layout_marginBottom="8dp"
-            android:text="0"
-            android:textAlignment="center"
-            android:textColor="#E91E63"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toBottomOf="@+id/ivPostImage" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

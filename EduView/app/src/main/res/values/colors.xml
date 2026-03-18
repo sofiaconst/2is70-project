@@ -2,10 +2,13 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="design_default_color_primary">#CB30E0</color>
+    <color name="main_color">#CB30E0</color>
     <color name="red">#FF383C</color>
     <color name="gray">#CCCCCC</color>
     <color name="aqua">#00C0E8</color>
     <color name="feed_tab_selected">#D260C3</color>
     <color name="reject_post">#DC2020</color>
+    <color name="not_liked_like_button_background">#D9D9D9</color>
+    <color name="liked_like_button_background">#E62327</color>
+    <color name="accept_post">#07F03A</color>
 </resources>

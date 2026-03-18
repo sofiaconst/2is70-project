@@ -78,6 +78,8 @@ public class UserRepository {
         String lastName = snapshot.child("last_name").getValue(String.class);
         String roleStr = snapshot.child("role").getValue(String.class);
         String pfp = snapshot.child("pfp").getValue(String.class);
+        String email = snapshot.child("email").getValue(String.class);
+        String bio = snapshot.child("bio").getValue(String.class);
 
         if (firstName == null || lastName == null || roleStr == null) {
             throw new RuntimeException("User information missing");
@@ -90,7 +92,10 @@ public class UserRepository {
             throw new RuntimeException("Invalid user role: " + roleStr);
         }
 
-        return new UserBaseData(firstName, lastName, role, pfp);
+        UserBaseData base = new UserBaseData(firstName, lastName, role, pfp);
+        base.email = email;
+        base.bio = bio;
+        return base;
     }
 
     private void fetchStudent(String userId, UserBaseData base, UserCallback callback) {
@@ -206,6 +211,12 @@ public class UserRepository {
 
     public void updateClass(String userID, String classID) {
         studentsRef.child(userID).child("classroom").setValue(classID);
+    }
+
+    public void updateBio(String userId, String bio, Runnable onSuccess, Consumer<Exception> onError) {
+        usersRef.child(userId).child("bio").setValue(bio)
+                .addOnSuccessListener(aVoid -> onSuccess.run())
+                .addOnFailureListener(onError::accept);
     }
 
     public void fetchChildrenOfParent(String parentID,

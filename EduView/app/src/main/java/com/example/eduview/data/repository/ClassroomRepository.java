@@ -1,5 +1,7 @@
 package com.example.eduview.data.repository;
 
+import java.util.function.Consumer;
+
 import com.example.eduview.data.model.Classroom;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -9,7 +11,11 @@ public class ClassroomRepository {
     private final DatabaseReference classroomsRef;
 
     public ClassroomRepository() {
-        classroomsRef = FirebaseDatabase.getInstance().getReference("classrooms");
+        FirebaseDatabase db = FirebaseDatabase.getInstance();
+        classroomsRef = db.getReference("classrooms");
+        teachersRef = db.getReference("teachers");
+        studentsRef = db.getReference("students");
+        
     }
 
     // Fetch classroom by ID
@@ -20,6 +26,18 @@ public class ClassroomRepository {
                 classroomCallback.onSuccess(classroom);
             } else {
                 classroomCallback.onError(new RuntimeException("Classroom not found"));
+            }
+        });
+    }
+
+    // Gets teacher id for the classroom (NOT THE NAME)
+    public void getClassroomTeacher(
+            String classId, Consumer<String> onSuccess, Consumer<Exception> onError) {
+        classroomsRef.child(classId).child("teacher").get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                onSuccess.accept(task.getResult().getValue(String.class));
+            } else {
+                onError.accept(new RuntimeException("Teacher id not found for this classroom"));
             }
         });
     }

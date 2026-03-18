@@ -5,6 +5,8 @@ public class UserBaseData {
     public String lastName;
     public UserRole role;
     public String pfp;
+    public String email;
+    public String bio;
 
     public UserBaseData(String firstName, String lastName, UserRole role, String pfp) {
         this.firstName = firstName;

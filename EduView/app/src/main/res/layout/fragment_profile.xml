@@ -125,20 +125,20 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/Teacher_Class_Text" />
 
-                <TextView
-                    android:id="@+id/EditBioText"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSaveBio"
+                    style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="15dp"
-                    android:layout_marginEnd="20dp"
-                    android:clickable="true"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
                     android:fontFamily="@font/robotomono"
-                    android:text="Edit"
+                    android:text="Save"
                     android:textColor="@color/aqua"
-                    android:textSize="12sp"
+                    android:textSize="14sp"
                     android:textStyle="bold"
-                    app:layout_constraintBottom_toTopOf="@+id/aboutMeCard"
+                    app:layout_constraintBottom_toBottomOf="@id/BioLabelText"
                     app:layout_constraintEnd_toEndOf="parent"
-                    tools:layout_marginTop="20dp" />
+                    app:layout_constraintTop_toTopOf="@id/BioLabelText" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/aboutMeCard"
@@ -152,8 +152,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/BioLabelText"
                     app:strokeColor="@android:color/black"
-                    app:strokeWidth="1dp"
-                    tools:layout_constraintTop_toBottomOf="@id/BioLabelText">
+                    app:strokeWidth="1dp">
 
                     <EditText
                         android:id="@+id/etAboutMe"
@@ -163,17 +162,87 @@
                         android:gravity="top|start"
                         android:hint="A little bit about me..."
                         android:inputType="textMultiLine"
-                        android:isScrollContainer="true"
-                        android:overScrollMode="ifContentScrolls"
-                        android:padding="12dp"
-                        android:scrollbars="vertical" />
+                        android:padding="12dp" />
 
                 </com.google.android.material.card.MaterialCardView>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <!-- QR Code Section -->
+            <!-- My Children Section (Visible only for Parents) -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardMyChildren"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="16dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="18dp"
+                app:strokeColor="#D9D2C3"
+                app:strokeWidth="1dp"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/tvMyChildrenTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:drawableStart="@drawable/profile_button_icon"
+                            android:drawablePadding="8dp"
+                            android:fontFamily="@font/robotomono"
+                            android:text="My Children"
+                            android:textColor="#1F1F1F"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnAddChild"
+                            style="@style/Widget.Material3.Button.IconButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:icon="@android:drawable/ic_menu_add"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <TextView
+                        android:id="@+id/tvNoChildren"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center"
+                        android:text="You currently have no children registered."
+                        android:textColor="#666666"
+                        android:visibility="gone" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvChildren"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:nestedScrollingEnabled="false"
+                        tools:listitem="@layout/item_child" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- QR Code Section (Visible only for Teachers) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardQRCode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
@@ -272,11 +341,65 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/profileFragmentContainer"
+        <!--Student class info-->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardClassInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="16dp"
+            app:cardBackgroundColor="#F9F7F3"
+            app:cardCornerRadius="18dp"
+            app:strokeColor="#D9D2C3"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp" />
+                android:orientation="vertical"
+                android:padding="20dp">
+                
+                <TextView
+                    android:id="@+id/tvClassInfoTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/robotomono"
+                    android:text="@string/class_information"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#1F1F1F"/>
+
+                <TextView
+                    android:id="@+id/tvTeacherName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Teacher:"
+                    android:textSize="16sp"
+                    android:textColor="#444444"/>
+
+                <TextView
+                    android:id="@+id/tvClassName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Class: "
+                    android:textSize="16sp"
+                    android:textColor="#444444"/>
+
+                <TextView
+                    android:id="@+id/tvNotRegistered"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:text="@string/not_registered"
+                    android:textColor="#666666"
+                    android:visibility="gone"/>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
             <!-- Buttons inside scroll -->
             <com.google.android.material.button.MaterialButton

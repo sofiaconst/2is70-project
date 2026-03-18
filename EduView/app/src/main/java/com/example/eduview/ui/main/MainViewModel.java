@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.User;
@@ -15,9 +16,23 @@ import com.example.eduview.data.repository.ClassroomRepository;
 import com.example.eduview.data.repository.UserRepository;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class MainViewModel extends ViewModel {
     private final SessionManager sessionManager;
     private final MutableLiveData<User> currentUser = new MutableLiveData<>();
+    private final MutableLiveData<String> classroomName = new MutableLiveData<>();
+    private final MutableLiveData<String> joinStatus = new MutableLiveData<>();
+
+    public MainViewModel(AuthRepository authRepository,
+                         UserRepository userRepository,
+                         ClassroomRepository classroomRepository) {
+        this.authRepository = authRepository;
+        this.userRepository = userRepository;
+        this.classroomRepository = classroomRepository;
+    }
 
     public MainViewModel() {
         // Use singleton SessionManager (already has repos)
@@ -39,6 +54,10 @@ public class MainViewModel extends ViewModel {
         });
     }
 
+    public LiveData<List<Student>> getChildrenData() {
+        return childrenData;
+    }
+
     public void loadCurrentUser() {
         User user = sessionManager.getCurrentUser();
         if(user != null){
@@ -58,6 +77,7 @@ public class MainViewModel extends ViewModel {
 
     public SessionManager getSessionManager() {
         return sessionManager;
+        childrenData.setValue(null);
     }
 
 }

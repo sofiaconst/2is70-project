@@ -159,8 +159,6 @@ public class AuthRepository {
 
                     // 1. Store in users table
                     User childUser = new User(child.firstName, child.lastName, child.email, "Student");
-                    childUser.bio = "";
-                    childUser.pfp = "";
                     
                     rootRef.child("users").child(childUid).setValue(childUser)
                         .addOnCompleteListener(dbTask -> {
@@ -184,6 +182,65 @@ public class AuthRepository {
                         });
                 } else {
                     callback.onError(task.getException());
+                }
+            });
+    }
+
+    public void addChildToParent(String parentId, ChildInfo child, String parentPassword, AuthCallback callback) {
+        String parentEmail = firebaseAuth.getCurrentUser().getEmail();
+
+        firebaseAuth.createUserWithEmailAndPassword(child.email, parentPassword)
+            .addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    String childUid = firebaseAuth.getCurrentUser().getUid();
+
+                    // 1. Store in users table
+                    User childUser = new User(child.firstName, child.lastName, child.email, "Student");
+                    rootRef.child("users").child(childUid).setValue(childUser)
+                        .addOnCompleteListener(userTask -> {
+                            if (userTask.isSuccessful()) {
+                                // 2. Store in students table
+                                Map<String, Object> studentData = new HashMap<>();
+                                studentData.put("classroom", "");
+                                rootRef.child("students").child(childUid).setValue(studentData)
+                                    .addOnCompleteListener(studentTask -> {
+                                        if (studentTask.isSuccessful()) {
+                                            // 3. Add to parent's children list
+                                            rootRef.child("parents").child(parentId).child("children").get()
+                                                .addOnCompleteListener(getTask -> {
+                                                    if (getTask.isSuccessful()) {
+                                                        Map<String, String> childrenMap = (Map<String, String>) getTask.getResult().getValue();
+                                                        if (childrenMap == null) childrenMap = new HashMap<>();
+                                                        
+                                                        int nextIndex = childrenMap.size() + 1;
+                                                        childrenMap.put("student_" + nextIndex, childUid);
+
+                                                        rootRef.child("parents").child(parentId).child("children").setValue(childrenMap)
+                                                            .addOnCompleteListener(updateTask -> {
+                                                                // Re-authenticate as parent
+                                                                firebaseAuth.signInWithEmailAndPassword(parentEmail, parentPassword)
+                                                                    .addOnCompleteListener(reAuthTask -> {
+                                                                        if (reAuthTask.isSuccessful()) {
+                                                                            callback.onSuccess();
+                                                                        } else {
+                                                                            callback.onFailure(reAuthTask.getException());
+                                                                        }
+                                                                    });
+                                                            });
+                                                    } else {
+                                                        callback.onFailure(getTask.getException());
+                                                    }
+                                                });
+                                        } else {
+                                            callback.onFailure(studentTask.getException());
+                                        }
+                                    });
+                            } else {
+                                callback.onFailure(userTask.getException());
+                            }
+                        });
+                } else {
+                    callback.onFailure(task.getException());
                 }
             });
     }
@@ -223,6 +280,8 @@ public class AuthRepository {
             this.last_name = last_name;
             this.email = email;
             this.role = role;
+            this.bio = "";
+            this.pfp = "";
         }
     }
 
