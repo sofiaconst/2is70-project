@@ -30,6 +30,7 @@ import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.User;
 import com.example.eduview.data.model.UserRole;
 import com.example.eduview.data.repository.ClassroomRepository;
+import com.example.eduview.data.repository.UserRepository;
 import com.example.eduview.ui.login.LoginActivity;
 import com.example.eduview.ui.main.MainViewModel;
 import com.google.android.material.card.MaterialCardView;
@@ -63,6 +64,12 @@ public class ProfileFragment extends Fragment {
     private ImageView ivQRCode;
     private Button buttonGenerateQR;
 
+    // Student Class Section
+    private MaterialCardView cardClassInfo;
+    private TextView tvTeacherName;
+    private TextView tvClassName;
+    private TextView tvNotRegistered;
+
     // Parent Children Section
     private MaterialCardView cardMyChildren;
     private RecyclerView rvChildren;
@@ -70,14 +77,6 @@ public class ProfileFragment extends Fragment {
     private ChildAdapter childAdapter;
     private Button buttonScanQR; // Used by Student to scan class QR
     private View btnAddChild; // Used by Parent to open dialog
-
-    // Student Class Info
-    private MaterialCardView cardClassInfo;
-    private TextView tvTeacherName;
-    private TextView tvClassName;
-    private TextView tvNotRegistered;
-
-    private final ClassroomRepository classroomRepository = new ClassroomRepository();
 
     private final ActivityResultLauncher<ScanOptions> qrCodeLauncher = registerForActivityResult(
             new ScanContract(),
@@ -116,16 +115,15 @@ public class ProfileFragment extends Fragment {
         buttonGenerateQR = root.findViewById(R.id.buttonGenerateQR);
         buttonScanQR = root.findViewById(R.id.buttonScanQR);
 
-        cardMyChildren = root.findViewById(R.id.cardMyChildren);
-        rvChildren = root.findViewById(R.id.rvChildren);
-        tvNoChildren = root.findViewById(R.id.tvNoChildren);
-        btnAddChild = root.findViewById(R.id.btnAddChild);
-
-        // Student class info
         cardClassInfo = root.findViewById(R.id.cardClassInfo);
         tvTeacherName = root.findViewById(R.id.tvTeacherName);
         tvClassName = root.findViewById(R.id.tvClassName);
         tvNotRegistered = root.findViewById(R.id.tvNotRegistered);
+
+        cardMyChildren = root.findViewById(R.id.cardMyChildren);
+        rvChildren = root.findViewById(R.id.rvChildren);
+        tvNoChildren = root.findViewById(R.id.tvNoChildren);
+        btnAddChild = root.findViewById(R.id.btnAddChild);
 
         setupRecyclerView();
 
@@ -303,34 +301,26 @@ public class ProfileFragment extends Fragment {
             String classId = ((Student) user).getClassId();
             classText.setText("Class: " + (classId != null ? classId : "None"));
 
-            // one or?
-            // Student is not registered in a class
             if (classId == null || classId.isEmpty()) {
                 tvNotRegistered.setVisibility(View.VISIBLE);
                 tvTeacherName.setVisibility(View.GONE);
                 tvClassName.setVisibility(View.GONE);
-            }
-            // Student is registered in a class
-            else {
+            } else {
                 tvNotRegistered.setVisibility(View.GONE);
                 tvTeacherName.setVisibility(View.VISIBLE);
                 tvClassName.setVisibility(View.VISIBLE);
 
-                classroomRepository.getClassroomName(
-                        classId,
-                        name -> tvClassName.setText("Class: " + name),
-                        e -> {
-                            Log.e("ProfileFragment", "Error loading class name", e);
-                        }
-                );
+                ClassroomRepository classroomRepo = new ClassroomRepository();
+                classroomRepo.getClassroomName(classId, name -> {
+                    tvClassName.setText("Class: " + name);
+                }, e -> tvClassName.setText("Class: Error"));
 
-                classroomRepository.getClassroomTeacher(
-                        classId,
-                        id -> tvTeacherName.setText("Teacher: " + id),
-                        e -> {
-                            Log.e("ProfileFragment", "Error loading teacher name", e);
-                        }
-                );
+                classroomRepo.getClassroomTeacher(classId, teacherId -> {
+                    UserRepository userRepo = new UserRepository();
+                    userRepo.fetchUser(teacherId, teacher -> {
+                        tvTeacherName.setText("Teacher: " + teacher.getFirstName() + " " + teacher.getLastName());
+                    }, e -> tvTeacherName.setText("Teacher: Error"));
+                }, e -> tvTeacherName.setText("Teacher: Error"));
             }
 
         } else if (user.getRole() == UserRole.PARENT) {
@@ -362,6 +352,7 @@ public class ProfileFragment extends Fragment {
 
     private void startScanner() {
         ScanOptions options = new ScanOptions();
+        options.setCaptureActivity(CustomScannerActivity.class);
         options.setPrompt("Scan the Classroom QR Code");
         options.setBeepEnabled(true);
         options.setOrientationLocked(true);
