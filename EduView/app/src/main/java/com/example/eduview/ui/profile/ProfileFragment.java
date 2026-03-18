@@ -39,7 +39,6 @@ public class ProfileFragment extends Fragment {
     private TextView tvQRLabel;
     private ImageView ivQRCode;
     private MaterialButton buttonScanQR;
-    private MaterialButton buttonGenerateQR;
 
     private MaterialCardView manageStudentsCard;
     private RecyclerView rvStudents;
@@ -76,7 +75,6 @@ public class ProfileFragment extends Fragment {
         tvQRLabel = root.findViewById(R.id.tvQRLabel);
         ivQRCode = root.findViewById(R.id.ivQRCode);
         buttonScanQR = root.findViewById(R.id.buttonScanQR);
-        buttonGenerateQR = root.findViewById(R.id.buttonGenerateQR);
 
         manageStudentsCard = root.findViewById(R.id.manageStudentsCard);
         rvStudents = root.findViewById(R.id.rvStudents);
@@ -109,8 +107,6 @@ public class ProfileFragment extends Fragment {
             requireActivity().finish();
         });
 
-        buttonGenerateQR.setOnClickListener(v -> profileViewModel.generateQRCode());
-
         // buttonScanQR.setOnClickListener(v -> profileViewModel.startQRScan());
     }
 
@@ -138,13 +134,11 @@ public class ProfileFragment extends Fragment {
         classText.setText(state.classText);
 
         buttonScanQR.setVisibility(state.showScanButton ? View.VISIBLE : View.GONE);
-        buttonGenerateQR.setVisibility(state.showGenerateButton ? View.VISIBLE : View.GONE);
 
         if (state.qrBitmap != null) {
             tvQRLabel.setVisibility(View.VISIBLE);
             ivQRCode.setVisibility(View.VISIBLE);
             ivQRCode.setImageBitmap(state.qrBitmap);
-            buttonGenerateQR.setVisibility(View.GONE);
         } else {
             tvQRLabel.setVisibility(View.GONE);
             ivQRCode.setVisibility(View.GONE);

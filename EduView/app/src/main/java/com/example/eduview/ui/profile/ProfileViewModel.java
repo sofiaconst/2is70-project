@@ -64,7 +64,16 @@ public class ProfileViewModel extends ViewModel {
 
         if (user == null) return;
 
-        uiState.postValue(mapUserToState(user, null, "Loading..."));
+        Bitmap qrBitmap = null;
+
+        if (user instanceof Teacher) {
+            String classId = ((Teacher) user).getClassId();
+            if (classId != null && !classId.isEmpty()) {
+                qrBitmap = generateQRCodeUseCase.execute(classId);
+            }
+        }
+
+        uiState.postValue(mapUserToState(user, qrBitmap, "Loading..."));
         fetchClassroomName(user);
 
         if (user instanceof Teacher) {
@@ -113,7 +122,6 @@ public class ProfileViewModel extends ViewModel {
         String roleText = user.getRole().name();
 
         boolean showScan = user instanceof Student || user instanceof Parent;
-        boolean showGenerate = user instanceof Teacher && className != null;
 
         String classText;
 
@@ -130,7 +138,6 @@ public class ProfileViewModel extends ViewModel {
                 roleText,
                 classText,
                 showScan,
-                showGenerate,
                 qrBitmap
         );
     }
@@ -149,32 +156,6 @@ public class ProfileViewModel extends ViewModel {
 
     public LiveData<String> getMessage() {
         return message;
-    }
-
-    public void generateQRCode() {
-        User user = sessionManager.getCurrentUser();
-
-        if (!(user instanceof Teacher)) return;
-
-        String classId = ((Teacher) user).getClassId();
-
-        if (classId == null || classId.isEmpty()) return;
-
-        Bitmap qrBitmap = generateQRCodeUseCase.execute(classId);
-
-        ProfileUIState current = uiState.getValue();
-        if (current == null) return;
-
-        ProfileUIState updated = new ProfileUIState(
-                current.displayName,
-                current.roleText,
-                current.classText,
-                current.showScanButton,
-                current.showGenerateButton,
-                qrBitmap
-        );
-
-        uiState.postValue(updated);
     }
 
     public void loadTeacherStudents() {

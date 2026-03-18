@@ -214,24 +214,6 @@
                         android:textSize="13sp"
                         tools:visibility="visible" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/buttonGenerateQR"
-                        android:layout_width="match_parent"
-                        android:layout_height="50dp"
-                        android:layout_marginTop="20dp"
-                        android:backgroundTint="@color/aqua"
-                        android:text="Generate Class QR Code"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/white"
-                        android:textSize="16sp"
-                        android:visibility="gone"
-                        app:cornerRadius="14dp"
-                        app:icon="@android:drawable/ic_menu_share"
-                        app:iconGravity="textStart"
-                        app:iconPadding="10dp"
-                        app:iconTint="@android:color/white"
-                        tools:visibility="visible" />
-
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="220dp"
                         android:layout_height="220dp"
