@@ -44,6 +44,8 @@ import androidx.camera.view.PreviewView;
 import androidx.camera.core.*;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.content.ContextCompat;
+
+import com.google.android.material.button.MaterialButton;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 /**
@@ -71,6 +73,7 @@ public class CreatePostFragment extends Fragment {
     // CameraX
     private ImageCapture imageCapture;
     private Uri imageUri;
+    private MaterialButton deleteImageButton;
 
     public CreatePostFragment() {
         // Required empty public constructor
@@ -118,6 +121,7 @@ public class CreatePostFragment extends Fragment {
         layoutImageContainer = view.findViewById(R.id.layoutImageContainer);
         postImage = view.findViewById(R.id.PostImage);
         cameraButton = view.findViewById(R.id.CameraButton);
+        deleteImageButton = view.findViewById(R.id.DeleteImageButton);
     }
 
     /**
@@ -149,6 +153,9 @@ public class CreatePostFragment extends Fragment {
 //            viewModel.setImageUrl("https://example.com/test.jpg");
         // Pressing send should attempt to create the post
         sendButton.setOnClickListener(v -> submitPost());
+
+        deleteImageButton.setOnClickListener(v -> { viewModel.setImageUrl(""); });
+
     }
 
     private void openCamera() {
@@ -267,7 +274,7 @@ public class CreatePostFragment extends Fragment {
 
                 Glide.with(this)
                         .load(imageUrl)
-                        .centerCrop()
+                        .fitCenter()
                         .into(postImage);
 
             } else {
