@@ -200,6 +200,8 @@
                         android:textSize="20sp"
                         android:textStyle="bold"
                         android:visibility="gone"
+                        android:drawableStart="@drawable/ic_qr_scanner"
+                        android:drawablePadding="8dp"
                         tools:visibility="visible" />
 
                     <TextView
@@ -270,6 +272,67 @@
                         tools:visibility="visible" />
 
                 </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/manageStudentsCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="16dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="#F9F7F3"
+                app:cardCornerRadius="18dp"
+                app:strokeColor="#D9D2C3"
+                app:strokeWidth="1dp"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:id="@+id/tvManageStudentsLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/robotomono"
+                        android:text="Manage Students"
+                        android:textColor="#1F1F1F"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:drawableStart="@drawable/ic_people"
+                        android:drawablePadding="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvManageStudentsSubtext"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="View students in your class and remove them if needed."
+                        android:textColor="#666666"
+                        android:textSize="13sp" />
+
+                    <ProgressBar
+                        android:id="@+id/progressStudents"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="16dp"
+                        android:visibility="gone" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvStudents"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:nestedScrollingEnabled="false"
+                        tools:listitem="@layout/item_student_manage" />
+
+                </LinearLayout>
+
             </com.google.android.material.card.MaterialCardView>
 
             <androidx.fragment.app.FragmentContainerView

@@ -230,6 +230,47 @@ public class UserRepository {
         });
     }
 
+    // Helper method to get students by their IDs
+    public void getStudentsByIds(List<String> studentIds,
+                                 java.util.function.Consumer<List<Student>> onSuccess,
+                                 java.util.function.Consumer<Exception> onError) {
+
+        if (studentIds == null || studentIds.isEmpty()) {
+            onSuccess.accept(new ArrayList<>());
+            return;
+        }
+
+        List<Student> students = new ArrayList<>();
+        final int[] remaining = {studentIds.size()};
+        final boolean[] failed = {false};
+
+        for (String studentId : studentIds) {
+            getUserById(studentId, new UserCallback() {
+                @Override
+                public void onSuccess(User user) {
+                    if (failed[0]) return;
+
+                    if (user instanceof Student) {
+                        students.add((Student) user);
+                    }
+
+                    remaining[0]--;
+
+                    if (remaining[0] == 0) {
+                        onSuccess.accept(students);
+                    }
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    if (failed[0]) return;
+                    failed[0] = true;
+                    onError.accept(e);
+                }
+            });
+        }
+    }
+
     public interface UserCallback {
         void onSuccess(User user);
         void onError(Exception e);

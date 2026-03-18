@@ -5,122 +5,158 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.eduview.R;
 import com.example.eduview.ui.login.LoginActivity;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.imageview.ShapeableImageView;
 
 public class ProfileFragment extends Fragment {
 
-        private ProfileViewModel profileViewModel;
+    private ProfileViewModel profileViewModel;
 
-        private ShapeableImageView profileImage;
-        private TextView userNameText;
-        private TextView roleText;
-        private TextView classText;
-        private EditText aboutMeEditText;
-        private Button logoutButton;
+    private ShapeableImageView profileImage;
+    private TextView userNameText;
+    private TextView roleText;
+    private TextView classText;
+    private EditText aboutMeEditText;
+    private MaterialButton logoutButton;
 
-        private TextView tvQRLabel;
-        private ImageView ivQRCode;
-        private Button buttonScanQR;
-        private Button buttonGenerateQR;
+    private TextView tvQRLabel;
+    private ImageView ivQRCode;
+    private MaterialButton buttonScanQR;
+    private MaterialButton buttonGenerateQR;
+
+    private MaterialCardView manageStudentsCard;
+    private RecyclerView rvStudents;
+    private ProgressBar progressStudents;
+    private StudentManagerAdapter studentManagerAdapter;
 
     @Nullable
-        @Override
-        public View onCreateView(
-                @NonNull LayoutInflater inflater,
-                @Nullable ViewGroup container,
-                @Nullable Bundle savedInstanceState
-        ) {
+    @Override
+    public View onCreateView(
+            @NonNull LayoutInflater inflater,
+            @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState
+    ) {
+        View root = inflater.inflate(R.layout.fragment_profile, container, false);
 
-            View root = inflater.inflate(R.layout.fragment_profile, container, false);
+        initViews(root);
+        setupViewModel();
+        setupStudentList();
+        setupListeners();
+        observeState();
 
-            initViews(root);
-            setupViewModel();
-            setupListeners();
-            observeState();
+        return root;
+    }
 
-            return root;
-        }
+    private void initViews(View root) {
+        profileImage = root.findViewById(R.id.profileImage);
+        userNameText = root.findViewById(R.id.User_name_text);
+        roleText = root.findViewById(R.id.textViewRole);
+        classText = root.findViewById(R.id.Teacher_Class_Text);
+        aboutMeEditText = root.findViewById(R.id.etAboutMe);
 
-        private void initViews(View root) {
+        logoutButton = root.findViewById(R.id.buttonLogout);
 
-            profileImage = root.findViewById(R.id.profileImage);
-            userNameText = root.findViewById(R.id.User_name_text);
-            roleText = root.findViewById(R.id.textViewRole);
-            classText = root.findViewById(R.id.Teacher_Class_Text);
-            aboutMeEditText = root.findViewById(R.id.etAboutMe);
+        tvQRLabel = root.findViewById(R.id.tvQRLabel);
+        ivQRCode = root.findViewById(R.id.ivQRCode);
+        buttonScanQR = root.findViewById(R.id.buttonScanQR);
+        buttonGenerateQR = root.findViewById(R.id.buttonGenerateQR);
 
-            logoutButton = root.findViewById(R.id.buttonLogout);
+        manageStudentsCard = root.findViewById(R.id.manageStudentsCard);
+        rvStudents = root.findViewById(R.id.rvStudents);
+        progressStudents = root.findViewById(R.id.progressStudents);
+    }
 
-            tvQRLabel = root.findViewById(R.id.tvQRLabel);
-            ivQRCode = root.findViewById(R.id.ivQRCode);
-            buttonScanQR = root.findViewById(R.id.buttonScanQR);
-            buttonGenerateQR = root.findViewById(R.id.buttonGenerateQR);
-        }
+    private void setupViewModel() {
+        profileViewModel = new ViewModelProvider(requireActivity()).get(ProfileViewModel.class);
+    }
 
-        private void setupViewModel() {
-            profileViewModel = new ViewModelProvider(requireActivity())
-                    .get(ProfileViewModel.class);
-        }
+    private void setupStudentList() {
+        studentManagerAdapter = new StudentManagerAdapter(student ->
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("Remove student")
+                        .setMessage("Remove " + student.getFirstName() + " " + student.getLastName() + " from this class?")
+                        .setPositiveButton("Remove", (dialog, which) ->
+                                profileViewModel.removeStudentFromClass(student))
+                        .setNegativeButton("Cancel", null)
+                        .show()
+        );
 
-        private void setupListeners() {
+        rvStudents.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvStudents.setAdapter(studentManagerAdapter);
+    }
 
-            logoutButton.setOnClickListener(v -> {
-                profileViewModel.logout();
-                startActivity(new Intent(requireActivity(), LoginActivity.class));
-                requireActivity().finish();
-            });
+    private void setupListeners() {
+        logoutButton.setOnClickListener(v -> {
+            profileViewModel.logout();
+            startActivity(new Intent(requireActivity(), LoginActivity.class));
+            requireActivity().finish();
+        });
 
-            buttonGenerateQR.setOnClickListener(v -> profileViewModel.generateQRCode());
+        buttonGenerateQR.setOnClickListener(v -> profileViewModel.generateQRCode());
 
-            //buttonScanQR.setOnClickListener(v -> profileViewModel.startQRScan());
-        }
+        // buttonScanQR.setOnClickListener(v -> profileViewModel.startQRScan());
+    }
 
-        private void observeState() {
+    private void observeState() {
+        profileViewModel.getUIState().observe(getViewLifecycleOwner(), this::render);
 
-            profileViewModel.getUIState().observe(
-                    getViewLifecycleOwner(),
-                    this::render
-            );
-        }
+        profileViewModel.getClassroomStudents().observe(getViewLifecycleOwner(), students -> {
+            studentManagerAdapter.submitList(students);
+        });
 
-        private void render(ProfileUIState state) {
+        profileViewModel.getStudentsLoading().observe(getViewLifecycleOwner(), loading -> {
+            progressStudents.setVisibility(loading ? View.VISIBLE : View.GONE);
+        });
 
-            userNameText.setText(state.displayName);
-            roleText.setText(state.roleText);
-            classText.setText(state.classText);
-
-            buttonScanQR.setVisibility(
-                    state.showScanButton ? View.VISIBLE : View.GONE
-            );
-
-            buttonGenerateQR.setVisibility(
-                    state.showGenerateButton ? View.VISIBLE : View.GONE
-            );
-
-            if (state.qrBitmap != null) {
-
-                tvQRLabel.setVisibility(View.VISIBLE);
-                ivQRCode.setVisibility(View.VISIBLE);
-                ivQRCode.setImageBitmap(state.qrBitmap);
-                buttonGenerateQR.setVisibility((View.GONE));
-
-            } else {
-
-                tvQRLabel.setVisibility(View.GONE);
-                ivQRCode.setVisibility(View.GONE);
-
+        profileViewModel.getMessage().observe(getViewLifecycleOwner(), msg -> {
+            if (msg != null && !msg.isEmpty()) {
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
             }
+        });
+    }
+
+    private void render(ProfileUIState state) {
+        userNameText.setText(state.displayName);
+        roleText.setText(state.roleText);
+        classText.setText(state.classText);
+
+        buttonScanQR.setVisibility(state.showScanButton ? View.VISIBLE : View.GONE);
+        buttonGenerateQR.setVisibility(state.showGenerateButton ? View.VISIBLE : View.GONE);
+
+        if (state.qrBitmap != null) {
+            tvQRLabel.setVisibility(View.VISIBLE);
+            ivQRCode.setVisibility(View.VISIBLE);
+            ivQRCode.setImageBitmap(state.qrBitmap);
+            buttonGenerateQR.setVisibility(View.GONE);
+        } else {
+            tvQRLabel.setVisibility(View.GONE);
+            ivQRCode.setVisibility(View.GONE);
         }
+
+        boolean isTeacher = "TEACHER".equalsIgnoreCase(state.roleText);
+        manageStudentsCard.setVisibility(isTeacher ? View.VISIBLE : View.GONE);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        profileViewModel.loadTeacherStudents();
+    }
 }
