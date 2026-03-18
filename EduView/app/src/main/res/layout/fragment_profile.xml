@@ -38,13 +38,29 @@
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="10dp"
                     android:padding="2dp"
-                    android:scaleType="center"
+                    android:scaleType="centerInside"
                     android:src="@drawable/pfp_photo_button_icon"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:shapeAppearanceOverlay="@style/CircleImage"
                     app:strokeColor="@android:color/black"
                     app:strokeWidth="2dp" />
+
+                <TextView
+                    android:id="@+id/tvEditPfp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:fontFamily="@font/robotomono"
+                    android:text="Edit Picture"
+                    android:textColor="@color/aqua"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toEndOf="@+id/profileImage"
+                    app:layout_constraintStart_toStartOf="@+id/profileImage"
+                    app:layout_constraintTop_toBottomOf="@+id/profileImage" />
 
                 <View
                     android:id="@+id/profile_bar"
@@ -123,7 +139,7 @@
                     android:textStyle="bold"
                     app:layout_constraintBottom_toTopOf="@id/aboutMeCard"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/Teacher_Class_Text" />
+                    app:layout_constraintTop_toBottomOf="@+id/tvEditPfp" />
 
                 <TextView
                     android:id="@+id/EditBioText"

@@ -3,6 +3,7 @@ package com.example.eduview.data.repository;
 import androidx.annotation.NonNull;
 
 import com.example.eduview.data.model.Parent;
+import com.example.eduview.data.model.ProfilePicture;
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.User;
@@ -116,6 +117,7 @@ public class UserRepository {
                     base.lastName,
                     classId
             );
+            student.setProfilePictureName(base.pfp);
 
             // Return via callback
             callback.onSuccess(student);
@@ -147,6 +149,7 @@ public class UserRepository {
                     email,
                     classId
             );
+            teacher.setProfilePictureName(base.pfp);
 
             // Return via callback
             callback.onSuccess(teacher);
@@ -178,6 +181,7 @@ public class UserRepository {
                     email,
                     childrenIDs
             );
+            parent.setProfilePictureName(base.pfp);
 
             // Return via callback
             callback.onSuccess(parent);
@@ -200,8 +204,8 @@ public class UserRepository {
         return childrenIDs;
     }
 
-    public void updateProfilePicture(String userID, String imageUrl) {
-        usersRef.child(userID).child("pfp").setValue(imageUrl);
+    public void updateProfilePicture(String userID, ProfilePicture profilePicture) {
+        usersRef.child(userID).child("pfp").setValue(profilePicture.name());
     }
 
     public void updateClass(String userID, String classID) {

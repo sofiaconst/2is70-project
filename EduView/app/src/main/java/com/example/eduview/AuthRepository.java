@@ -1,6 +1,8 @@
 package com.example.eduview;
 
 import android.util.Log;
+
+import com.example.eduview.data.model.ProfilePicture;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -28,6 +30,7 @@ public class AuthRepository {
                 if (task.isSuccessful()) {
                     String userId = firebaseAuth.getCurrentUser().getUid();
                     User user = new User(firstName, lastName, email, role);
+                    user.pfp = ProfilePicture.DEFAULT.name();
 
                     rootRef.child("users").child(userId).setValue(user)
                         .addOnCompleteListener(dbTask -> {
@@ -57,6 +60,7 @@ public class AuthRepository {
 
                     // 1. Store in users table
                     User user = new User(firstName, lastName, email, "Teacher");
+                    user.pfp = ProfilePicture.DEFAULT.name();
                     rootRef.child("users").child(userId).setValue(user)
                         .addOnCompleteListener(userTask -> {
                             if (userTask.isSuccessful()) {
@@ -97,6 +101,7 @@ public class AuthRepository {
 
                     // 1. Store Parent in users table
                     User parentUser = new User(firstName, lastName, email, "Parent");
+                    parentUser.pfp = ProfilePicture.DEFAULT.name();
                     rootRef.child("users").child(parentId).setValue(parentUser)
                         .addOnCompleteListener(userTask -> {
                             if (userTask.isSuccessful()) {
@@ -160,7 +165,7 @@ public class AuthRepository {
                     // 1. Store in users table
                     User childUser = new User(child.firstName, child.lastName, child.email, "Student");
                     childUser.bio = "";
-                    childUser.pfp = "";
+                    childUser.pfp = ProfilePicture.DEFAULT.name();
                     
                     rootRef.child("users").child(childUid).setValue(childUser)
                         .addOnCompleteListener(dbTask -> {

@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -30,6 +31,7 @@ public class ProfileFragment extends Fragment {
     private ProfileViewModel profileViewModel;
 
     private ShapeableImageView profileImage;
+    private TextView tvEditPfp;
     private TextView userNameText;
     private TextView roleText;
     private TextView classText;
@@ -65,6 +67,7 @@ public class ProfileFragment extends Fragment {
 
     private void initViews(View root) {
         profileImage = root.findViewById(R.id.profileImage);
+        tvEditPfp = root.findViewById(R.id.tvEditPfp);
         userNameText = root.findViewById(R.id.User_name_text);
         roleText = root.findViewById(R.id.textViewRole);
         classText = root.findViewById(R.id.Teacher_Class_Text);
@@ -107,7 +110,30 @@ public class ProfileFragment extends Fragment {
             requireActivity().finish();
         });
 
+        tvEditPfp.setOnClickListener(v -> showPfpSelectionDialog());
+
         // buttonScanQR.setOnClickListener(v -> profileViewModel.startQRScan());
+    }
+
+    private void showPfpSelectionDialog() {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_pfp_selection, null);
+        RecyclerView rvPfps = dialogView.findViewById(R.id.rvPfpSelection);
+        
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setTitle("Choose Profile Picture")
+                .setView(dialogView)
+                .setNegativeButton("Cancel", null)
+                .create();
+
+        PfpAdapter adapter = new PfpAdapter(pfp -> {
+            profileViewModel.updateProfilePicture(pfp);
+            dialog.dismiss();
+        });
+
+        rvPfps.setLayoutManager(new GridLayoutManager(requireContext(), 3));
+        rvPfps.setAdapter(adapter);
+        
+        dialog.show();
     }
 
     private void observeState() {
@@ -132,6 +158,7 @@ public class ProfileFragment extends Fragment {
         userNameText.setText(state.displayName);
         roleText.setText(state.roleText);
         classText.setText(state.classText);
+        profileImage.setImageResource(state.profilePictureResId);
 
         buttonScanQR.setVisibility(state.showScanButton ? View.VISIBLE : View.GONE);
 

@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.eduview.data.model.Parent;
+import com.example.eduview.data.model.ProfilePicture;
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.User;
@@ -137,6 +138,7 @@ public class ProfileViewModel extends ViewModel {
                 displayName,
                 roleText,
                 classText,
+                user.getProfilePictureResourceId(),
                 showScan,
                 qrBitmap
         );
@@ -218,6 +220,20 @@ public class ProfileViewModel extends ViewModel {
                         message.postValue("Failed to remove student");
                     }
                 });
+    }
+
+    public void updateProfilePicture(ProfilePicture pfp) {
+        User user = sessionManager.getCurrentUser();
+        if (user == null) return;
+
+        userRepository.updateProfilePicture(user.getUserId(), pfp);
+        user.setProfilePicture(pfp);
+        
+        // Refresh UI
+        ProfileUIState current = uiState.getValue();
+        if (current != null) {
+            uiState.postValue(mapUserToState(user, current.qrBitmap, current.classText.replace("Class: ", "")));
+        }
     }
 
     public void logout() {

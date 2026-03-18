@@ -7,6 +7,7 @@ public class ProfileUIState {
     public final String displayName;
     public final String roleText;
     public final String classText;
+    public final int profilePictureResId;
 
     public final boolean showScanButton;
 
@@ -16,12 +17,14 @@ public class ProfileUIState {
             String displayName,
             String roleText,
             String classText,
+            int profilePictureResId,
             boolean showScanButton,
             Bitmap qrBitmap
     ) {
         this.displayName = displayName;
         this.roleText = roleText;
         this.classText = classText;
+        this.profilePictureResId = profilePictureResId;
         this.showScanButton = showScanButton;
         this.qrBitmap = qrBitmap;
     }
