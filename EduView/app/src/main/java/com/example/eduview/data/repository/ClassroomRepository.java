@@ -13,8 +13,8 @@ public class ClassroomRepository {
     public ClassroomRepository() {
         FirebaseDatabase db = FirebaseDatabase.getInstance();
         classroomsRef = db.getReference("classrooms");
-        teachersRef = db.getReference("teachers");
-        studentsRef = db.getReference("students");
+        //teachersRef = db.getReference("teachers");
+        //studentsRef = db.getReference("students");
         
     }
 

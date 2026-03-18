@@ -89,9 +89,9 @@ public class ProfileViewModel extends ViewModel {
 
         ProfileUIState current = uiState.getValue();
 
-        Bitmap qr = current != null ? current.qrBitmap : null;
+        //Bitmap qr = current != null ? current.qrBitmap : null;
 
-        uiState.postValue(mapUserToState(user, qr, className));
+        //uiState.postValue(mapUserToState(user, qr, className));
     }
 
 
@@ -128,7 +128,7 @@ public class ProfileViewModel extends ViewModel {
         else {
             classText = "Profile";
         }
-
+/*
         return new ProfileUIState(
                 displayName,
                 roleText,
@@ -137,6 +137,9 @@ public class ProfileViewModel extends ViewModel {
                 showGenerate,
                 qrBitmap
         );
+
+ */
+        return null;
     }
 
 
@@ -160,7 +163,7 @@ public class ProfileViewModel extends ViewModel {
         ProfileUIState current = uiState.getValue();
 
         if (current == null) return;
-
+/*
         ProfileUIState updated = new ProfileUIState(
                 current.displayName,
                 current.roleText,
@@ -169,6 +172,9 @@ public class ProfileViewModel extends ViewModel {
                 current.showGenerateButton,
                 qrBitmap
         );
+
+ */
+        ProfileUIState updated = null;
 
         uiState.postValue(updated);
     }

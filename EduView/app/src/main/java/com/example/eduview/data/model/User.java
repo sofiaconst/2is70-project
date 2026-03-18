@@ -46,7 +46,7 @@ public class User {
         return firstName;
     }
     public String getLastName() {return lastName;}
-    public UserRole getRole() { return role; }
+  
     public String getProfileImageURL() {return profileImageURL;}
     public UserRole getRole() {
         return role;

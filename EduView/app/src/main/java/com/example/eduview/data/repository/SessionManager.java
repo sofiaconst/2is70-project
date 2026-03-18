@@ -98,7 +98,7 @@ public class SessionManager {
 
             @Override
             public void onError(Exception error) {
-                callback.onError(new Exception(error));
+                callback.onError(error);
             }
         });
     }

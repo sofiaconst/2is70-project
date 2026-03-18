@@ -2,49 +2,30 @@ package com.example.eduview.ui.main;
 
 import android.util.Log;
 
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.example.eduview.data.model.Parent;
-import com.example.eduview.data.model.Student;
-import com.example.eduview.data.model.Teacher;
+import com.example.eduview.R;
 import com.example.eduview.data.model.User;
-import com.example.eduview.data.repository.AuthRepository;
 import com.example.eduview.data.repository.SessionManager;
-import com.example.eduview.data.repository.ClassroomRepository;
-import com.example.eduview.data.repository.UserRepository;
-import com.google.firebase.auth.FirebaseUser;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class MainViewModel extends ViewModel {
     private final SessionManager sessionManager;
-    private final MutableLiveData<User> currentUser = new MutableLiveData<>();
-    private final MutableLiveData<String> classroomName = new MutableLiveData<>();
-    private final MutableLiveData<String> joinStatus = new MutableLiveData<>();
-
-    public MainViewModel(AuthRepository authRepository,
-                         UserRepository userRepository,
-                         ClassroomRepository classroomRepository) {
-        this.authRepository = authRepository;
-        this.userRepository = userRepository;
-        this.classroomRepository = classroomRepository;
-    }
+    private User currentUser;
 
     public MainViewModel() {
-        // Use singleton SessionManager (already has repos)
+        // Use singleton SessionManager
         this.sessionManager = SessionManager.getInstance();
     }
 
-    public void startSession() {
+    public void startSession(Runnable onUserReady) {
         sessionManager.initializeSession(new SessionManager.SessionCallback() {
             @Override
             public void onSuccess(User user) {
-                currentUser.postValue(user);
+                currentUser = user;
                 Log.d("MainViewModel", "Session initialized: " + user.getFirstName());
+                if (onUserReady != null) {
+                    onUserReady.run(); // Activity can safely setup navigation now
+                }
             }
 
             @Override
@@ -54,30 +35,34 @@ public class MainViewModel extends ViewModel {
         });
     }
 
-    public LiveData<List<Student>> getChildrenData() {
-        return childrenData;
-    }
+    public int getMenuResForUser() {
+        if (currentUser == null) {
+            throw new IllegalStateException("User not loaded yet. Call startSession() first.");
+        }
 
-    public void loadCurrentUser() {
-        User user = sessionManager.getCurrentUser();
-        if(user != null){
-            currentUser.postValue(user); // use cached user
-        } else {
-            Log.w("MainViewModel", "No user stored yet");
+        switch (currentUser.getRole()) {
+            case PARENT:
+                return R.menu.bottom_nav_parent;
+            case TEACHER:
+            case STUDENT:
+            default:
+                return R.menu.bottom_nav_main;
         }
     }
 
-    public void logout() {
-        sessionManager.logoutCurrentUser(null);
-    }
-
-    public LiveData<User> getCurrentUser() {
+    /**
+     * Get the UI-ready current user.
+     */
+    public User getCurrentUser() {
         return currentUser;
     }
 
-    public SessionManager getSessionManager() {
-        return sessionManager;
-        childrenData.setValue(null);
+    /**
+     * Logout the current session and clear cached user.
+     */
+    public void logout() {
+        sessionManager.logoutCurrentUser(null);
+        currentUser = null;
     }
 
 }

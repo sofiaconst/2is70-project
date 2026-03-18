@@ -55,7 +55,7 @@ public class FeedFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_feed, container, false);
         mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
         feedViewModel = new ViewModelProvider(this).get(FeedViewModel.class);
-
+/*
         mainViewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
 
             if (user == null) {
@@ -90,7 +90,11 @@ public class FeedFragment extends Fragment {
         });
 
         // Inflate the layout for this fragment
+        
+ */
         return view;
+
+
 
     }
 

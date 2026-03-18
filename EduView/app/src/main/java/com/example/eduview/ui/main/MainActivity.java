@@ -14,11 +14,6 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.eduview.R;
-import com.example.eduview.data.model.User;
-import com.example.eduview.data.model.UserRole;
-import com.example.eduview.data.repository.SessionManager;
-import com.example.eduview.data.model.Student;
-import com.example.eduview.data.repository.UserRepository;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -29,34 +24,56 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // 1. Inflate layout and apply edge-to-edge insets
         setupLayout();
+
+        // 2. Initialize MainViewModel and session
         setupViewModel();
     }
 
-    private void setupViewModel() {
+    /** Layout and padding setup */
+    private void setupLayout() {
+        EdgeToEdge.enable(this);
 
-        Log.d("SESSION", "test123");
-        mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
-        mainViewModel.startSession();  // initializeSession() runs here
-        mainViewModel.getCurrentUser().observe(this, user -> {
-            if(user != null){
-                Log.d("SESSION", "Loaded user: " + user.getFirstName());
-                setupNavigation(user);
-            }
-        });
+        setContentView(R.layout.activity_main);
+
+        ViewCompat.setOnApplyWindowInsetsListener(
+                findViewById(R.id.main),
+                (v, insets) -> {
+                    Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                    v.setPadding(
+                            systemBars.left,
+                            systemBars.top,
+                            systemBars.right,
+                            systemBars.bottom
+                    );
+                    return insets;
+                }
+        );
     }
 
-    private void setupNavigation(User user) {
+    /** Initialize ViewModel and start session */
+    private void setupViewModel() {
+        // Get ViewModel
+        mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
+        // Start session asynchronously and provide a callback for when user info is ready
+        mainViewModel.startSession(this::onSessionReady);
+    }
+
+    /** Callback invoked once the session/user info is ready */
+    private void onSessionReady() {
+        // Safe: user info exists, now we can set up navigation
+        setupNavigation();
+    }
+    /** Setup bottom navigation and NavController */
+    private void setupNavigation() {
         BottomNavigationView bottomNav = findViewById(R.id.MainBottomNavigationView);
-
         bottomNav.getMenu().clear();
 
-        if(user.getRole() == UserRole.PARENT) {
-            bottomNav.inflateMenu(R.menu.bottom_nav_parent);
-        } else {
-            bottomNav.inflateMenu(R.menu.bottom_nav_main);
-        }
+        // Ask ViewModel for the menu resource ID (decouples Activity from user/role logic)
+        int menuRes = mainViewModel.getMenuResForUser();
+        bottomNav.inflateMenu(menuRes);
 
         NavHostFragment navHostFragment =
                 (NavHostFragment) getSupportFragmentManager()
@@ -68,35 +85,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         NavController navController = navHostFragment.getNavController();
-
         NavigationUI.setupWithNavController(bottomNav, navController);
-    }
-
-    private void setupLayout() {
-        EdgeToEdge.enable(this);
-
-        setContentView(R.layout.activity_main);
-
-        ViewCompat.setOnApplyWindowInsetsListener(
-                findViewById(R.id.main),
-                (v, insets) -> {
-
-                    Insets systemBars =
-                            insets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-                    v.setPadding(
-                            systemBars.left,
-                            systemBars.top,
-                            systemBars.right,
-                            systemBars.bottom
-                    );
-
-                    return insets;
-                }
-        );
-    }
-
-    public MainViewModel getMainViewmodel() {
-        return this.mainViewModel;
     }
 }

@@ -67,10 +67,13 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
             if (classId == null || classId.isEmpty()) {
                 tvClass.setText("Not registered to a class");
             } else {
+                /*
                 classroomRepository.getClassroomName(classId, 
                     name -> tvClass.setText("Class " + name),
                     error -> tvClass.setText("Class " + classId)
                 );
+
+                 */
             }
         }
     }
