@@ -46,8 +46,6 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.content.ContextCompat;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
-
-
 /**
  * Fragment for the "Create Post" screen.
  *
@@ -61,11 +59,8 @@ public class CreatePostFragment extends Fragment {
 
     // ViewModel that remembers the user's draft even if the screen rotates
     private CreatePostViewModel viewModel;
-
     // SessionManager is treated as a black box from your teammate
     private SessionManager sessionManager;
-
-    // Views from fragment_create_post.xml
     private ImageButton sendButton;
     private View layoutAnnouncement;
     private CheckBox announcementCheckBox;
@@ -73,7 +68,6 @@ public class CreatePostFragment extends Fragment {
     private View layoutImageContainer;
     private ImageView postImage;
     private ImageView cameraButton;
-
     // CameraX
     private ImageCapture imageCapture;
     private Uri imageUri;
@@ -81,17 +75,14 @@ public class CreatePostFragment extends Fragment {
     public CreatePostFragment() {
         // Required empty public constructor
     }
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-
         // Inflate the XML layout for this screen
         return inflater.inflate(R.layout.fragment_create_post, container, false);
     }
-
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -107,17 +98,12 @@ public class CreatePostFragment extends Fragment {
 
         // Link all Java fields to the views in the XML
         bindViews(view);
-
         // Configure the UI based on the user's role
         configureUiForUserRole();
-
         // Set up all click listeners and text listeners
         setupListeners();
-
         // Watch the ViewModel so the UI always reflects the saved draft state
         observeViewModel();
-
-        runCloudinaryUploadTest();
     }
 
     /**
@@ -159,10 +145,8 @@ public class CreatePostFragment extends Fragment {
         // The image container is where CameraX will later be opened.
         // For now we just leave placeholder behavior here.
         cameraButton.setOnClickListener(v -> openCamera());
-
 //            // Optional test line if you want to simulate an image being selected:
 //            viewModel.setImageUrl("https://example.com/test.jpg");
-
         // Pressing send should attempt to create the post
         sendButton.setOnClickListener(v -> submitPost());
     }
@@ -175,12 +159,9 @@ public class CreatePostFragment extends Fragment {
                 .setPositiveButton("Capture", (d, which) -> takePhoto())
                 .setNegativeButton("Cancel", null)
                 .create();
-
         dialog.show();
-
         startCamera(previewView);
     }
-
     private void startCamera(PreviewView previewView) {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
                 ProcessCameraProvider.getInstance(requireContext());
@@ -217,10 +198,8 @@ public class CreatePostFragment extends Fragment {
                 requireContext().getExternalFilesDir(null),
                 System.currentTimeMillis() + ".jpg"
         );
-
         ImageCapture.OutputFileOptions outputOptions =
                 new ImageCapture.OutputFileOptions.Builder(photoFile).build();
-
         imageCapture.takePicture(
                 outputOptions,
                 ContextCompat.getMainExecutor(requireContext()),
@@ -235,7 +214,6 @@ public class CreatePostFragment extends Fragment {
                         cameraButton.setVisibility(View.GONE);
 
                         MediaRepository mediaRepository = new MediaRepository();
-
                         mediaRepository.uploadImage(imageUri, new MediaRepository.MediaUploadCallback() {
                             @Override
                             public void onSuccess(String imageUrl) {
@@ -243,7 +221,6 @@ public class CreatePostFragment extends Fragment {
 
                                 Toast.makeText(requireContext(), "Image uploaded", Toast.LENGTH_SHORT).show();
                             }
-
                             @Override
                             public void onError(Exception e) {
                                 Toast.makeText(requireContext(), "Image upload failed", Toast.LENGTH_SHORT).show();
@@ -251,7 +228,6 @@ public class CreatePostFragment extends Fragment {
                             }
                         });
                     }
-
                     @Override
                     public void onError(@NonNull ImageCaptureException exception) {
                         Toast.makeText(requireContext(), "Capture failed", Toast.LENGTH_SHORT).show();
@@ -262,11 +238,9 @@ public class CreatePostFragment extends Fragment {
 
     /**
      * Observes the ViewModel so the UI stays in sync with the saved draft.
-     *
      * This is the part that makes rotation work properly.
      */
     private void observeViewModel() {
-
         // Restore caption text whenever the saved caption changes.
         // This matters especially after rotation.
         viewModel.getCaption().observe(getViewLifecycleOwner(), caption -> {
@@ -324,9 +298,6 @@ public class CreatePostFragment extends Fragment {
 
     /**
      * Reads the needed information and asks the ViewModel to create the post.
-     *
-     * The Fragment does not talk to Firebase directly.
-     * It just gathers UI/session info and passes it on.
      */
     private void submitPost() {
         String classId = null;
@@ -370,9 +341,6 @@ public class CreatePostFragment extends Fragment {
      * Current logic:
      * - checked announcement box -> ANNOUNCEMENT
      * - otherwise -> PENDING
-     *
-     * If later you want teachers to post directly to published_posts,
-     * this is one of the places you would update.
      */
     private PostType getSelectedPostType(User user) {
         if (user.getRole() == UserRole.STUDENT) {
@@ -389,12 +357,8 @@ public class CreatePostFragment extends Fragment {
         throw new IllegalStateException("Parents cannot create posts");
     }
 
-
     /**
      * Clears the UI and ViewModel after a successful post.
-     *
-     * This is important because if we only cleared the UI and not the ViewModel,
-     * the old text could come back after rotation.
      */
     private void clearFieldsAfterPost() {
         // Clear what the ViewModel is holding
@@ -420,52 +384,6 @@ public class CreatePostFragment extends Fragment {
         } else {
             layoutAnnouncement.setVisibility(View.GONE);
             announcementCheckBox.setChecked(false);
-        }
-    }
-    private void runCloudinaryUploadTest() {
-        try {
-            // 1. Open the drawable resource as an input stream
-            InputStream inputStream = requireContext()
-                    .getResources()
-                    .openRawResource(R.raw.test_image);
-
-            // 2. Create a real file inside the app's internal storage
-            File testFile = new File(requireContext().getFilesDir(), "test_image.jpg");
-            FileOutputStream outputStream = new FileOutputStream(testFile);
-
-            // 3. Copy the drawable bytes into that file
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-            }
-
-            outputStream.flush();
-            outputStream.close();
-            inputStream.close();
-
-            // 4. Turn the file into a Uri your repository can upload
-            Uri imageUri = Uri.fromFile(testFile);
-
-            Log.d("CloudinaryTest", "Local test Uri: " + imageUri);
-
-            // 5. Upload to Cloudinary
-            MediaRepository mediaRepository = new MediaRepository();
-            mediaRepository.uploadImage(imageUri, new MediaRepository.MediaUploadCallback() {
-                @Override
-                public void onSuccess(String imageUrl) {
-                    Log.d("CloudinaryTest", "Upload successful. URL: " + imageUrl);
-                }
-
-                @Override
-                public void onError(Exception e) {
-                    Log.e("CloudinaryTest", "Upload failed", e);
-                }
-            });
-
-        } catch (Exception e) {
-            Log.e("CloudinaryTest", "Failed to prepare local test image", e);
         }
     }
 }

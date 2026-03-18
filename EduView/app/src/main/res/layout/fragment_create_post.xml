@@ -112,37 +112,37 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutImageContainer"
             android:layout_width="0dp"
-            android:layout_height="180dp"
+            android:layout_height="240dp"
             android:layout_marginTop="16dp"
             android:background="@drawable/prompt_box"
             android:clickable="true"
             android:focusable="true"
-            app:layout_constraintTop_toBottomOf="@id/PromptEditTextBox"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            app:layout_constraintTop_toBottomOf="@id/PromptEditTextBox">
 
             <ImageView
                 android:id="@+id/PostImage"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:scaleType="centerCrop"
-                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ImageButton
                 android:id="@+id/CameraButton"
-                android:background="@null"
-                android:scaleType="centerInside"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:src="@drawable/camera_button_icon"
+                android:background="@null"
                 android:contentDescription="Add image"
-                app:layout_constraintTop_toTopOf="parent"
+                android:scaleType="centerInside"
+                android:src="@drawable/camera_button_icon"
                 app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toTopOf="parent" />
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>
