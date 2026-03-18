@@ -95,6 +95,7 @@ public class CreatePostFragment extends Fragment {
 
         // Link all Java fields to the views in the XML
         bindViews(view);
+        setupFragmentResultListener();
         // Configure the UI based on the user's role
         configureUiForUserRole();
         // Set up all click listeners and text listeners
@@ -151,18 +152,8 @@ public class CreatePostFragment extends Fragment {
     }
 
     private void loadCameraFragment() {
-        // Listening for the result
-        getParentFragmentManager().setFragmentResultListener("cameraResult",
-                getViewLifecycleOwner(), (requestKey, bundle) -> {
-                    String imageUrl = bundle.getString("imageUrl");
-                    Log.d("CreatePostFragment", "Received imageUrl from CameraFragment: " + imageUrl);
-                    if (imageUrl != null && !imageUrl.isEmpty()) {
-                        viewModel.setImageUrl(imageUrl);
-                    }
-                });
-
-        // Navigate to CameraFragment
-        NavHostFragment.findNavController(this).navigate(R.id.action_createPost_to_camera);
+        NavHostFragment.findNavController(this)
+                .navigate(R.id.action_createPost_to_camera);
     }
 
     /**
@@ -317,5 +308,19 @@ public class CreatePostFragment extends Fragment {
             layoutAnnouncement.setVisibility(View.GONE);
             announcementCheckBox.setChecked(false);
         }
+    }
+    private void setupFragmentResultListener() {
+        getParentFragmentManager().setFragmentResultListener(
+                "cameraResult",
+                getViewLifecycleOwner(),
+                (requestKey, bundle) -> {
+                    String imageUrl = bundle.getString("imageUrl");
+                    Log.d("CreatePostFragment", "Received imageUrl from CameraFragment: " + imageUrl);
+
+                    if (imageUrl != null && !imageUrl.isEmpty()) {
+                        viewModel.setImageUrl(imageUrl);
+                    }
+                }
+        );
     }
 }

@@ -104,10 +104,6 @@ public class CameraFragment extends Fragment {
                     public void onImageSaved(@NonNull ImageCapture.OutputFileResults output) {
                         Uri imageUri = Uri.fromFile(photoFile);
 
-                        // Show the Uploading Toast
-                        Toast.makeText(requireContext(),
-                                "Uploading image...", Toast.LENGTH_SHORT).show();
-
                         // Upload the image
                         MediaRepository mediaRepository = new MediaRepository();
                         mediaRepository.uploadImage(imageUri,
@@ -129,9 +125,7 @@ public class CameraFragment extends Fragment {
                                         "Image uploaded", Toast.LENGTH_SHORT).show();
 
                                 // Close CameraFragment
-                                if (getActivity() != null) {
-                                    getActivity().onBackPressed();
-                                }
+                                NavHostFragment.findNavController(CameraFragment.this).popBackStack();
                             }
 
                             @Override
