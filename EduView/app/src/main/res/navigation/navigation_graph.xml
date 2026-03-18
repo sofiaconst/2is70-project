@@ -14,10 +14,19 @@
         android:id="@+id/createPostFragment"
         android:name="com.example.eduview.ui.createPost.CreatePostFragment"
         android:label="fragment_create_post"
-        tools:layout="@layout/fragment_create_post" />
+        tools:layout="@layout/fragment_create_post">
+
+        <action
+        android:id="@+id/action_createPost_to_camera"
+        app:destination="@id/cameraFragment" />
+    </fragment>
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.example.eduview.ui.profile.ProfileFragment"
         android:label="fragment_profile"
         tools:layout="@layout/fragment_profile" />
+    <fragment
+        android:id="@+id/cameraFragment"
+        android:name="com.example.eduview.ui.createPost.CameraFragment"
+        android:label="CameraFragment"/>
 </navigation>

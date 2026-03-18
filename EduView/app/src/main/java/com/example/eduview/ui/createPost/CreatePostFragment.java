@@ -16,7 +16,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -24,30 +23,25 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.eduview.R;
-import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.PostType;
 import com.example.eduview.data.model.*;
 import com.example.eduview.data.repository.MediaRepository;
 import com.example.eduview.data.repository.SessionManager;
 import com.example.eduview.ui.main.MainActivity;
-import com.example.eduview.ui.createPost.CreatePostViewModel;
 import com.example.eduview.ui.main.MainViewModel;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+
 import com.bumptech.glide.Glide;
 
-import android.net.Uri;
-import android.app.AlertDialog;
-import androidx.camera.view.PreviewView;
 import androidx.camera.core.*;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.content.ContextCompat;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.io.File;
+
 /**
  * Fragment for the "Create Post" screen.
  *
@@ -146,9 +140,7 @@ public class CreatePostFragment extends Fragment {
             }
         });
 
-        // The image container is where CameraX will later be opened.
-        // For now we just leave placeholder behavior here.
-        cameraButton.setOnClickListener(v -> openCamera());
+        cameraButton.setOnClickListener(v -> loadCameraFragment());
 //            // Optional test line if you want to simulate an image being selected:
 //            viewModel.setImageUrl("https://example.com/test.jpg");
         // Pressing send should attempt to create the post
@@ -158,89 +150,19 @@ public class CreatePostFragment extends Fragment {
 
     }
 
-    private void openCamera() {
-        PreviewView previewView = new PreviewView(requireContext());
-
-        AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                .setView(previewView)
-                .setPositiveButton("Capture", (d, which) -> takePhoto())
-                .setNegativeButton("Cancel", null)
-                .create();
-        dialog.show();
-        startCamera(previewView);
-    }
-    private void startCamera(PreviewView previewView) {
-        ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
-                ProcessCameraProvider.getInstance(requireContext());
-
-        cameraProviderFuture.addListener(() -> {
-            try {
-                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
-
-                Preview preview = new Preview.Builder().build();
-                preview.setSurfaceProvider(previewView.getSurfaceProvider());
-
-                imageCapture = new ImageCapture.Builder().build();
-
-                CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
-
-                cameraProvider.unbindAll();
-                cameraProvider.bindToLifecycle(
-                        getViewLifecycleOwner(),
-                        cameraSelector,
-                        preview,
-                        imageCapture
-                );
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }, ContextCompat.getMainExecutor(requireContext()));
-    }
-
-    private void takePhoto() {
-        if (imageCapture == null) return;
-
-        File photoFile = new File(
-                requireContext().getExternalFilesDir(null),
-                System.currentTimeMillis() + ".jpg"
-        );
-        ImageCapture.OutputFileOptions outputOptions =
-                new ImageCapture.OutputFileOptions.Builder(photoFile).build();
-        imageCapture.takePicture(
-                outputOptions,
-                ContextCompat.getMainExecutor(requireContext()),
-                new ImageCapture.OnImageSavedCallback() {
-                    @Override
-                    public void onImageSaved(@NonNull ImageCapture.OutputFileResults output) {
-
-                        imageUri = Uri.fromFile(photoFile);
-
-                        // Show preview
-                        //postImage.setImageURI(imageUri);
-                        cameraButton.setVisibility(View.GONE);
-
-                        MediaRepository mediaRepository = new MediaRepository();
-                        mediaRepository.uploadImage(imageUri, new MediaRepository.MediaUploadCallback() {
-                            @Override
-                            public void onSuccess(String imageUrl) {
-                                viewModel.setImageUrl(imageUrl);
-
-                                Toast.makeText(requireContext(), "Image uploaded", Toast.LENGTH_SHORT).show();
-                            }
-                            @Override
-                            public void onError(Exception e) {
-                                Toast.makeText(requireContext(), "Image upload failed", Toast.LENGTH_SHORT).show();
-                                Log.e("CreatePostFragment", "Upload failed", e);
-                            }
-                        });
+    private void loadCameraFragment() {
+        // Listening for the result
+        getParentFragmentManager().setFragmentResultListener("cameraResult",
+                getViewLifecycleOwner(), (requestKey, bundle) -> {
+                    String imageUrl = bundle.getString("imageUrl");
+                    Log.d("CreatePostFragment", "Received imageUrl from CameraFragment: " + imageUrl);
+                    if (imageUrl != null && !imageUrl.isEmpty()) {
+                        viewModel.setImageUrl(imageUrl);
                     }
-                    @Override
-                    public void onError(@NonNull ImageCaptureException exception) {
-                        Toast.makeText(requireContext(), "Capture failed", Toast.LENGTH_SHORT).show();
-                    }
-                }
-        );
+                });
+
+        // Navigate to CameraFragment
+        NavHostFragment.findNavController(this).navigate(R.id.action_createPost_to_camera);
     }
 
     /**
