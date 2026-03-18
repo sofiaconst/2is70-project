@@ -20,7 +20,6 @@ public class ClassroomRepository {
         classroomsRef = rootRef.child("classrooms");
     }
 
-    // Fetch classroom by ID
     public void getClassroomName(String classId, ClassroomCallback<Classroom> classroomCallback) {
         classroomsRef.child(classId).get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult().exists()) {
@@ -32,7 +31,6 @@ public class ClassroomRepository {
         });
     }
 
-    // Add student to classroom
     public void joinClassroom(String studentId, String classId, ClassroomCallback<Void> classroomCallback) {
         Map<String, Object> updates = new HashMap<>();
         updates.put("classrooms/" + classId + "/students/" + studentId, true);
@@ -66,14 +64,13 @@ public class ClassroomRepository {
     public void removeStudentFromClassroom(String classId, String studentId, ClassroomCallback<Void> callback) {
         Map<String, Object> updates = new HashMap<>();
         updates.put("classrooms/" + classId + "/students/" + studentId, null);
-        updates.put("students/" + studentId + "/classroom", null);
+        updates.put("students/" + studentId + "/classroom", "");
 
         rootRef.updateChildren(updates)
                 .addOnSuccessListener(unused -> callback.onSuccess(null))
                 .addOnFailureListener(callback::onError);
     }
 
-    // Generic callback interface
     public interface ClassroomCallback<T> {
         void onSuccess(T result);
         void onError(Exception e);
