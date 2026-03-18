@@ -131,8 +131,10 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
-            <ImageView
-                android:id="@+id/ImagePlaceholderIcon"
+            <ImageButton
+                android:id="@+id/CameraButton"
+                android:background="@null"
+                android:scaleType="centerInside"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:src="@drawable/camera_button_icon"
