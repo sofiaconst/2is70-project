@@ -8,7 +8,7 @@
 
     <!-- outline -->
     <stroke
-        android:width="1.5dp"
+        android:width="2.3dp"
         android:color="#6F6F6F"/>
 
 </shape>

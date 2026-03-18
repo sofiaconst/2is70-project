@@ -271,15 +271,18 @@ public class CreatePostFragment extends Fragment {
             if (hasImage) {
                 cameraButton.setVisibility(View.GONE);
                 postImage.setVisibility(View.VISIBLE);
+                deleteImageButton.setVisibility(View.VISIBLE);
 
                 Glide.with(this)
                         .load(imageUrl)
-                        .fitCenter()
+                        .dontAnimate()
+                        .centerCrop()
                         .into(postImage);
 
             } else {
                 cameraButton.setVisibility(View.VISIBLE);
                 postImage.setVisibility(View.GONE);
+                deleteImageButton.setVisibility(View.GONE);
                 postImage.setImageDrawable(null);
             }
         });
