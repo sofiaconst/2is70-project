@@ -1,4 +1,4 @@
-package com.example.eduview.ui.createpost;
+package com.example.eduview.ui.createPost;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;

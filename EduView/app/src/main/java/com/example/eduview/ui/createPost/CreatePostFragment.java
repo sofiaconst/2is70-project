@@ -1,5 +1,6 @@
 package com.example.eduview.ui.createPost;
 
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -9,9 +10,11 @@ import androidx.lifecycle.ViewModelProvider;
 
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -22,10 +25,15 @@ import com.example.eduview.R;
 import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.PostType;
 import com.example.eduview.data.model.*;
+import com.example.eduview.data.repository.MediaRepository;
 import com.example.eduview.data.repository.SessionManager;
 import com.example.eduview.ui.main.MainActivity;
-import com.example.eduview.ui.createpost.CreatePostViewModel;
+import com.example.eduview.ui.createPost.CreatePostViewModel;
 import com.example.eduview.ui.main.MainViewModel;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 
 
 /**
@@ -92,6 +100,8 @@ public class CreatePostFragment extends Fragment {
 
         // Watch the ViewModel so the UI always reflects the saved draft state
         observeViewModel();
+
+        runCloudinaryUploadTest();
     }
 
     /**
@@ -298,6 +308,52 @@ public class CreatePostFragment extends Fragment {
         } else {
             layoutAnnouncement.setVisibility(View.GONE);
             announcementCheckBox.setChecked(false);
+        }
+    }
+    private void runCloudinaryUploadTest() {
+        try {
+            // 1. Open the drawable resource as an input stream
+            InputStream inputStream = requireContext()
+                    .getResources()
+                    .openRawResource(R.raw.test_image);
+
+            // 2. Create a real file inside the app's internal storage
+            File testFile = new File(requireContext().getFilesDir(), "test_image.jpg");
+            FileOutputStream outputStream = new FileOutputStream(testFile);
+
+            // 3. Copy the drawable bytes into that file
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+
+            outputStream.flush();
+            outputStream.close();
+            inputStream.close();
+
+            // 4. Turn the file into a Uri your repository can upload
+            Uri imageUri = Uri.fromFile(testFile);
+
+            Log.d("CloudinaryTest", "Local test Uri: " + imageUri);
+
+            // 5. Upload to Cloudinary
+            MediaRepository mediaRepository = new MediaRepository();
+            mediaRepository.uploadImage(imageUri, new MediaRepository.MediaUploadCallback() {
+                @Override
+                public void onSuccess(String imageUrl) {
+                    Log.d("CloudinaryTest", "Upload successful. URL: " + imageUrl);
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    Log.e("CloudinaryTest", "Upload failed", e);
+                }
+            });
+
+        } catch (Exception e) {
+            Log.e("CloudinaryTest", "Failed to prepare local test image", e);
         }
     }
 }

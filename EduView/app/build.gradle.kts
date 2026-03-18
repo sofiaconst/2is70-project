@@ -84,6 +84,7 @@ dependencies {
     // ZXing for QR Code generation and scanning
     implementation(libs.zxing.core)
     implementation(libs.zxing.android.embedded)
+    implementation("com.cloudinary:cloudinary-android:3.1.2")
 }
 
 jacoco {
