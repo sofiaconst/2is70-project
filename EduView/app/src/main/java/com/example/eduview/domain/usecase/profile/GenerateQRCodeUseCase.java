@@ -1,4 +1,4 @@
-package com.example.eduview.domain.usecase;
+package com.example.eduview.domain.usecase.profile;
 
 import android.graphics.Bitmap;
 

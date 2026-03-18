@@ -1,4 +1,4 @@
-package com.example.eduview.domain.usecase;
+package com.example.eduview.domain.usecase.profile;
 
 import com.example.eduview.data.model.Classroom;
 import com.example.eduview.data.repository.ClassroomRepository;
@@ -17,9 +17,12 @@ public class FetchClassroomNameUseCase {
 
             @Override
             public void onSuccess(Classroom classroom) {
-                callback.onSuccess(classroom.getName());
+                if (classroom != null && classroom.getName() != null) {
+                    callback.onSuccess(classroom.getName());
+                } else {
+                    callback.onError(new Exception("Invalid classroom data"));
+                }
             }
-
             @Override
             public void onError(Exception e) {
                 callback.onError(e);
