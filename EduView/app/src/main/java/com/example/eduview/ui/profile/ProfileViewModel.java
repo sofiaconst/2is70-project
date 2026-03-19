@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.eduview.data.model.Classroom;
+import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.User;
 import com.example.eduview.data.repository.AuthRepository;
@@ -14,7 +15,10 @@ import com.example.eduview.data.repository.ClassroomRepository;
 import com.example.eduview.data.repository.UserRepository;
 import com.example.eduview.ui.profile.profileStates.StudentProfileState;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ProfileViewModel extends ViewModel {
 
@@ -189,6 +193,10 @@ public class ProfileViewModel extends ViewModel {
         });
     }
 
+    public void setStudentUnregistered() {
+        studentState.postValue(StudentProfileState.notRegistered());
+    }
+
     public void logout() {
         authRepository.logout();
         currentUser.setValue(null);
@@ -206,4 +214,43 @@ public class ProfileViewModel extends ViewModel {
         return childrenData;
     }
     public LiveData<StudentProfileState> getStudentState() {return studentState;}
+
+    public void loadChildrenData(Parent parent) {
+        List<String> childrenIds = parent.getChildrenIDs();
+        Log.d("TESTER", Arrays.toString(childrenIds.toArray()));
+
+        if (childrenIds == null || childrenIds.isEmpty()) {
+            childrenData.postValue(new ArrayList<>());
+            return;
+        }
+
+        List<Student> students = new ArrayList<>();
+        AtomicInteger remaining = new AtomicInteger(childrenIds.size());
+
+        for (String id : childrenIds) {
+            userRepository.getUserById(id, new UserRepository.UserCallback() {
+
+                @Override
+                public void onSuccess(User user) {
+                    if (user instanceof Student) {
+                        Log.d("TESTER", user.getFirstName());
+                        students.add((Student) user);
+                    }
+
+                    if (remaining.decrementAndGet() == 0) {
+                        childrenData.postValue(students);
+                    }
+                }
+
+                @Override
+                public void onError(Exception error) {
+                    Log.e("ProfileViewModel", "Failed to fetch child: " + id, error);
+
+                    if (remaining.decrementAndGet() == 0) {
+                        childrenData.postValue(students);
+                    }
+                }
+            });
+        }
+    }
 }

@@ -300,6 +300,7 @@
                         tools:visibility="visible" />
 
                     <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/mcvQRCode"
                         android:layout_width="220dp"
                         android:layout_height="220dp"
                         android:layout_gravity="center_horizontal"

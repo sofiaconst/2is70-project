@@ -34,6 +34,7 @@ import com.example.eduview.data.repository.ClassroomRepository;
 import com.example.eduview.ui.adapters.ChildAdapter;
 import com.example.eduview.ui.login.LoginActivity;
 import com.example.eduview.ui.main.MainViewModel;
+import com.example.eduview.ui.profile.profileStates.StudentProfileState;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.zxing.BarcodeFormat;
@@ -52,12 +53,9 @@ public class ProfileFragment extends Fragment {
     private ProfileViewModel profileVM;
 
     private ShapeableImageView profileImage;
-    private TextView userNameText;
-    private TextView roleText;
-    private TextView classText;
+    private TextView userNameText,roleText,classText;
     private EditText aboutMeEditText;
-    private Button btnSaveBio;
-    private Button logoutButton;
+    private Button btnSaveBio, logoutButton;
 
     // Teacher QR Section
     private MaterialCardView cardQRCode;
@@ -75,9 +73,8 @@ public class ProfileFragment extends Fragment {
 
     // Student Class Info
     private MaterialCardView cardClassInfo;
-    private TextView tvTeacherName;
-    private TextView tvClassName;
-    private TextView tvNotRegistered;
+    private TextView tvTeacherName,tvClassName,tvNotRegistered,tvQRSubtext;
+
 
     private final ActivityResultLauncher<ScanOptions> qrCodeLauncher = registerForActivityResult(
             new ScanContract(),
@@ -141,6 +138,7 @@ public class ProfileFragment extends Fragment {
         tvQRLabel = root.findViewById(R.id.tvQRLabel);
         ivQRCode = root.findViewById(R.id.ivQRCode);
         buttonGenerateQR = root.findViewById(R.id.buttonGenerateQR);
+        tvQRSubtext = root.findViewById(R.id.tvQRSubtext);
     }
 
     private void setupRecyclerView() {
@@ -179,15 +177,6 @@ public class ProfileFragment extends Fragment {
             }
         });
 
-        profileVM.getClassroomName().observe(getViewLifecycleOwner(), name -> {
-            User user = profileVM.getCurrentUser().getValue();
-            if (name != null && user != null) {
-                if (user.getRole() == UserRole.TEACHER || user.getRole() == UserRole.STUDENT) {
-                    classText.setText("Class: " + name);
-                }
-            }
-        });
-
         // Observe join status for toast
         profileVM.getJoinStatus().observe(getViewLifecycleOwner(), status -> {
             if (status != null) {
@@ -195,23 +184,13 @@ public class ProfileFragment extends Fragment {
             }
         });
 
-        // Observe the aggregated student state
         profileVM.getStudentState().observe(getViewLifecycleOwner(), state -> {
-            if (state == null) return;
+            // Bind the UI in one place
+            bindStudentProfileUI(state);
 
-            if (state.isLoading()) {
-                classText.setText("Loading class info...");
-                tvClassName.setText("Loading class info...");
-                tvTeacherName.setText("Loading Teacher info...");
-            } else if (state.getErrorMessage() != null) {
-                classText.setText("Class: Error");
-                tvClassName.setText("Class: Error");
-                tvTeacherName.setText("Teacher: Error");
+            // Optional: show toast if there is an error
+            if (state != null && state.getErrorMessage() != null) {
                 Toast.makeText(getContext(), state.getErrorMessage(), Toast.LENGTH_SHORT).show();
-            } else {
-                classText.setText("Class: " + state.getClassName());
-                tvClassName.setText("Class: " + state.getClassName());
-                tvTeacherName.setText("Teacher: " + state.getTeacherName());
             }
         });
     }
@@ -331,23 +310,19 @@ public class ProfileFragment extends Fragment {
         aboutMeEditText.setText(user.getBio());
     }
     private void updateStudentUI(Student student) {
-        // Basic visibility
-        cardQRCode.setVisibility(View.VISIBLE);
+//        // Make sure base views are visible
+//        cardQRCode.setVisibility(View.VISIBLE);
         classText.setVisibility(View.VISIBLE);
-        buttonScanQR.setVisibility(View.VISIBLE);
-        buttonGenerateQR.setVisibility(View.GONE);
-        cardClassInfo.setVisibility(View.VISIBLE);
+//        buttonScanQR.setVisibility(View.VISIBLE);
+//        buttonGenerateQR.setVisibility(View.GONE);
 
         String classId = student.getClassId();
-        if (classId == null || classId.isEmpty()) {
-            classText.setText("Class: None");
-            showNotRegisteredState();
-        } else {
-            // Show registered state placeholders first
-            showRegisteredState();
-            classText.setText("Loading class info...");
 
-            // Ask ViewModel to load classroom + teacher info
+        if (classId == null || classId.isEmpty()) {
+            // Ask ViewModel to emit unregistered state
+            profileVM.setStudentUnregistered();
+        } else {
+            // Trigger loading and fetching class + teacher info
             profileVM.loadStudentProfile(classId);
         }
     }
@@ -364,9 +339,33 @@ public class ProfileFragment extends Fragment {
         }
     }
     private void updateParentUI(Parent parent) {
+        profileVM.loadChildrenData(parent);
         cardMyChildren.setVisibility(View.VISIBLE);
         classText.setVisibility(View.VISIBLE);
         classText.setText("Parent Profile");
+    }
+
+    private void bindStudentProfileUI(StudentProfileState state) {
+        if (state == null) return;
+
+        // Text updates
+        classText.setText(state.isLoading() ? "Loading class info..." :
+                state.getClassName() != null ? ("Class: " + state.getClassName()) : "Class: Not Registered");
+        tvClassName.setText(state.isLoading() ? "Loading class info..." :
+                state.getClassName() != null ? ("Class: " + state.getClassName()) : "Class: None");
+        tvTeacherName.setText(state.isLoading() ? "" :
+                state.getTeacherName() != null ? ("Teacher: " + state.getTeacherName()) : "Teacher: Unknown");
+
+        boolean registered = state.isRegistered();
+
+        cardClassInfo.setVisibility(registered ? View.VISIBLE : View.GONE);
+        tvNotRegistered.setVisibility(registered ? View.GONE : View.VISIBLE);
+
+        cardQRCode.setVisibility(registered ? View.GONE : View.VISIBLE);
+        ivQRCode.setVisibility(cardQRCode.getVisibility());
+        tvQRLabel.setVisibility(cardQRCode.getVisibility());
+        tvQRSubtext.setVisibility(View.GONE);
+        buttonScanQR.setVisibility(cardQRCode.getVisibility());
     }
 
     private void resetVisibility() {
@@ -374,21 +373,6 @@ public class ProfileFragment extends Fragment {
         cardMyChildren.setVisibility(View.GONE);
         classText.setVisibility(View.GONE);
         cardClassInfo.setVisibility(View.GONE);
-    }
-
-    private void showNotRegisteredState() {
-        tvNotRegistered.setVisibility(View.VISIBLE);
-        buttonScanQR.setVisibility(View.VISIBLE);
-        tvTeacherName.setVisibility(View.GONE);
-        tvClassName.setVisibility(View.GONE);
-    }
-
-    private void showRegisteredState() {
-        tvNotRegistered.setVisibility(View.GONE);
-        cardQRCode.setVisibility(View.GONE);
-        buttonScanQR.setVisibility(View.GONE);
-        tvTeacherName.setVisibility(View.VISIBLE);
-        tvClassName.setVisibility(View.VISIBLE);
     }
 
     private Bitmap generateQRCode(String classCode) {
