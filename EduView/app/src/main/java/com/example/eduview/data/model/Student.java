@@ -7,7 +7,6 @@ import com.google.firebase.database.PropertyName;
 public class Student extends User {
     @PropertyName("classroom")
     private String classroomId;
-
     //Empty Constructor needed for Firebase
     public Student() {}
 

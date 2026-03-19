@@ -22,36 +22,22 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.eduview.AuthRepository;
 import com.example.eduview.R;
-import com.example.eduview.data.model.Classroom;
 import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.User;
-import com.example.eduview.data.model.UserRole;
-import com.example.eduview.data.repository.ClassroomRepository;
 import com.example.eduview.ui.adapters.ChildAdapter;
 import com.example.eduview.ui.login.LoginActivity;
-import com.example.eduview.ui.main.MainViewModel;
 import com.example.eduview.ui.profile.profileStates.StudentProfileState;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.imageview.ShapeableImageView;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.MultiFormatWriter;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
-import com.journeyapps.barcodescanner.BarcodeEncoder;
 import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
-
-import java.util.Collections;
-import java.util.List;
 
 public class ProfileFragment extends Fragment {
 
     private ProfileViewModel profileVM;
-
     private ShapeableImageView profileImage;
     private TextView userNameText,roleText,classText;
     private EditText aboutMeEditText;
@@ -75,20 +61,6 @@ public class ProfileFragment extends Fragment {
     private MaterialCardView cardClassInfo;
     private TextView tvTeacherName,tvClassName,tvNotRegistered,tvQRSubtext;
 
-
-    private final ActivityResultLauncher<ScanOptions> qrCodeLauncher = registerForActivityResult(
-            new ScanContract(),
-            result -> {
-                if (result.getContents() != null) {
-                    String scannedCode = result.getContents();
-                    Log.d("ProfileFragment", "Scanned QR code = " + scannedCode);
-
-                    // NEW: delegate to ProfileViewModel instead of MainViewModel
-                    profileVM.joinClass(scannedCode);
-                }
-            }
-    );
-
     public ProfileFragment() {}
 
     @Nullable
@@ -99,7 +71,6 @@ public class ProfileFragment extends Fragment {
 
         View root = inflater.inflate(R.layout.fragment_profile, container, false);
         initViews(root);
-        setupRecyclerView();
         return root;
     }
 
@@ -142,7 +113,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private void setupRecyclerView() {
-        childAdapter = new ChildAdapter(new ClassroomRepository());
+        childAdapter = new ChildAdapter();
         rvChildren.setLayoutManager(new LinearLayoutManager(getContext()));
         rvChildren.setAdapter(childAdapter);
     }
@@ -209,7 +180,7 @@ public class ProfileFragment extends Fragment {
             if (user instanceof Teacher) {
                 String classId = ((Teacher) user).getClassId();
 
-                Bitmap qrBitmap = generateQRCode(classId);
+                Bitmap qrBitmap = profileVM.generateQRCode(classId);
                 if (qrBitmap != null) {
                     ivQRCode.setImageBitmap(qrBitmap);
                     tvQRLabel.setVisibility(View.VISIBLE);
@@ -225,7 +196,6 @@ public class ProfileFragment extends Fragment {
         }
     }
 
-
     private void showAddChildDialog() {
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_child, null);
         AlertDialog dialog = new AlertDialog.Builder(getContext(), R.style.TransparentDialog)
@@ -240,49 +210,40 @@ public class ProfileFragment extends Fragment {
         Button btnCancel = dialogView.findViewById(R.id.btnCancel);
 
         btnAdd.setOnClickListener(v -> {
-            String fName = etFirstName.getText().toString().trim();
-            String lName = etLastName.getText().toString().trim();
-            String email = etEmail.getText().toString().trim();
-            String password = etPassword.getText().toString().trim();
-
-            if (fName.isEmpty() || lName.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(getContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            AuthRepository authRepo = new AuthRepository();
-            AuthRepository.ChildInfo childInfo = new AuthRepository.ChildInfo(fName, lName, email);
-
             User currentUser = profileVM.getCurrentUser().getValue();
             if (!(currentUser instanceof Parent)) return;
 
-            btnAdd.setEnabled(false);
-            btnAdd.setText("Adding...");
-
-            authRepo.addChildToParent(
+            profileVM.addChild(
                     currentUser.getUserId(),
-                    childInfo,
-                    password,
-                    new AuthRepository.AuthCallback() {
-                        @Override
-                        public void onSuccess() {
-                            Toast.makeText(getContext(), "Child added successfully!", Toast.LENGTH_SHORT).show();
-                            profileVM.loadCurrentUser(); // Refresh list
-                            dialog.dismiss();
-                        }
-
-                        @Override
-                        public void onFailure(Exception e) {
-                            btnAdd.setEnabled(true);
-                            btnAdd.setText("Add");
-                            Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                        }
-                    }
+                    etFirstName.getText().toString().trim(),
+                    etLastName.getText().toString().trim(),
+                    etEmail.getText().toString().trim(),
+                    etPassword.getText().toString().trim()
             );
         });
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
+
         dialog.show();
+
+        profileVM.getAddChildStatus().observe(getViewLifecycleOwner(), status -> {
+            if (status == null) return;
+
+            if (status.equals("LOADING")) {
+                btnAdd.setEnabled(false);
+                btnAdd.setText("Adding...");
+            } else if (status.equals("SUCCESS")) {
+                Toast.makeText(getContext(), "Child added successfully!", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            } else if (status.startsWith("ERROR")) {
+                btnAdd.setEnabled(true);
+                btnAdd.setText("Add");
+                Toast.makeText(getContext(), status, Toast.LENGTH_LONG).show();
+            } else {
+                // validation message
+                Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     // Update UI
@@ -300,6 +261,7 @@ public class ProfileFragment extends Fragment {
                 break;
 
             case PARENT:
+                setupRecyclerView();
                 updateParentUI((Parent) user);
                 break;
         }
@@ -339,6 +301,7 @@ public class ProfileFragment extends Fragment {
         }
     }
     private void updateParentUI(Parent parent) {
+
         profileVM.loadChildrenData(parent);
         cardMyChildren.setVisibility(View.VISIBLE);
         classText.setVisibility(View.VISIBLE);
@@ -375,25 +338,6 @@ public class ProfileFragment extends Fragment {
         cardClassInfo.setVisibility(View.GONE);
     }
 
-    private Bitmap generateQRCode(String classCode) {
-        if (classCode == null || classCode.trim().isEmpty()) {
-            return null;
-        }
-
-        try {
-            BitMatrix bitMatrix = new MultiFormatWriter().encode(
-                    classCode,
-                    BarcodeFormat.QR_CODE,
-                    500,
-                    500
-            );
-            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
-            return barcodeEncoder.createBitmap(bitMatrix);
-        } catch (WriterException e) {
-            Log.e("ProfileFragment", "Error generating QR code", e);
-            return null;
-        }
-    }
 
     private void startScanner() {
         ScanOptions options = new ScanOptions();
@@ -402,4 +346,17 @@ public class ProfileFragment extends Fragment {
         options.setOrientationLocked(true);
         qrCodeLauncher.launch(options);
     }
+
+    private final ActivityResultLauncher<ScanOptions> qrCodeLauncher = registerForActivityResult(
+            new ScanContract(),
+            result -> {
+                if (result.getContents() != null) {
+                    String scannedCode = result.getContents();
+                    Log.d("ProfileFragment", "Scanned QR code = " + scannedCode);
+
+                    // NEW: delegate to ProfileViewModel instead of MainViewModel
+                    profileVM.joinClass(scannedCode);
+                }
+            }
+    );
 }

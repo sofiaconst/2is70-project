@@ -1,5 +1,7 @@
 package com.example.eduview.data.repository;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.example.eduview.data.model.Parent;
@@ -13,6 +15,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -184,6 +187,8 @@ public class UserRepository {
                     childrenIDs
             );
 
+            Log.d("TESTER", Arrays.toString(parent.getChildrenIDs().toArray()));
+
             // Return via callback
             callback.onSuccess(parent);
         });
@@ -196,8 +201,11 @@ public class UserRepository {
 
         if (childrenSnapshot.exists()) {
             for (DataSnapshot childSnapshot : childrenSnapshot.getChildren()) {
-                if (childSnapshot.getKey() != null) {
-                    childrenIDs.add(childSnapshot.getKey());
+
+                String childId = childSnapshot.getValue(String.class);
+
+                if (childId != null && !childId.trim().isEmpty()) {
+                    childrenIDs.add(childId);
                 }
             }
         }

@@ -1,11 +1,13 @@
 package com.example.eduview.ui.profile;
 
+import android.graphics.Bitmap;
 import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.eduview.AuthService;
 import com.example.eduview.data.model.Classroom;
 import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.Student;
@@ -14,6 +16,11 @@ import com.example.eduview.data.repository.AuthRepository;
 import com.example.eduview.data.repository.ClassroomRepository;
 import com.example.eduview.data.repository.UserRepository;
 import com.example.eduview.ui.profile.profileStates.StudentProfileState;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.journeyapps.barcodescanner.BarcodeEncoder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +40,11 @@ public class ProfileViewModel extends ViewModel {
     private final MutableLiveData<String> joinStatus = new MutableLiveData<>();
     private final MutableLiveData<List<Student>> childrenData = new MutableLiveData<>();
     private final MutableLiveData<StudentProfileState> studentState = new MutableLiveData<>();
+    private final MutableLiveData<String> addChildStatus = new MutableLiveData<>();
+
+    public LiveData<String> getAddChildStatus() {
+        return addChildStatus;
+    }
 
     // Constructor
     public ProfileViewModel() {
@@ -82,74 +94,6 @@ public class ProfileViewModel extends ViewModel {
                 joinStatus.postValue("Failed to join class: " + e.getMessage());
             }
         });
-    }
-
-    public void fetchClassroomName(String classId) {
-        classroomRepository.getClassroomById(
-                classId,
-                new ClassroomRepository.ClassroomCallback<Classroom>() {
-                    @Override
-                    public void onSuccess(Classroom classroom) {
-                        if (classroom != null && classroom.getName() != null) {
-                            classroomName.postValue(classroom.getName());
-                        } else {
-                            classroomName.postValue("Unknown");
-                        }
-                    }
-
-                    @Override
-                    public void onError(Exception e) {
-                        classroomName.postValue("Error");
-                        Log.e("ProfileViewModel", "Error loading class name", e);
-                    }
-                }
-        );
-    }
-
-    public void processStudent(Student student) {
-        if (student == null) return;
-
-        String classId = student.getClassId();
-
-        // Not registered
-        if (classId == null || classId.isEmpty()) {
-            studentState.setValue(StudentProfileState.notRegistered());
-            return;
-        }
-
-        // Loading state
-        studentState.setValue(StudentProfileState.loading());
-
-        // Fetch classroom data
-        classroomRepository.getClassroomById(
-                classId,
-                new ClassroomRepository.ClassroomCallback<Classroom>() {
-                    @Override
-                    public void onSuccess(Classroom classroom) {
-                        if (classroom != null) {
-                            String className = classroom.getName();
-                            //String teacherName = classroom.getTeacherName(); // adjust if needed
-
-                            studentState.postValue(
-                                    StudentProfileState.success(className, "teacherName")
-                            );
-                        } else {
-                            studentState.postValue(
-                                    StudentProfileState.error("Classroom data is null")
-                            );
-                        }
-                    }
-
-                    @Override
-                    public void onError(Exception e) {
-                        studentState.postValue(
-                                StudentProfileState.error(e.getMessage())
-                        );
-                    }
-                }
-        );
-
-
     }
 
     public void loadStudentProfile(String classId) {
@@ -217,7 +161,7 @@ public class ProfileViewModel extends ViewModel {
 
     public void loadChildrenData(Parent parent) {
         List<String> childrenIds = parent.getChildrenIDs();
-        Log.d("TESTER", Arrays.toString(childrenIds.toArray()));
+
 
         if (childrenIds == null || childrenIds.isEmpty()) {
             childrenData.postValue(new ArrayList<>());
@@ -233,7 +177,6 @@ public class ProfileViewModel extends ViewModel {
                 @Override
                 public void onSuccess(User user) {
                     if (user instanceof Student) {
-                        Log.d("TESTER", user.getFirstName());
                         students.add((Student) user);
                     }
 
@@ -253,4 +196,58 @@ public class ProfileViewModel extends ViewModel {
             });
         }
     }
+
+    public Bitmap generateQRCode(String classCode) {
+        if (classCode == null || classCode.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            BitMatrix bitMatrix = new MultiFormatWriter().encode(
+                    classCode,
+                    BarcodeFormat.QR_CODE,
+                    500,
+                    500
+            );
+            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+            return barcodeEncoder.createBitmap(bitMatrix);
+        } catch (WriterException e) {
+            Log.e("ProfileFragment", "Error generating QR code", e);
+            return null;
+        }
+    }
+
+    public void addChild(String parentId, String fName, String lName, String email, String password) {
+
+        if (fName.isEmpty() || lName.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            addChildStatus.postValue("Please fill all fields");
+            return;
+        }
+
+        AuthService authService = new AuthService();
+        AuthService.ChildInfo childInfo = new AuthService.ChildInfo(fName, lName, email);
+
+        addChildStatus.postValue("LOADING");
+
+        authService.addChildToParent(
+                parentId,
+                childInfo,
+                password,
+                new AuthService.AuthCallback() {
+                    @Override
+                    public void onSuccess() {
+                        addChildStatus.postValue("SUCCESS");
+                        loadCurrentUser(); // refresh children
+                    }
+
+                    @Override
+                    public void onFailure(Exception e) {
+                        addChildStatus.postValue("ERROR: " + e.getMessage());
+                    }
+                }
+        );
+    }
+
+
+
 }

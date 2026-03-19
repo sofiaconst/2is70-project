@@ -5,19 +5,17 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import org.jetbrains.annotations.UnknownNullability;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AuthRepository {
+public class AuthService {
 
     private final FirebaseAuth firebaseAuth;
     private final DatabaseReference rootRef;
 
-    public AuthRepository() {
+    public AuthService() {
         firebaseAuth = FirebaseAuth.getInstance();
         rootRef = FirebaseDatabase.getInstance().getReference();
     }
