@@ -39,6 +39,7 @@ public class AuthRepository {
                                 callback.onSuccess();
                             } else {
                                 Log.e("AuthRepository", "Failed to save user data to Firebase", dbTask.getException());
+                                firebaseAuth.signOut(); // Clean up session on failure
                                 callback.onFailure(dbTask.getException());
                             }
                         });
@@ -75,14 +76,17 @@ public class AuthRepository {
                                                     if (classroomTask.isSuccessful()) {
                                                         callback.onSuccess();
                                                     } else {
+                                                        firebaseAuth.signOut();
                                                         callback.onFailure(classroomTask.getException());
                                                     }
                                                 });
                                         } else {
+                                            firebaseAuth.signOut();
                                             callback.onFailure(teacherTask.getException());
                                         }
                                     });
                             } else {
+                                firebaseAuth.signOut();
                                 callback.onFailure(userTask.getException());
                             }
                         });
@@ -125,10 +129,12 @@ public class AuthRepository {
                                                             if (reAuthTask.isSuccessful()) {
                                                                 callback.onSuccess();
                                                             } else {
+                                                                firebaseAuth.signOut();
                                                                 callback.onFailure(reAuthTask.getException());
                                                             }
                                                         });
                                                 } else {
+                                                    firebaseAuth.signOut();
                                                     callback.onFailure(parentTask.getException());
                                                 }
                                             });
@@ -136,10 +142,12 @@ public class AuthRepository {
 
                                     @Override
                                     public void onError(Exception e) {
+                                        firebaseAuth.signOut(); // Ensure we sign out on any sequential error
                                         callback.onFailure(e);
                                     }
                                 });
                             } else {
+                                firebaseAuth.signOut();
                                 callback.onFailure(userTask.getException());
                             }
                         });
