@@ -278,6 +278,7 @@ public class ProfileFragment extends Fragment {
         cardMyChildren.setVisibility(View.GONE);
         classText.setVisibility(View.GONE);
         cardClassInfo.setVisibility(View.GONE);
+        buttonScanQR.setVisibility(View.GONE);
 
         if (user.getRole() == UserRole.TEACHER && user instanceof Teacher) {
             cardQRCode.setVisibility(View.VISIBLE);
@@ -292,9 +293,7 @@ public class ProfileFragment extends Fragment {
             }
 
         } else if (user.getRole() == UserRole.STUDENT) {
-            cardQRCode.setVisibility(View.VISIBLE);
             classText.setVisibility(View.VISIBLE);
-            buttonScanQR.setVisibility(View.VISIBLE);
             buttonGenerateQR.setVisibility(View.GONE);
             cardClassInfo.setVisibility(View.VISIBLE);
             
@@ -302,10 +301,14 @@ public class ProfileFragment extends Fragment {
             classText.setText("Class: " + (classId != null ? classId : "None"));
 
             if (classId == null || classId.isEmpty()) {
+                cardQRCode.setVisibility(View.GONE);
+                buttonScanQR.setVisibility(View.VISIBLE);
                 tvNotRegistered.setVisibility(View.VISIBLE);
                 tvTeacherName.setVisibility(View.GONE);
                 tvClassName.setVisibility(View.GONE);
             } else {
+                cardQRCode.setVisibility(View.GONE);
+                buttonScanQR.setVisibility(View.GONE);
                 tvNotRegistered.setVisibility(View.GONE);
                 tvTeacherName.setVisibility(View.VISIBLE);
                 tvClassName.setVisibility(View.VISIBLE);

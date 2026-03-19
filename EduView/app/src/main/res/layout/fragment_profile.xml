@@ -320,26 +320,29 @@
                             tools:visibility="visible" />
                     </com.google.android.material.card.MaterialCardView>
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/buttonScanQR"
-                        android:layout_width="match_parent"
-                        android:layout_height="50dp"
-                        android:layout_marginTop="20dp"
-                        android:backgroundTint="@color/aqua"
-                        android:text="Scan Class QR"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/white"
-                        android:textSize="16sp"
-                        android:visibility="gone"
-                        app:cornerRadius="14dp"
-                        app:icon="@android:drawable/ic_menu_camera"
-                        app:iconGravity="textStart"
-                        app:iconPadding="10dp"
-                        app:iconTint="@android:color/white"
-                        tools:visibility="visible" />
-
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- Standalone Scan QR Button (Used by Student) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonScanQR"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="16dp"
+                android:backgroundTint="@color/aqua"
+                android:text="Scan Class QR"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:visibility="gone"
+                app:cornerRadius="14dp"
+                app:icon="@android:drawable/ic_menu_camera"
+                app:iconGravity="textStart"
+                app:iconPadding="10dp"
+                app:iconTint="@android:color/white"
+                tools:visibility="visible" />
 
         <!--Student class info-->
         <com.google.android.material.card.MaterialCardView
