@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     /** Setup bottom navigation and NavController */
     private void setupNavigation() {
         BottomNavigationView bottomNav = findViewById(R.id.MainBottomNavigationView);
-        bottomNav.getMenu().clear();
+        bottomNav.getMenu().close();
 
         // Ask ViewModel for the menu resource ID (decouples Activity from user/role logic)
         int menuRes = mainViewModel.getMenuResForUser();

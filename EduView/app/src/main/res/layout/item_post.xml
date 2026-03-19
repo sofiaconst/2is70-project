@@ -95,23 +95,4 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/ButtonLikePost"
-        android:layout_width="124dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/feed_like_button"
-        android:contentDescription="LikeButton"
-        android:text="Like"
-        android:textColor="@color/black"
-        app:backgroundTint="@color/not_liked_like_button_background"
-        app:icon="@drawable/like_button_icon_24"
-        app:iconGravity="textStart"
-        app:iconPadding="12dp"
-        app:iconSize="20dp"
-        app:iconTint="@color/black"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ivPostImage" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>
