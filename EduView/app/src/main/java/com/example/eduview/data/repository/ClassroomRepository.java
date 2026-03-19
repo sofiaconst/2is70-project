@@ -19,7 +19,7 @@ public class ClassroomRepository {
     }
 
     // Fetch classroom by ID
-    public void getClassroomName(String classId, ClassroomCallback<Classroom> classroomCallback) {
+    public void getClassroomById(String classId, ClassroomCallback<Classroom> classroomCallback) {
         classroomsRef.child(classId).get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult().exists()) {
                 Classroom classroom = task.getResult().getValue(Classroom.class);

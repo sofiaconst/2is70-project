@@ -1,217 +1,323 @@
 package com.example.eduview.ui.profile;
 
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.eduview.R;
+import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.User;
-import com.example.eduview.data.repository.SessionManager.SessionCallback;
+import com.example.eduview.ui.adapters.ChildAdapter;
 import com.example.eduview.ui.login.LoginActivity;
-import com.example.eduview.ui.main.MainActivity;
+import com.example.eduview.ui.profile.profileStates.StudentProfileState;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.imageview.ShapeableImageView;
-import com.example.eduview.ui.profile.ProfileUIState.BaseUserUiState;
+import com.journeyapps.barcodescanner.ScanContract;
+import com.journeyapps.barcodescanner.ScanOptions;
 
 public class ProfileFragment extends Fragment {
-    // Base user info
-    private TextView fullNameText, roleText, classNameText;
+
+    private ProfileViewModel profileVM;
     private ShapeableImageView profileImage;
-    private Button logoutButton;
+    private TextView userNameText,roleText,classText;
+    private EditText aboutMeEditText;
+    private Button btnSaveBio, logoutButton;
 
-    // Role-specific sections
+    // Teacher QR Section
+    private MaterialCardView cardQRCode;
+    private TextView tvQRLabel;
+    private ImageView ivQRCode;
+    private Button buttonGenerateQR;
 
-    private View studentSection, teacherSection, parentSection;
+    // Parent Children Section
+    private MaterialCardView cardMyChildren;
+    private RecyclerView rvChildren;
+    private TextView tvNoChildren;
+    private ChildAdapter childAdapter;
+    private Button buttonScanQR; // Used by Student to scan class QR
+    private View btnAddChild; // Used by Parent to open dialog
 
-    // ViewModels
-    private BaseUserViewModel baseUserVM;
-    private StudentProfileViewModel studentVM;
-    private TeacherProfileViewModel teacherVM;
-    private ParentProfileViewModel parentVM;
-    private User currentUser;
+    // Student Class Info
+    private MaterialCardView cardClassInfo;
+    private TextView tvTeacherName,tvClassName,tvNotRegistered,tvQRSubtext;
+    private StudentProfileFeature studentFeature;
 
+    public ProfileFragment() {}
+
+    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_profile_trial, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+
+        View root = inflater.inflate(R.layout.fragment_profile, container, false);
         initViews(root);
-        setupViewModel();
-
-        logoutButton.setOnClickListener(v -> {
-            baseUserVM.logout(new SessionCallback() {
-                @Override
-                public void onSuccess(User user) {
-                    navigateToLogin();
-                }
-
-                @Override
-                public void onError(Exception e) {
-                    Toast.makeText(getContext(), "Logout failed", Toast.LENGTH_SHORT).show();
-                }
-            });
-        });
         return root;
     }
 
-    private void navigateToLogin() {
-        Intent intent = new Intent(requireActivity(), LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-    }
-
+    // Views initializer
     private void initViews(View root) {
-        fullNameText = root.findViewById(R.id.User_name_text);
-        roleText = root.findViewById(R.id.textViewRole);
-        classNameText = root.findViewById(R.id.Teacher_Class_Text);
+        initBaseViews(root);
+        initTeacherViews(root);
+        initParentViews(root);
+        initStudentViews(root);
+    }
+    private void initBaseViews(View root) {
+        profileImage = root.findViewById(R.id.profileImage);
+        userNameText = root.findViewById(R.id.User_name_text);
+        roleText = root.findViewById(R.id.materialCardView).findViewById(R.id.textViewRole);
+        classText = root.findViewById(R.id.Teacher_Class_Text);
+        aboutMeEditText = root.findViewById(R.id.etAboutMe);
+        btnSaveBio = root.findViewById(R.id.btnSaveBio);
         logoutButton = root.findViewById(R.id.buttonLogout);
-/*
-        teacherSection = root.findViewById(R.id.cardQRCode);
-        parentSection = root.findViewById(R.id.cardMyChildren);
-        studentClassInfoSection = root.findViewById(R.id.cardClassInfo);
-
-        // Hide everything initially
-        teacherSection.setVisibility(View.GONE);
-        parentSection.setVisibility(View.GONE);
-        studentClassInfoSection.setVisibility(View.GONE);
-        classNameText.setVisibility(View.GONE);
-
- */
+    }
+    private void initStudentViews(View root) {
+        // Student class info
+        cardClassInfo = root.findViewById(R.id.cardClassInfo);
+        buttonScanQR = root.findViewById(R.id.buttonScanQR);
+    }
+    private void initParentViews(View root) {
+        cardMyChildren = root.findViewById(R.id.cardMyChildren);
+        rvChildren = root.findViewById(R.id.rvChildren);
+        tvNoChildren = root.findViewById(R.id.tvNoChildren);
+        btnAddChild = root.findViewById(R.id.btnAddChild);
+    }
+    private void initTeacherViews(View root) {
+        cardQRCode = root.findViewById(R.id.cardQRCode);
+        tvQRLabel = root.findViewById(R.id.tvQRLabel);
+        ivQRCode = root.findViewById(R.id.ivQRCode);
+        buttonGenerateQR = root.findViewById(R.id.buttonGenerateQR);
+        tvQRSubtext = root.findViewById(R.id.tvQRSubtext);
     }
 
-    private void setupViewModel() {
-        baseUserVM = new ViewModelProvider(this).get(BaseUserViewModel.class);
+    private void setupRecyclerView() {
+        childAdapter = new ChildAdapter();
+        rvChildren.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvChildren.setAdapter(childAdapter);
+    }
 
-        baseUserVM.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        setupViewModel();
+        setupObservers();
+        setupClickListeners();
+        studentFeature = new StudentProfileFeature(getView(), profileVM);
+    }
+
+    // Setup
+    private void setupViewModel() {
+        profileVM = new ViewModelProvider(this).get(ProfileViewModel.class);
+    }
+    private void setupObservers() {
+        profileVM.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
-                currentUser = user;
-                updateBaseUI(user);
-                setupRoleUI(user);
+                updateUI(user);
             } else {
-                Log.e("ProfileFragment", "User is null");
+                Log.e("ProfileFragment", "Current user is null");
             }
         });
 
-        baseUserVM.loadUser();
+        profileVM.getChildrenData().observe(getViewLifecycleOwner(), children -> {
+            if (children != null) {
+                childAdapter.setChildren(children);
+                tvNoChildren.setVisibility(children.isEmpty() ? View.VISIBLE : View.GONE);
+                rvChildren.setVisibility(children.isEmpty() ? View.GONE : View.VISIBLE);
+            }
+        });
 
+        // Observe join status for toast
+        profileVM.getJoinStatus().observe(getViewLifecycleOwner(), status -> {
+            if (status != null) {
+                Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        profileVM.getStudentState().observe(getViewLifecycleOwner(), state -> {
+            studentFeature.bind(state);
+
+            if (state != null && state.getErrorMessage() != null) {
+                Toast.makeText(getContext(), state.getErrorMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    private void setupClickListeners() {
+        logoutButton.setOnClickListener(v -> {
+            profileVM.logout();
+            Log.d("ProfileFragment", "Navigating to LoginActivity");
+            startActivity(new Intent(requireActivity(), LoginActivity.class));
+            requireActivity().finish();
+        });
+
+        buttonScanQR.setOnClickListener(v -> startScanner());
+
+        buttonGenerateQR.setOnClickListener(v -> {
+            User user = profileVM.getCurrentUser().getValue();
+            if (user instanceof Teacher) {
+                String classId = ((Teacher) user).getClassId();
+
+                Bitmap qrBitmap = profileVM.generateQRCode(classId);
+                if (qrBitmap != null) {
+                    ivQRCode.setImageBitmap(qrBitmap);
+                    tvQRLabel.setVisibility(View.VISIBLE);
+                    ivQRCode.setVisibility(View.VISIBLE);
+                } else {
+                    Toast.makeText(getContext(), "Could not generate QR code.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        if (btnAddChild != null) {
+            btnAddChild.setOnClickListener(v -> showAddChildDialog());
+        }
     }
 
-    private void updateBaseUI(User user) {
-        fullNameText.setText(user.getFirstName() + " " + user.getLastName());
-        roleText.setText(user.getRole().name());
+    private void showAddChildDialog() {
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_child, null);
+        AlertDialog dialog = new AlertDialog.Builder(getContext(), R.style.TransparentDialog)
+                .setView(dialogView)
+                .create();
+
+        EditText etFirstName = dialogView.findViewById(R.id.etChildFirstName);
+        EditText etLastName = dialogView.findViewById(R.id.etChildLastName);
+        EditText etEmail = dialogView.findViewById(R.id.etChildEmail);
+        EditText etPassword = dialogView.findViewById(R.id.etParentPassword);
+        Button btnAdd = dialogView.findViewById(R.id.btnAdd);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancel);
+
+        btnAdd.setOnClickListener(v -> {
+            User currentUser = profileVM.getCurrentUser().getValue();
+            if (!(currentUser instanceof Parent)) return;
+
+            profileVM.addChild(
+                    currentUser.getUserId(),
+                    etFirstName.getText().toString().trim(),
+                    etLastName.getText().toString().trim(),
+                    etEmail.getText().toString().trim(),
+                    etPassword.getText().toString().trim()
+            );
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+
+        profileVM.getAddChildStatus().observe(getViewLifecycleOwner(), status -> {
+            if (status == null) return;
+
+            if (status.equals("LOADING")) {
+                btnAdd.setEnabled(false);
+                btnAdd.setText("Adding...");
+            } else if (status.equals("SUCCESS")) {
+                Toast.makeText(getContext(), "Child added successfully!", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            } else if (status.startsWith("ERROR")) {
+                btnAdd.setEnabled(true);
+                btnAdd.setText("Add");
+                Toast.makeText(getContext(), status, Toast.LENGTH_LONG).show();
+            } else {
+                // validation message
+                Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    private void setupRoleUI(User user) {
+    // Update UI
+    private void updateUI(User user) {
+        updateBaseUI(user);
+        resetVisibility();
 
         switch (user.getRole()) {
-
-            case STUDENT:
-                //studentClassInfoSection.setVisibility(View.VISIBLE);
-                setupStudentSection((Student) user);
+            case TEACHER:
+                updateTeacherUI((Teacher) user);
                 break;
 
-            case TEACHER:
-                //teacherSection.setVisibility(View.VISIBLE);
-                setupTeacherSection((Teacher) user);
+            case STUDENT:
+                updateStudentUI((Student) user);
                 break;
 
             case PARENT:
-                //parentSection.setVisibility(View.VISIBLE);
-                // Parent logic later
+                setupRecyclerView();
+                updateParentUI((Parent) user);
                 break;
         }
     }
-
-    private void setupStudentSection(Student student) {
-
-        studentVM = new ViewModelProvider(this).get(StudentProfileViewModel.class);
-
-        classNameText.setVisibility(View.VISIBLE);
-
-        studentVM.getClassName().observe(getViewLifecycleOwner(), name -> {
-            classNameText.setText("Class: " + name);
-        });
-
-        String classId = student.getClassId();
-        studentVM.loadClassName(classId);
+    private void updateBaseUI(User user) {
+        userNameText.setText(user.getFirstName() + " " + user.getLastName());
+        roleText.setText(user.getRole().name());
+        aboutMeEditText.setText(user.getBio());
     }
 
-    private void setupTeacherSection(Teacher teacher) {
-
-        teacherVM = new ViewModelProvider(this).get(TeacherProfileViewModel.class);
-
-        classNameText.setVisibility(View.VISIBLE);
-
-        teacherVM.getClassName().observe(getViewLifecycleOwner(), name -> {
-            classNameText.setText("Class: " + name);
-        });
+    private void updateStudentUI(Student student) {
+        classText.setVisibility(View.VISIBLE);
+        studentFeature.handleStudent(student);
+    }
+    private void updateTeacherUI(Teacher teacher) {
+        cardQRCode.setVisibility(View.VISIBLE);
+        classText.setVisibility(View.VISIBLE);
+        buttonGenerateQR.setVisibility(View.VISIBLE);
+        buttonScanQR.setVisibility(View.GONE);
+        tvQRLabel.setVisibility(View.VISIBLE);
 
         String classId = teacher.getClassId();
-        teacherVM.loadClassName(classId);
-    }
-/*
-    private void updateBaseUserUI(BaseUserUiState state) {
-        // Common info
-        fullNameText.setText(state.fullName);
-        roleText.setText(String.valueOf(state.role));
-        // Load profile image
-
-        // Hide all sections initially
-        //studentSection.setVisibility(View.GONE);
-        //teacherSection.setVisibility(View.GONE);
-        //parentSection.setVisibility(View.GONE);
-
-        // Show role-specific section and attach ViewModel logic
-        switch (state.role) {
-            case STUDENT:
-                //studentSection.setVisibility(View.VISIBLE);
-                setupStudentSection();
-                //observeStudentData();
-                break;
-            case TEACHER:
-                //teacherSection.setVisibility(View.VISIBLE);
-                setupTeacherSection();
-                observeTeacherData();
-                break;
-            case PARENT:
-                parentSection.setVisibility(View.VISIBLE);
-                setupParentSection();
-                //observeParentData();
-                break;
+        if (classId == null || classId.isEmpty()) {
+            classText.setText("Class: None");
         }
+    }
+    private void updateParentUI(Parent parent) {
 
-
+        profileVM.loadChildrenData(parent);
+        cardMyChildren.setVisibility(View.VISIBLE);
+        classText.setVisibility(View.VISIBLE);
+        classText.setText("Parent Profile");
     }
 
-    private void observeTeacherData() {
-        teacherVM.getClassName.observe(getViewLifecycleOwner(), name -> {
-            classNameText.setText(name);
-        });
+    private void resetVisibility() {
+        cardQRCode.setVisibility(View.GONE);
+        cardMyChildren.setVisibility(View.GONE);
+        classText.setVisibility(View.GONE);
+        cardClassInfo.setVisibility(View.GONE);
     }
 
-    private void setupStudentSection() {
-        studentVM = new ViewModelProvider(this).get(StudentProfileViewModel.class);
-        // Observe student data, QR scanning, etc.
-        // studentVM.getStudentState().observe(...);
+    private void startScanner() {
+        ScanOptions options = new ScanOptions();
+        options.setPrompt("Scan the Classroom QR Code");
+        options.setBeepEnabled(true);
+        options.setOrientationLocked(true);
+        qrCodeLauncher.launch(options);
     }
 
-    private void setupTeacherSection() {
-        //teacherVM = new ViewModelProvider(this).get(TeacherProfileViewModel.class);
-        // Observe teacher data, QR generation, student list, etc.
-    }
+    private final ActivityResultLauncher<ScanOptions> qrCodeLauncher = registerForActivityResult(
+            new ScanContract(),
+            result -> {
+                if (result.getContents() != null) {
+                    String scannedCode = result.getContents();
+                    Log.d("ProfileFragment", "Scanned QR code = " + scannedCode);
 
-    private void setupParentSection() {
-        //parentVM = new ViewModelProvider(this).get(ParentProfileViewModel.class);
-        // Observe children list, add child logic, etc.
-    }
-    */
+                    // NEW: delegate to ProfileViewModel instead of MainViewModel
+                    profileVM.joinClass(scannedCode);
+                }
+            }
+    );
 }

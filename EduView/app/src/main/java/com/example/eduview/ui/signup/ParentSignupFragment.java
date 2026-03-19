@@ -12,7 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.example.eduview.AuthRepository;
+import com.example.eduview.AuthService;
 import com.example.eduview.R;
 
 import java.util.ArrayList;
@@ -83,8 +83,8 @@ public class ParentSignupFragment extends Fragment {
         }
     }
 
-    public List<AuthRepository.ChildInfo> getChildrenInfo() {
-        List<AuthRepository.ChildInfo> children = new ArrayList<>();
+    public List<AuthService.ChildInfo> getChildrenInfo() {
+        List<AuthService.ChildInfo> children = new ArrayList<>();
         for (View form : formList) {
             EditText etChildFirstName = form.findViewById(R.id.et_child_first_name);
             EditText etChildLastName = form.findViewById(R.id.et_child_last_name);
@@ -96,7 +96,7 @@ public class ParentSignupFragment extends Fragment {
                 String email = etChildEmail.getText().toString().trim();
                 
                 if (!firstName.isEmpty() && !lastName.isEmpty() && !email.isEmpty()) {
-                    children.add(new AuthRepository.ChildInfo(firstName, lastName, email));
+                    children.add(new AuthService.ChildInfo(firstName, lastName, email));
                 }
             }
         }

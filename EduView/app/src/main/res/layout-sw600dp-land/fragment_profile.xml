@@ -202,7 +202,7 @@
                 app:iconTint="@android:color/white" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonDelete"
+                android:id="@+id/DeleteImageButton"
                 android:layout_width="500dp"
                 android:layout_height="100dp"
                 android:layout_gravity="center_horizontal"

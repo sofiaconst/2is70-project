@@ -87,4 +87,9 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = navHostFragment.getNavController();
         NavigationUI.setupWithNavController(bottomNav, navController);
     }
+
+    public MainViewModel getMainViewModel() {
+        return this.mainViewModel;
+    }
+
 }

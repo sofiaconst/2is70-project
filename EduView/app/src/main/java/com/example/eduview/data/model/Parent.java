@@ -2,6 +2,8 @@ package com.example.eduview.data.model;
 
 import static com.example.eduview.data.model.UserRole.PARENT;
 
+import com.google.firebase.database.PropertyName;
+
 import java.util.List;
 
 public class Parent extends User {
@@ -21,8 +23,10 @@ public class Parent extends User {
     public String getEmail() {
         return email;
     }
+    @PropertyName("children")
     public List<String> getChildrenIDs() {
         return children;
     }
+
 
 }
