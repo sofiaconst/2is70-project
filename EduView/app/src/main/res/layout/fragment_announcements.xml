@@ -87,10 +87,9 @@
             app:layout_constraintTop_toBottomOf="@id/tvPostContent" />
 
         <ImageView
-            android:id="@+id/ivPostImage"
-            android:contentDescription="Image"
-            android:layout_width="366dp"
-            android:layout_height="160dp"
+            android:id="@+id/ImageBox"
+            android:layout_width="362dp"
+            android:layout_height="259dp"
             android:layout_marginTop="20dp"
             android:adjustViewBounds="true"
             android:maxHeight="300dp"

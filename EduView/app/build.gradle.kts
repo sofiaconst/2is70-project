@@ -84,6 +84,17 @@ dependencies {
     // ZXing for QR Code generation and scanning
     implementation(libs.zxing.core)
     implementation(libs.zxing.android.embedded)
+    implementation("com.cloudinary:cloudinary-android:3.1.2")
+
+    // CameraX
+    val camerax_version = "1.5.3"
+
+    implementation("androidx.camera:camera-core:$camerax_version")
+    implementation("androidx.camera:camera-camera2:$camerax_version")
+    implementation("androidx.camera:camera-lifecycle:$camerax_version")
+    implementation("androidx.camera:camera-view:$camerax_version")
+    implementation("com.github.bumptech.glide:glide:5.0.5")
+    annotationProcessor("com.github.bumptech.glide:compiler:5.0.5")
 }
 
 jacoco {

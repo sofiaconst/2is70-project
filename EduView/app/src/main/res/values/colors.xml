@@ -11,4 +11,5 @@
     <color name="not_liked_like_button_background">#D9D9D9</color>
     <color name="liked_like_button_background">#E62327</color>
     <color name="accept_post">#07F03A</color>
+    <color name="tinted_white">#FFF8F8</color>
 </resources>
