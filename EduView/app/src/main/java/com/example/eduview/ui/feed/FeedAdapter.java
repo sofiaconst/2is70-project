@@ -84,8 +84,6 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             // later you can load the image here
             // Glide.with(holder.itemView.getContext()).load(item.getImageUrl()).into(holder.ivPostImage);
         }
-
-        holder.buttonLikePost.setText("Like");
     }
 
     private void bindAnnouncement(@NonNull AnnouncementViewHolder holder, @NonNull FeedItem item) {
@@ -126,14 +124,12 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         TextView tvStudentName;
         TextView tvPostContent;
         ImageView ivPostImage;
-        MaterialButton buttonLikePost;
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
             tvStudentName = itemView.findViewById(R.id.tvStudentName);
             tvPostContent = itemView.findViewById(R.id.tvPostContent);
             ivPostImage = itemView.findViewById(R.id.ivPostImage);
-            buttonLikePost = itemView.findViewById(R.id.ButtonLikePost);
         }
     }
 
