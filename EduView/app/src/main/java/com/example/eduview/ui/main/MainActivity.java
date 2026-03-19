@@ -88,4 +88,8 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(bottomNav, navController);
     }
 
+    public MainViewModel getMainViewModel() {
+        return this.mainViewModel;
+    }
+
 }

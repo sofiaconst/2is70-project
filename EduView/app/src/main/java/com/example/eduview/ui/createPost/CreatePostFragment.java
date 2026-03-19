@@ -91,7 +91,7 @@ public class CreatePostFragment extends Fragment {
         // Get the current session manager instance from the mainactivity getter.
         MainActivity main =(MainActivity) requireActivity();
         MainViewModel model = main.getMainViewModel();
-        sessionManager = model.getSessionManager();
+        sessionManager = SessionManager.getInstance();
 
         // Link all Java fields to the views in the XML
         bindViews(view);

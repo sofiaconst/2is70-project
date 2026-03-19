@@ -12,7 +12,7 @@ public class Student extends User {
 
     public Student(String id, String firstName, String lastName, String classroom){
         super(id, firstName, lastName, STUDENT);
-        this.classroom = classroom;
+        this.classroomId = classroom;
     }
 
 
@@ -20,11 +20,11 @@ public class Student extends User {
         Setters
          */
     public void setClassID(String classID) {
-        this.classroom = classID;
+        this.classroomId = classID;
     }
 
 
     public String getClassId() {
-        return classroom;
+        return classroomId;
     }
 }
