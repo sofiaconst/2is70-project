@@ -196,28 +196,8 @@
                 app:iconSize="30dp"
                 app:iconTint="@android:color/white" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonDelete"
-                android:layout_width="300dp"
-                android:layout_height="60dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="12dp"
-                android:backgroundTint="@color/red"
-                android:elevation="0dp"
-                android:stateListAnimator="@null"
-                android:text="Delete"
-                android:textColor="@android:color/white"
-                android:textSize="25sp"
-                app:cornerRadius="12dp"
-                app:icon="@drawable/delete_button_icon"
-                app:iconGravity="textStart"
-                app:iconPadding="12dp"
-                app:iconSize="30dp"
-                app:iconTint="@android:color/white" />
-
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-
