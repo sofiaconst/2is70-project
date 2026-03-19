@@ -60,6 +60,7 @@ public class ProfileFragment extends Fragment {
     // Student Class Info
     private MaterialCardView cardClassInfo;
     private TextView tvTeacherName,tvClassName,tvNotRegistered,tvQRSubtext;
+    private StudentProfileFeature studentFeature;
 
     public ProfileFragment() {}
 
@@ -93,9 +94,6 @@ public class ProfileFragment extends Fragment {
     private void initStudentViews(View root) {
         // Student class info
         cardClassInfo = root.findViewById(R.id.cardClassInfo);
-        tvTeacherName = root.findViewById(R.id.tvTeacherName);
-        tvClassName = root.findViewById(R.id.tvClassName);
-        tvNotRegistered = root.findViewById(R.id.tvNotRegistered);
         buttonScanQR = root.findViewById(R.id.buttonScanQR);
     }
     private void initParentViews(View root) {
@@ -125,6 +123,7 @@ public class ProfileFragment extends Fragment {
         setupViewModel();
         setupObservers();
         setupClickListeners();
+        studentFeature = new StudentProfileFeature(getView(), profileVM);
     }
 
     // Setup
@@ -156,10 +155,8 @@ public class ProfileFragment extends Fragment {
         });
 
         profileVM.getStudentState().observe(getViewLifecycleOwner(), state -> {
-            // Bind the UI in one place
-            bindStudentProfileUI(state);
+            studentFeature.bind(state);
 
-            // Optional: show toast if there is an error
             if (state != null && state.getErrorMessage() != null) {
                 Toast.makeText(getContext(), state.getErrorMessage(), Toast.LENGTH_SHORT).show();
             }
@@ -271,22 +268,10 @@ public class ProfileFragment extends Fragment {
         roleText.setText(user.getRole().name());
         aboutMeEditText.setText(user.getBio());
     }
+
     private void updateStudentUI(Student student) {
-//        // Make sure base views are visible
-//        cardQRCode.setVisibility(View.VISIBLE);
         classText.setVisibility(View.VISIBLE);
-//        buttonScanQR.setVisibility(View.VISIBLE);
-//        buttonGenerateQR.setVisibility(View.GONE);
-
-        String classId = student.getClassId();
-
-        if (classId == null || classId.isEmpty()) {
-            // Ask ViewModel to emit unregistered state
-            profileVM.setStudentUnregistered();
-        } else {
-            // Trigger loading and fetching class + teacher info
-            profileVM.loadStudentProfile(classId);
-        }
+        studentFeature.handleStudent(student);
     }
     private void updateTeacherUI(Teacher teacher) {
         cardQRCode.setVisibility(View.VISIBLE);
@@ -308,36 +293,12 @@ public class ProfileFragment extends Fragment {
         classText.setText("Parent Profile");
     }
 
-    private void bindStudentProfileUI(StudentProfileState state) {
-        if (state == null) return;
-
-        // Text updates
-        classText.setText(state.isLoading() ? "Loading class info..." :
-                state.getClassName() != null ? ("Class: " + state.getClassName()) : "Class: Not Registered");
-        tvClassName.setText(state.isLoading() ? "Loading class info..." :
-                state.getClassName() != null ? ("Class: " + state.getClassName()) : "Class: None");
-        tvTeacherName.setText(state.isLoading() ? "" :
-                state.getTeacherName() != null ? ("Teacher: " + state.getTeacherName()) : "Teacher: Unknown");
-
-        boolean registered = state.isRegistered();
-
-        cardClassInfo.setVisibility(registered ? View.VISIBLE : View.GONE);
-        tvNotRegistered.setVisibility(registered ? View.GONE : View.VISIBLE);
-
-        cardQRCode.setVisibility(registered ? View.GONE : View.VISIBLE);
-        ivQRCode.setVisibility(cardQRCode.getVisibility());
-        tvQRLabel.setVisibility(cardQRCode.getVisibility());
-        tvQRSubtext.setVisibility(View.GONE);
-        buttonScanQR.setVisibility(cardQRCode.getVisibility());
-    }
-
     private void resetVisibility() {
         cardQRCode.setVisibility(View.GONE);
         cardMyChildren.setVisibility(View.GONE);
         classText.setVisibility(View.GONE);
         cardClassInfo.setVisibility(View.GONE);
     }
-
 
     private void startScanner() {
         ScanOptions options = new ScanOptions();
