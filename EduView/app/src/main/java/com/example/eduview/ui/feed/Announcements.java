@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -37,24 +38,22 @@ public class Announcements extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        recyclerAnnouncement = view.findViewById(R.id.recyclerAnnouncements);
+        RecyclerView recyclerPosts = view.findViewById(R.id.recyclerAnnouncements);
 
         feedAdapter = new FeedAdapter();
+        recyclerPosts.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerPosts.setAdapter(feedAdapter);
 
-        recyclerAnnouncement.setLayoutManager(new LinearLayoutManager(requireContext()));
-        recyclerAnnouncement.setAdapter(feedAdapter);
+        FeedViewModel feedViewModel = new ViewModelProvider(requireParentFragment()).get(FeedViewModel.class);
 
-        // Fake data for testing
-        List<FeedItem> items = new ArrayList<>();
+        feedViewModel.loadAnnouncements();
 
-        FeedItem ann1 = new FeedItem(FeedType.ANNOUNCEMENT, "Emily Smith", "We got a trip");
-        FeedItem ann2 = new FeedItem(FeedType.ANNOUNCEMENT, "Emily Smith", "Today we learned about volcanoes in class.");
-        FeedItem ann3 = new FeedItem(FeedType.ANNOUNCEMENT, "Emily Smith", "No more trip actually!");
-
-        items.add(ann1);
-        items.add(ann2);
-        items.add(ann3);
-
-        feedAdapter.setItems(items);
+        if (feedViewModel.getAnnouncements() != null) {
+            feedViewModel.getAnnouncements().observe(getViewLifecycleOwner(), items -> {
+                if (items != null) {
+                    feedAdapter.setItems(items);
+                }
+            });
+        }
     }
 }

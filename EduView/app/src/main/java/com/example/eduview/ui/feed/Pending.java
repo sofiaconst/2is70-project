@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -37,24 +38,22 @@ public class Pending extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        recyclerPending = view.findViewById(R.id.recyclerPending);
+        RecyclerView recyclerPosts = view.findViewById(R.id.recyclerPending);
 
         feedAdapter = new FeedAdapter();
+        recyclerPosts.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerPosts.setAdapter(feedAdapter);
 
-        recyclerPending.setLayoutManager(new LinearLayoutManager(requireContext()));
-        recyclerPending.setAdapter(feedAdapter);
+        FeedViewModel feedViewModel = new ViewModelProvider(requireParentFragment()).get(FeedViewModel.class);
 
-        // Fake data for testing
-        List<FeedItem> items = new ArrayList<>();
+        feedViewModel.loadPendingPosts();
 
-        FeedItem pen1 = new FeedItem(FeedType.PENDING, "John Doe", "Check out my science project on plant cells!");
-        FeedItem pen2 = new FeedItem(FeedType.PENDING, "Emma Smith", "Today we learned about volcanoes in class.");
-        FeedItem pen3 = new FeedItem(FeedType.PENDING, "Liam Brown", "I finished my math worksheet!");
-
-        items.add(pen1);
-        items.add(pen2);
-        items.add(pen3);
-
-        feedAdapter.setItems(items);
+        if (feedViewModel.getPendingPosts() != null) {
+            feedViewModel.getPendingPosts().observe(getViewLifecycleOwner(), items -> {
+                if (items != null) {
+                    feedAdapter.setItems(items);
+                }
+            });
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.eduview.ui.feed;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +9,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -37,24 +39,24 @@ public class Posts extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        recyclerPosts = view.findViewById(R.id.recyclerPosts);
-
+        RecyclerView recyclerPosts = view.findViewById(R.id.recyclerPosts);
+        Log.d("PostsFragment", "Create Recycler View");
         feedAdapter = new FeedAdapter();
-
         recyclerPosts.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerPosts.setAdapter(feedAdapter);
+        Log.d("PostsFragment", "Feed Adapter");
 
-        // Fake data for testing
-        List<FeedItem> items = new ArrayList<>();
+        FeedViewModel feedViewModel = new ViewModelProvider(requireParentFragment()).get(FeedViewModel.class);
 
-        FeedItem post1 = new FeedItem(FeedType.POST, "John Doe", "Check out my science project on plant cells!");
-        FeedItem post2 = new FeedItem(FeedType.POST, "Emma Smith", "Today we learned about volcanoes in class.");
-        FeedItem post3 = new FeedItem(FeedType.POST, "Liam Brown", "I finished my math worksheet!");
+        feedViewModel.loadPublishedPosts();
+        Log.d("PostsFragment", "Loaded Published Posts");
 
-        items.add(post1);
-        items.add(post2);
-        items.add(post3);
-
-        feedAdapter.setItems(items);
+        if (feedViewModel.getPublishedPosts() != null) {
+            feedViewModel.getPublishedPosts().observe(getViewLifecycleOwner(), items -> {
+                if (items != null) {
+                    feedAdapter.setItems(items);
+                }
+            });
+        }
     }
 }
