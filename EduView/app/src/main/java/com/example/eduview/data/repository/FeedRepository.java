@@ -13,7 +13,6 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class FeedRepository {
 
@@ -25,6 +24,11 @@ public class FeedRepository {
         Log.d("FeedRepository", "Fetching published posts for classroom: " + classroomId);
 
         MutableLiveData<List<FeedItem>> liveData = new MutableLiveData<>();
+        if (classroomId == null || classroomId.isEmpty()) {
+            Log.e("FeedRepository", "fetchPublishedPosts: classroomId is null");
+            liveData.setValue(new ArrayList<>());
+            return liveData;
+        }
 
         classroomRef.child(classroomId)
                 .child("feed")
@@ -47,7 +51,7 @@ public class FeedRepository {
                             postIds.add(postId);
                         }
                     }
-                    fetchPosts(postIds, FeedType.POST, liveData);
+                    fetchFeedItem(postIds, FeedType.POST, liveData);
                     Log.d("FeedRepository", "Total posts found: " + snapshot.getChildrenCount());
                 })
                 .addOnFailureListener(e -> {
@@ -83,7 +87,7 @@ public class FeedRepository {
                             postIds.add(postId);
                         }
                     }
-                    fetchPosts(postIds, FeedType.PENDING, liveData);
+                    fetchFeedItem(postIds, FeedType.PENDING, liveData);
                     Log.d("FeedRepository", "Total posts found: " + snapshot.getChildrenCount());
                 })
                 .addOnFailureListener(e -> {
@@ -119,7 +123,7 @@ public class FeedRepository {
                             postIds.add(postId);
                         }
                     }
-                    fetchPosts(postIds, FeedType.ANNOUNCEMENT, liveData);
+                    fetchFeedItem(postIds, FeedType.ANNOUNCEMENT, liveData);
                     Log.d("FeedRepository", "Total posts found: " + snapshot.getChildrenCount());
                 })
                 .addOnFailureListener(e -> {
@@ -128,7 +132,7 @@ public class FeedRepository {
                 });
         return liveData;
     }
-    private void fetchPosts(List<String> postIds, FeedType feedItemType, MutableLiveData<List<FeedItem>> liveData) {
+    private void fetchFeedItem(List<String> postIds, FeedType feedItemType, MutableLiveData<List<FeedItem>> liveData) {
         ArrayList<FeedItem> items = new ArrayList<>();
 
         if (postIds.isEmpty()) {
@@ -146,7 +150,9 @@ public class FeedRepository {
                     .addOnSuccessListener(snapshot -> {
                         String author = snapshot.child("authorId").getValue(String.class);
                         String content = snapshot.child("caption").getValue(String.class);
-                        String imageUrl = snapshot.child("image").getValue(String.class);
+                        String imageUrl = snapshot.child("imageUrl").getValue(String.class);
+
+                        Log.d("FeedRepository", "ImageURL " + imageUrl);
 
                         Log.d("FeedRepository", "Post content retrieved.");
                         if (content == null) content = "";
@@ -178,6 +184,7 @@ public class FeedRepository {
                                     String authorName = (firstName + " " + lastName).trim();
 
                                     FeedItem item = new FeedItem(feedItemType, authorName, finalContent);
+                                    item.setPostId(postId);
                                     item.setImageUrl(imageUrl);
                                     items.add(item);
 
@@ -214,7 +221,7 @@ public class FeedRepository {
         DatabaseReference pendingRef = classroomRef
                 .child(classroomId)
                 .child("feed")
-                .child("pending_posts")
+                .child("pending")
                 .child(postId);
 
         DatabaseReference publishedRef = classroomRef
@@ -223,10 +230,10 @@ public class FeedRepository {
                 .child("published_posts")
                 .child(postId);
 
-        // 1. Add to published
+        // Add to published
         publishedRef.setValue(true).addOnSuccessListener(aVoid -> {
 
-            // 2. Remove from pending
+            // Remove from pending
             pendingRef.removeValue();
 
         }).addOnFailureListener(e ->
@@ -237,7 +244,7 @@ public class FeedRepository {
 
         classroomRef.child(classroomId)
                 .child("feed")
-                .child("pending_posts")
+                .child("pending")
                 .child(postId)
                 .removeValue()
                 .addOnFailureListener(e ->

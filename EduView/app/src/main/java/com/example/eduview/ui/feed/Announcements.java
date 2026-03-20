@@ -40,11 +40,11 @@ public class Announcements extends Fragment {
 
         RecyclerView recyclerPosts = view.findViewById(R.id.recyclerAnnouncements);
 
-        feedAdapter = new FeedAdapter();
+        FeedViewModel feedViewModel = new ViewModelProvider(requireParentFragment()).get(FeedViewModel.class);
+        feedAdapter = new FeedAdapter(feedViewModel);
+
         recyclerPosts.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerPosts.setAdapter(feedAdapter);
-
-        FeedViewModel feedViewModel = new ViewModelProvider(requireParentFragment()).get(FeedViewModel.class);
 
         feedViewModel.loadAnnouncements();
 

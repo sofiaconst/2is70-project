@@ -84,6 +84,7 @@ public class FeedFragment extends Fragment {
         }).attach();
 
         feedViewModel.loadPostsForUser(user);
+        feedViewModel.loadPublishedPosts();
         Log.d("FeedFragment", "Loading posts for user");
     }
 

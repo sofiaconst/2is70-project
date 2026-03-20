@@ -1,5 +1,6 @@
 package com.example.eduview.ui.feed;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,7 +9,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
 
 import com.example.eduview.R;
 import com.example.eduview.data.model.FeedItem;
@@ -21,6 +24,11 @@ import java.util.List;
 public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private final List<FeedItem> items = new ArrayList<>();
+    private final FeedViewModel feedViewModel;
+
+    public FeedAdapter(FeedViewModel feedViewModel) {
+        this.feedViewModel = feedViewModel;
+    }
 
     public void setItems(List<FeedItem> newItems) {
         items.clear();
@@ -80,9 +88,13 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (item.getImageUrl() == null || item.getImageUrl().isEmpty()) {
             holder.ivPostImage.setVisibility(View.GONE);
         } else {
+            Log.d("FeedAdapter", "Url "+ item.getImageUrl());
             holder.ivPostImage.setVisibility(View.VISIBLE);
-            // later you can load the image here
-            // Glide.with(holder.itemView.getContext()).load(item.getImageUrl()).into(holder.ivPostImage);
+            Glide.with(holder.itemView.getContext())
+                    .load(item.getImageUrl())
+                    .dontAnimate()
+                    .centerCrop()
+                    .into(holder.ivPostImage);
         }
     }
 
@@ -93,6 +105,11 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             holder.ivAnnouncementImage.setVisibility(View.GONE);
         } else {
             holder.ivAnnouncementImage.setVisibility(View.VISIBLE);
+            Glide.with(holder.itemView.getContext())
+                    .load(item.getImageUrl())
+                    .dontAnimate()
+                    .centerCrop()
+                    .into(holder.ivAnnouncementImage);
         }
     }
 
@@ -104,14 +121,23 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             holder.ivPendingImage.setVisibility(View.GONE);
         } else {
             holder.ivPendingImage.setVisibility(View.VISIBLE);
+            Glide.with(holder.itemView.getContext())
+                    .load(item.getImageUrl())
+                    .dontAnimate()
+                    .centerCrop()
+                    .into(holder.ivPendingImage);
         }
 
         holder.btnApprove.setOnClickListener(v -> {
-            // add approve logic later
+            if (item.getPostId() != null) {
+                feedViewModel.approvePost(item.getPostId());
+            }
         });
 
         holder.btnReject.setOnClickListener(v -> {
-            // add reject logic later
+            if (item.getPostId() != null) {
+                feedViewModel.rejectPost(item.getPostId());
+            }
         });
     }
 

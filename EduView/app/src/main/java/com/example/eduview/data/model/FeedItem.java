@@ -6,6 +6,8 @@ public class FeedItem {
 
     private FeedType type;
 
+    private String postId;
+
     private String authorName;
     private String content;
     private String imageUrl;
@@ -21,6 +23,9 @@ public class FeedItem {
 
     public FeedType getType() {
         return type;
+    }
+    public String getPostId() {
+        return postId;
     }
 
     public String getAuthorName() {
@@ -45,5 +50,8 @@ public class FeedItem {
 
     public void setPending(boolean pending) {
         isPending = pending;
+    }
+    public void setPostId(String postId) {
+        this.postId = postId;
     }
 }

@@ -41,15 +41,13 @@ public class Posts extends Fragment {
 
         RecyclerView recyclerPosts = view.findViewById(R.id.recyclerPosts);
         Log.d("PostsFragment", "Create Recycler View");
-        feedAdapter = new FeedAdapter();
+
+        FeedViewModel feedViewModel = new ViewModelProvider(requireParentFragment()).get(FeedViewModel.class);
+        feedAdapter = new FeedAdapter(feedViewModel);
+
         recyclerPosts.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerPosts.setAdapter(feedAdapter);
         Log.d("PostsFragment", "Feed Adapter");
-
-        FeedViewModel feedViewModel = new ViewModelProvider(requireParentFragment()).get(FeedViewModel.class);
-
-        feedViewModel.loadPublishedPosts();
-        Log.d("PostsFragment", "Loaded Published Posts");
 
         if (feedViewModel.getPublishedPosts() != null) {
             feedViewModel.getPublishedPosts().observe(getViewLifecycleOwner(), items -> {

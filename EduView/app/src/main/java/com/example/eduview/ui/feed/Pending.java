@@ -40,11 +40,12 @@ public class Pending extends Fragment {
 
         RecyclerView recyclerPosts = view.findViewById(R.id.recyclerPending);
 
-        feedAdapter = new FeedAdapter();
+        FeedViewModel feedViewModel = new ViewModelProvider(requireParentFragment()).get(FeedViewModel.class);
+        feedAdapter = new FeedAdapter(feedViewModel);
+
         recyclerPosts.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerPosts.setAdapter(feedAdapter);
 
-        FeedViewModel feedViewModel = new ViewModelProvider(requireParentFragment()).get(FeedViewModel.class);
 
         feedViewModel.loadPendingPosts();
 

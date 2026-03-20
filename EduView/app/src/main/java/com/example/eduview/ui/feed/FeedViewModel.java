@@ -27,10 +27,11 @@ public class FeedViewModel extends ViewModel {
         classroomId = null;
         if (user instanceof Student) {
             classroomId = ((Student) user).getClassId();
-            Log.d("FeedViewModel", "Loading posts for classroom: " + classroomId);
+
         } else if (user instanceof Teacher) {
             classroomId = ((Teacher) user).getClassId();
         }
+        Log.d("FeedViewModel", "Class id found for class: " + classroomId);
     }
 
     public void loadPublishedPosts() {
@@ -55,5 +56,22 @@ public class FeedViewModel extends ViewModel {
 
     public LiveData<List<FeedItem>> getPendingPosts() {
         return pendingPosts;
+    }
+
+    public void approvePost(String postId) {
+        if (classroomId == null || classroomId.isEmpty()) {
+            Log.e("FeedViewModel", "Cannot approve post, classroomId is null");
+            return;
+        }
+        feedRepository.approvePost(classroomId, postId);
+        loadPendingPosts();
+    }
+    public void rejectPost(String postId) {
+        if (classroomId == null || classroomId.isEmpty()) {
+            Log.e("FeedViewModel", "Cannot reject post, classroomId is null");
+            return;
+        }
+        feedRepository.rejectPost(classroomId, postId);
+        loadPendingPosts();
     }
 }
