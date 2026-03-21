@@ -29,7 +29,8 @@ import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.User;
 import com.example.eduview.ui.adapters.ChildAdapter;
 import com.example.eduview.ui.login.LoginActivity;
-import com.example.eduview.ui.profile.profileStates.StudentProfileState;
+import com.example.eduview.ui.profile.profileFeatures.StudentProfileFeature;
+import com.example.eduview.ui.profile.profileFeatures.TeacherProfileFeature;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.journeyapps.barcodescanner.ScanContract;
@@ -39,7 +40,7 @@ public class ProfileFragment extends Fragment {
 
     private ProfileViewModel profileVM;
     private ShapeableImageView profileImage;
-    private TextView userNameText,roleText,classText;
+    private TextView userNameText, roleText, classText;
     private EditText aboutMeEditText;
     private Button btnSaveBio, logoutButton;
 
@@ -59,10 +60,11 @@ public class ProfileFragment extends Fragment {
 
     // Student Class Info
     private MaterialCardView cardClassInfo;
-    private TextView tvTeacherName,tvClassName,tvNotRegistered,tvQRSubtext;
     private StudentProfileFeature studentFeature;
+    private TeacherProfileFeature teacherFeature;
 
-    public ProfileFragment() {}
+    public ProfileFragment() {
+    }
 
     @Nullable
     @Override
@@ -82,6 +84,7 @@ public class ProfileFragment extends Fragment {
         initParentViews(root);
         initStudentViews(root);
     }
+
     private void initBaseViews(View root) {
         profileImage = root.findViewById(R.id.profileImage);
         userNameText = root.findViewById(R.id.User_name_text);
@@ -91,78 +94,76 @@ public class ProfileFragment extends Fragment {
         btnSaveBio = root.findViewById(R.id.btnSaveBio);
         logoutButton = root.findViewById(R.id.buttonLogout);
     }
+
     private void initStudentViews(View root) {
         // Student class info
         cardClassInfo = root.findViewById(R.id.cardClassInfo);
         buttonScanQR = root.findViewById(R.id.buttonScanQR);
     }
+
     private void initParentViews(View root) {
         cardMyChildren = root.findViewById(R.id.cardMyChildren);
         rvChildren = root.findViewById(R.id.rvChildren);
         tvNoChildren = root.findViewById(R.id.tvNoChildren);
         btnAddChild = root.findViewById(R.id.btnAddChild);
     }
+
     private void initTeacherViews(View root) {
         cardQRCode = root.findViewById(R.id.cardQRCode);
         tvQRLabel = root.findViewById(R.id.tvQRLabel);
         ivQRCode = root.findViewById(R.id.ivQRCode);
         buttonGenerateQR = root.findViewById(R.id.buttonGenerateQR);
-        tvQRSubtext = root.findViewById(R.id.tvQRSubtext);
-    }
-
-    private void setupRecyclerView() {
-        childAdapter = new ChildAdapter();
-        rvChildren.setLayoutManager(new LinearLayoutManager(getContext()));
-        rvChildren.setAdapter(childAdapter);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        setupViewModel();
-        setupObservers();
-        setupClickListeners();
-        studentFeature = new StudentProfileFeature(getView(), profileVM);
-    }
-
-    // Setup
-    private void setupViewModel() {
         profileVM = new ViewModelProvider(this).get(ProfileViewModel.class);
-    }
-    private void setupObservers() {
+
+        studentFeature = new StudentProfileFeature(getView(), profileVM);
+        teacherFeature = new TeacherProfileFeature(getView(), profileVM);
+
         profileVM.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
+                Log.d("TESTER", user.getFirstName());
                 updateUI(user);
+                setupRoleBasedObservers(user);
+                setupRoleBasedListeners(user);
             } else {
                 Log.e("ProfileFragment", "Current user is null");
             }
         });
-
-        profileVM.getChildrenData().observe(getViewLifecycleOwner(), children -> {
-            if (children != null) {
-                childAdapter.setChildren(children);
-                tvNoChildren.setVisibility(children.isEmpty() ? View.VISIBLE : View.GONE);
-                rvChildren.setVisibility(children.isEmpty() ? View.GONE : View.VISIBLE);
-            }
-        });
-
-        // Observe join status for toast
-        profileVM.getJoinStatus().observe(getViewLifecycleOwner(), status -> {
-            if (status != null) {
-                Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        profileVM.getStudentState().observe(getViewLifecycleOwner(), state -> {
-            studentFeature.bind(state);
-
-            if (state != null && state.getErrorMessage() != null) {
-                Toast.makeText(getContext(), state.getErrorMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
     }
-    private void setupClickListeners() {
+
+    private void updateUI(User user) {
+        updateBaseUI(user);
+        resetVisibility();
+
+        switch (user.getRole()) {
+            case TEACHER:
+                teacherFeature.handleTeacher((Teacher) user);
+                break;
+
+            case STUDENT:
+                studentFeature.handleStudent((Student) user);
+                break;
+
+            case PARENT:
+                setupRecyclerView();
+                updateParentUI((Parent) user);
+
+                break;
+        }
+    }
+
+    private void updateBaseUI(User user) {
+        userNameText.setText(user.getFirstName() + " " + user.getLastName());
+        roleText.setText(user.getRole().name());
+        aboutMeEditText.setText(user.getBio());
+    }
+
+    private void setupRoleBasedListeners(User user) {
         logoutButton.setOnClickListener(v -> {
             profileVM.logout();
             Log.d("ProfileFragment", "Navigating to LoginActivity");
@@ -170,27 +171,66 @@ public class ProfileFragment extends Fragment {
             requireActivity().finish();
         });
 
-        buttonScanQR.setOnClickListener(v -> startScanner());
-
-        buttonGenerateQR.setOnClickListener(v -> {
-            User user = profileVM.getCurrentUser().getValue();
-            if (user instanceof Teacher) {
-                String classId = ((Teacher) user).getClassId();
-
-                Bitmap qrBitmap = profileVM.generateQRCode(classId);
-                if (qrBitmap != null) {
-                    ivQRCode.setImageBitmap(qrBitmap);
-                    tvQRLabel.setVisibility(View.VISIBLE);
-                    ivQRCode.setVisibility(View.VISIBLE);
-                } else {
-                    Toast.makeText(getContext(), "Could not generate QR code.", Toast.LENGTH_SHORT).show();
+        switch (user.getRole()) {
+            case PARENT:
+                if (btnAddChild != null) {
+                    btnAddChild.setOnClickListener(v -> showAddChildDialog());
                 }
-            }
-        });
+                break;
 
-        if (btnAddChild != null) {
-            btnAddChild.setOnClickListener(v -> showAddChildDialog());
+            case STUDENT:
+                buttonScanQR.setOnClickListener(v -> startScanner());
+                break;
+
+            case TEACHER:
+                buttonGenerateQR.setOnClickListener(v -> {
+                    if (user instanceof Teacher) {
+                        profileVM.generateTeacherQR(((Teacher) user).getClassId());
+                    }
+                });
+                break;
         }
+    }
+
+    private void setupRoleBasedObservers(User user) {
+        switch (user.getRole()) {
+            case PARENT:
+                profileVM.getChildrenData().observe(getViewLifecycleOwner(), children -> {
+                    if (children != null) {
+                        childAdapter.setChildren(children);
+                        tvNoChildren.setVisibility(children.isEmpty() ? View.VISIBLE : View.GONE);
+                        rvChildren.setVisibility(children.isEmpty() ? View.GONE : View.VISIBLE);
+                    }
+                });
+                break;
+
+            case STUDENT:
+                profileVM.getJoinStatus().observe(getViewLifecycleOwner(), status -> {
+                    if (status != null) {
+                        Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+                profileVM.getStudentState().observe(getViewLifecycleOwner(), state -> {
+                    studentFeature.bind(state);
+
+                    if (state != null && state.getErrorMessage() != null) {
+                        Toast.makeText(getContext(), state.getErrorMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+                break;
+
+            case TEACHER:
+                profileVM.getTeacherState().observe(getViewLifecycleOwner(), state -> {
+                    teacherFeature.bind(state);
+
+                    if (state != null && state.getErrorMessage() != null) {
+                        Toast.makeText(getContext(), state.getErrorMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+                break;
+        }
+
     }
 
     private void showAddChildDialog() {
@@ -243,54 +283,19 @@ public class ProfileFragment extends Fragment {
         });
     }
 
-    // Update UI
-    private void updateUI(User user) {
-        updateBaseUI(user);
-        resetVisibility();
-
-        switch (user.getRole()) {
-            case TEACHER:
-                updateTeacherUI((Teacher) user);
-                break;
-
-            case STUDENT:
-                updateStudentUI((Student) user);
-                break;
-
-            case PARENT:
-                setupRecyclerView();
-                updateParentUI((Parent) user);
-                break;
-        }
-    }
-    private void updateBaseUI(User user) {
-        userNameText.setText(user.getFirstName() + " " + user.getLastName());
-        roleText.setText(user.getRole().name());
-        aboutMeEditText.setText(user.getBio());
+    private void setupRecyclerView() {
+        childAdapter = new ChildAdapter();
+        rvChildren.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvChildren.setAdapter(childAdapter);
     }
 
-    private void updateStudentUI(Student student) {
-        classText.setVisibility(View.VISIBLE);
-        studentFeature.handleStudent(student);
-    }
-    private void updateTeacherUI(Teacher teacher) {
-        cardQRCode.setVisibility(View.VISIBLE);
-        classText.setVisibility(View.VISIBLE);
-        buttonGenerateQR.setVisibility(View.VISIBLE);
-        buttonScanQR.setVisibility(View.GONE);
-        tvQRLabel.setVisibility(View.VISIBLE);
-
-        String classId = teacher.getClassId();
-        if (classId == null || classId.isEmpty()) {
-            classText.setText("Class: None");
-        }
-    }
     private void updateParentUI(Parent parent) {
 
         profileVM.loadChildrenData(parent);
         cardMyChildren.setVisibility(View.VISIBLE);
         classText.setVisibility(View.VISIBLE);
-        classText.setText("Parent Profile");
+        classText.setText("");
+
     }
 
     private void resetVisibility() {

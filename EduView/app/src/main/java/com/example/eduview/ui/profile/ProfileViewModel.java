@@ -16,6 +16,7 @@ import com.example.eduview.data.repository.AuthRepository;
 import com.example.eduview.data.repository.ClassroomRepository;
 import com.example.eduview.data.repository.UserRepository;
 import com.example.eduview.ui.profile.profileStates.StudentProfileState;
+import com.example.eduview.ui.profile.profileStates.TeacherProfileState;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
@@ -40,6 +41,7 @@ public class ProfileViewModel extends ViewModel {
     private final MutableLiveData<String> joinStatus = new MutableLiveData<>();
     private final MutableLiveData<List<Student>> childrenData = new MutableLiveData<>();
     private final MutableLiveData<StudentProfileState> studentState = new MutableLiveData<>();
+    private final MutableLiveData<TeacherProfileState> teacherState = new MutableLiveData<>();
     private final MutableLiveData<String> addChildStatus = new MutableLiveData<>();
 
     public LiveData<String> getAddChildStatus() {
@@ -158,6 +160,7 @@ public class ProfileViewModel extends ViewModel {
         return childrenData;
     }
     public LiveData<StudentProfileState> getStudentState() {return studentState;}
+    public LiveData<TeacherProfileState> getTeacherState() {return teacherState;}
 
     public void loadChildrenData(Parent parent) {
         List<String> childrenIds = parent.getChildrenIDs();
@@ -217,6 +220,15 @@ public class ProfileViewModel extends ViewModel {
         }
     }
 
+    public void generateTeacherQR(String classId) {
+        /*
+        Bitmap qr = generateQRCode(classId);
+
+        teacherState.setValue(teacherState.copyWithQr(qr));
+
+         */
+    }
+
     public void addChild(String parentId, String fName, String lName, String email, String password) {
 
         if (fName.isEmpty() || lName.isEmpty() || email.isEmpty() || password.isEmpty()) {
@@ -248,6 +260,29 @@ public class ProfileViewModel extends ViewModel {
         );
     }
 
+
+    public void loadTeacherProfile(String classId) {
+        teacherState.postValue(TeacherProfileState.loading());
+
+        classroomRepository.getClassroomById(classId, new ClassroomRepository.ClassroomCallback<Classroom>() {
+            @Override
+            public void onSuccess(Classroom classroom) {
+                if (classroom == null) {
+                    teacherState.postValue(TeacherProfileState.error("Classroom not found"));
+                    return;
+                }
+
+                teacherState.postValue(TeacherProfileState.success(classroom.getName(), generateQRCode(classId)));
+            }
+
+            @Override
+            public void onError(Exception e) {
+                teacherState.postValue(TeacherProfileState.error(e.getMessage()));
+            }
+        });
+
+
+    }
 
 
 }

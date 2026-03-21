@@ -1,10 +1,11 @@
-package com.example.eduview.ui.profile;
+package com.example.eduview.ui.profile.profileFeatures;
 
 import android.view.View;
 import android.widget.TextView;
 
 import com.example.eduview.R;
 import com.example.eduview.data.model.Student;
+import com.example.eduview.ui.profile.ProfileViewModel;
 import com.example.eduview.ui.profile.profileStates.StudentProfileState;
 
 public class StudentProfileFeature {
@@ -38,6 +39,7 @@ public class StudentProfileFeature {
     }
 
     public void bind(StudentProfileState state) {
+
         if (state == null) return;
 
         boolean registered = state.isRegistered();
@@ -63,6 +65,7 @@ public class StudentProfileFeature {
         );
 
         // Visibility
+        classText.setVisibility(View.VISIBLE);
         cardClassInfo.setVisibility(registered ? View.VISIBLE : View.GONE);
         tvNotRegistered.setVisibility(registered ? View.GONE : View.VISIBLE);
 
@@ -70,6 +73,8 @@ public class StudentProfileFeature {
         buttonScanQR.setVisibility(registered ? View.GONE : View.VISIBLE);
         tvQRLabel.setVisibility(registered ? View.GONE : View.VISIBLE);
         ivQRCode.setVisibility(registered ? View.GONE : View.VISIBLE);
+
+
     }
 
     public void handleStudent(Student student) {
