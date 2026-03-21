@@ -21,7 +21,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
-import com.example.eduview.AuthService;
+import com.example.eduview.AuthRepository;
 import com.example.eduview.R;
 import com.example.eduview.ui.login.LoginActivity;
 
@@ -143,7 +143,7 @@ public class SignupActivity extends AppCompatActivity {
         });
 
         // Initialize AuthRepository
-        AuthService authService = new AuthService();
+        AuthRepository authRepository = new AuthRepository();
 
         // Add role tracking
         final String[] selectedRole = {null};
@@ -182,6 +182,11 @@ public class SignupActivity extends AppCompatActivity {
                 return;
             }
 
+            if (!email.contains("@")) {
+                Toast.makeText(this, "Please enter a valid email address", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             if (!isPasswordValid(password)) {
                 tvPasswordError.setText(getPasswordRequirementsMessage(password));
                 tvPasswordError.setVisibility(View.VISIBLE);
@@ -190,9 +195,13 @@ public class SignupActivity extends AppCompatActivity {
                 tvPasswordError.setVisibility(View.GONE);
             }
 
-            AuthService.AuthCallback callback = new AuthService.AuthCallback() {
+            // Disable button to prevent double clicks
+            btnSignUp.setEnabled(false);
+
+            AuthRepository.AuthCallback callback = new AuthRepository.AuthCallback() {
                 @Override
                 public void onSuccess() {
+                    btnSignUp.setEnabled(true);
                     Toast.makeText(SignupActivity.this, "Sign Up Successful!", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(SignupActivity.this, LoginActivity.class));
                     finish();
@@ -200,6 +209,7 @@ public class SignupActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(Exception e) {
+                    btnSignUp.setEnabled(true);
                     Toast.makeText(SignupActivity.this, "Sign Up Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             };
@@ -209,20 +219,29 @@ public class SignupActivity extends AppCompatActivity {
                 if (fragment instanceof TeacherSignupFragment) {
                     String className = ((TeacherSignupFragment) fragment).getClassName();
                     if (className.isEmpty()) {
+                        btnSignUp.setEnabled(true);
                         Toast.makeText(this, "Please enter classroom name", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    authService.signUpTeacher(firstName, lastName, email, password, className, callback);
+                    authRepository.signUpTeacher(firstName, lastName, email, password, className, callback);
                 }
             } else if ("Parent".equals(selectedRole[0])) {
                 Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
                 if (fragment instanceof ParentSignupFragment) {
-                    List<AuthService.ChildInfo> childrenInfo = ((ParentSignupFragment) fragment).getChildrenInfo();
-                    if (childrenInfo.size() != ((ParentSignupFragment) fragment).getCounter()) {
-                        Toast.makeText(this, "Please provide children information", Toast.LENGTH_SHORT).show();
+                    List<AuthRepository.ChildInfo> childrenInfo = ((ParentSignupFragment) fragment).getChildrenInfo();
+                    
+                    if (childrenInfo == null) {
+                        // Error already shown in fragment via Toast
+                        btnSignUp.setEnabled(true);
                         return;
                     }
-                    authService.signUpParent(firstName, lastName, email, password, childrenInfo, callback);
+
+                    if (childrenInfo.size() != ((ParentSignupFragment) fragment).getCounter()) {
+                        btnSignUp.setEnabled(true);
+                        Toast.makeText(this, "Please provide information for all children", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    authRepository.signUpParent(firstName, lastName, email, password, childrenInfo, callback);
                 }
             }
         });

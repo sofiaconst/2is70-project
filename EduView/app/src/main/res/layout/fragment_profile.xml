@@ -38,13 +38,29 @@
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="10dp"
                     android:padding="2dp"
-                    android:scaleType="center"
+                    android:scaleType="centerInside"
                     android:src="@drawable/pfp_photo_button_icon"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:shapeAppearanceOverlay="@style/CircleImage"
                     app:strokeColor="@android:color/black"
                     app:strokeWidth="2dp" />
+
+                <TextView
+                    android:id="@+id/tvEditPfp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:fontFamily="@font/robotomono"
+                    android:text="Edit Picture"
+                    android:textColor="@color/aqua"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toEndOf="@+id/profileImage"
+                    app:layout_constraintStart_toStartOf="@+id/profileImage"
+                    app:layout_constraintTop_toBottomOf="@+id/profileImage" />
 
                 <View
                     android:id="@+id/profile_bar"
@@ -123,7 +139,7 @@
                     android:textStyle="bold"
                     app:layout_constraintBottom_toTopOf="@id/aboutMeCard"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/Teacher_Class_Text" />
+                    app:layout_constraintTop_toBottomOf="@+id/tvEditPfp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSaveBio"
@@ -269,6 +285,8 @@
                         android:textSize="20sp"
                         android:textStyle="bold"
                         android:visibility="gone"
+                        android:drawableStart="@drawable/ic_qr_scanner"
+                        android:drawablePadding="8dp"
                         tools:visibility="visible" />
 
                     <TextView
@@ -279,24 +297,6 @@
                         android:text="Students can scan this code to join the class."
                         android:textColor="#666666"
                         android:textSize="13sp"
-                        tools:visibility="visible" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/buttonGenerateQR"
-                        android:layout_width="match_parent"
-                        android:layout_height="50dp"
-                        android:layout_marginTop="20dp"
-                        android:backgroundTint="@color/aqua"
-                        android:text="Generate Class QR Code"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/white"
-                        android:textSize="16sp"
-                        android:visibility="gone"
-                        app:cornerRadius="14dp"
-                        app:icon="@android:drawable/ic_menu_share"
-                        app:iconGravity="textStart"
-                        app:iconPadding="10dp"
-                        app:iconTint="@android:color/white"
                         tools:visibility="visible" />
 
                     <com.google.android.material.card.MaterialCardView
@@ -355,6 +355,69 @@
             app:strokeWidth="1dp">
 
             <LinearLayout
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/manageStudentsCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="16dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="#F9F7F3"
+                app:cardCornerRadius="18dp"
+                app:strokeColor="#D9D2C3"
+                app:strokeWidth="1dp"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:id="@+id/tvManageStudentsLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/robotomono"
+                        android:text="Manage Students"
+                        android:textColor="#1F1F1F"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:drawableStart="@drawable/ic_people"
+                        android:drawablePadding="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvManageStudentsSubtext"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="View students in your class and remove them if needed."
+                        android:textColor="#666666"
+                        android:textSize="13sp" />
+
+                    <ProgressBar
+                        android:id="@+id/progressStudents"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="16dp"
+                        android:visibility="gone" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvStudents"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:nestedScrollingEnabled="false"
+                        tools:listitem="@layout/item_student_manage" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/profileFragmentContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"

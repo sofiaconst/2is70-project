@@ -1,21 +1,25 @@
 package com.example.eduview;
 
 import android.util.Log;
+
+import com.example.eduview.data.model.ProfilePicture;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AuthService {
+public class AuthRepository {
 
     private final FirebaseAuth firebaseAuth;
     private final DatabaseReference rootRef;
 
-    public AuthService() {
+    public AuthRepository() {
         firebaseAuth = FirebaseAuth.getInstance();
         rootRef = FirebaseDatabase.getInstance().getReference();
     }
@@ -26,6 +30,7 @@ public class AuthService {
                 if (task.isSuccessful()) {
                     String userId = firebaseAuth.getCurrentUser().getUid();
                     User user = new User(firstName, lastName, email, role);
+                    user.pfp = ProfilePicture.DEFAULT.name();
 
                     rootRef.child("users").child(userId).setValue(user)
                         .addOnCompleteListener(dbTask -> {
@@ -34,6 +39,7 @@ public class AuthService {
                                 callback.onSuccess();
                             } else {
                                 Log.e("AuthRepository", "Failed to save user data to Firebase", dbTask.getException());
+                                firebaseAuth.signOut(); // Clean up session on failure
                                 callback.onFailure(dbTask.getException());
                             }
                         });
@@ -55,6 +61,7 @@ public class AuthService {
 
                     // 1. Store in users table
                     User user = new User(firstName, lastName, email, "Teacher");
+                    user.pfp = ProfilePicture.DEFAULT.name();
                     rootRef.child("users").child(userId).setValue(user)
                         .addOnCompleteListener(userTask -> {
                             if (userTask.isSuccessful()) {
@@ -69,14 +76,17 @@ public class AuthService {
                                                     if (classroomTask.isSuccessful()) {
                                                         callback.onSuccess();
                                                     } else {
+                                                        firebaseAuth.signOut();
                                                         callback.onFailure(classroomTask.getException());
                                                     }
                                                 });
                                         } else {
+                                            firebaseAuth.signOut();
                                             callback.onFailure(teacherTask.getException());
                                         }
                                     });
                             } else {
+                                firebaseAuth.signOut();
                                 callback.onFailure(userTask.getException());
                             }
                         });
@@ -95,6 +105,7 @@ public class AuthService {
 
                     // 1. Store Parent in users table
                     User parentUser = new User(firstName, lastName, email, "Parent");
+                    parentUser.pfp = ProfilePicture.DEFAULT.name();
                     rootRef.child("users").child(parentId).setValue(parentUser)
                         .addOnCompleteListener(userTask -> {
                             if (userTask.isSuccessful()) {
@@ -118,10 +129,12 @@ public class AuthService {
                                                             if (reAuthTask.isSuccessful()) {
                                                                 callback.onSuccess();
                                                             } else {
+                                                                firebaseAuth.signOut();
                                                                 callback.onFailure(reAuthTask.getException());
                                                             }
                                                         });
                                                 } else {
+                                                    firebaseAuth.signOut();
                                                     callback.onFailure(parentTask.getException());
                                                 }
                                             });
@@ -129,10 +142,12 @@ public class AuthService {
 
                                     @Override
                                     public void onError(Exception e) {
+                                        firebaseAuth.signOut(); // Ensure we sign out on any sequential error
                                         callback.onFailure(e);
                                     }
                                 });
                             } else {
+                                firebaseAuth.signOut();
                                 callback.onFailure(userTask.getException());
                             }
                         });
@@ -157,6 +172,8 @@ public class AuthService {
 
                     // 1. Store in users table
                     User childUser = new User(child.firstName, child.lastName, child.email, "Student");
+                    childUser.bio = "";
+                    childUser.pfp = ProfilePicture.DEFAULT.name();
                     
                     rootRef.child("users").child(childUid).setValue(childUser)
                         .addOnCompleteListener(dbTask -> {
@@ -180,65 +197,6 @@ public class AuthService {
                         });
                 } else {
                     callback.onError(task.getException());
-                }
-            });
-    }
-
-    public void addChildToParent(String parentId, ChildInfo child, String parentPassword, AuthCallback callback) {
-        String parentEmail = firebaseAuth.getCurrentUser().getEmail();
-
-        firebaseAuth.createUserWithEmailAndPassword(child.email, parentPassword)
-            .addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    String childUid = firebaseAuth.getCurrentUser().getUid();
-
-                    // 1. Store in users table
-                    User childUser = new User(child.firstName, child.lastName, child.email, "Student");
-                    rootRef.child("users").child(childUid).setValue(childUser)
-                        .addOnCompleteListener(userTask -> {
-                            if (userTask.isSuccessful()) {
-                                // 2. Store in students table
-                                Map<String, Object> studentData = new HashMap<>();
-                                studentData.put("classroom", "");
-                                rootRef.child("students").child(childUid).setValue(studentData)
-                                    .addOnCompleteListener(studentTask -> {
-                                        if (studentTask.isSuccessful()) {
-                                            // 3. Add to parent's children list
-                                            rootRef.child("parents").child(parentId).child("children").get()
-                                                .addOnCompleteListener(getTask -> {
-                                                    if (getTask.isSuccessful()) {
-                                                        Map<String, String> childrenMap = (Map<String, String>) getTask.getResult().getValue();
-                                                        if (childrenMap == null) childrenMap = new HashMap<>();
-                                                        
-                                                        int nextIndex = childrenMap.size() + 1;
-                                                        childrenMap.put("student_" + nextIndex, childUid);
-
-                                                        rootRef.child("parents").child(parentId).child("children").setValue(childrenMap)
-                                                            .addOnCompleteListener(updateTask -> {
-                                                                // Re-authenticate as parent
-                                                                firebaseAuth.signInWithEmailAndPassword(parentEmail, parentPassword)
-                                                                    .addOnCompleteListener(reAuthTask -> {
-                                                                        if (reAuthTask.isSuccessful()) {
-                                                                            callback.onSuccess();
-                                                                        } else {
-                                                                            callback.onFailure(reAuthTask.getException());
-                                                                        }
-                                                                    });
-                                                            });
-                                                    } else {
-                                                        callback.onFailure(getTask.getException());
-                                                    }
-                                                });
-                                        } else {
-                                            callback.onFailure(studentTask.getException());
-                                        }
-                                    });
-                            } else {
-                                callback.onFailure(userTask.getException());
-                            }
-                        });
-                } else {
-                    callback.onFailure(task.getException());
                 }
             });
     }
@@ -278,8 +236,6 @@ public class AuthService {
             this.last_name = last_name;
             this.email = email;
             this.role = role;
-            this.bio = "";
-            this.pfp = "";
         }
     }
 

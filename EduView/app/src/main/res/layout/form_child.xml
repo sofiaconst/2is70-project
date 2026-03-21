@@ -92,16 +92,16 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Email of Child"
+            android:text="Username of Child"
             android:textSize="12sp" />
 
         <EditText
-            android:id="@+id/et_child_email"
+            android:id="@+id/et_child_username"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Email"
+            android:hint="Username"
             android:importantForAutofill="no"
-            android:inputType="textEmailAddress"
+            android:inputType="text"
             android:background="@drawable/bg_input_rounded"/>
     </LinearLayout>
 </LinearLayout>

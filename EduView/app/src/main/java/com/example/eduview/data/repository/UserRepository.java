@@ -5,6 +5,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.example.eduview.data.model.Parent;
+import com.example.eduview.data.model.ProfilePicture;
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.User;
@@ -124,6 +125,7 @@ public class UserRepository {
                     base.lastName,
                     classId
             );
+            student.setProfilePictureName(base.pfp);
 
             // Return via callback
             callback.onSuccess(student);
@@ -155,6 +157,7 @@ public class UserRepository {
                     email,
                     classId
             );
+            teacher.setProfilePictureName(base.pfp);
 
             // Return via callback
             callback.onSuccess(teacher);
@@ -186,6 +189,7 @@ public class UserRepository {
                     email,
                     childrenIDs
             );
+            parent.setProfilePictureName(base.pfp);
 
             Log.d("TESTER", Arrays.toString(parent.getChildrenIDs().toArray()));
 
@@ -213,8 +217,8 @@ public class UserRepository {
         return childrenIDs;
     }
 
-    public void updateProfilePicture(String userID, String imageUrl) {
-        usersRef.child(userID).child("pfp").setValue(imageUrl);
+    public void updateProfilePicture(String userID, ProfilePicture profilePicture) {
+        usersRef.child(userID).child("pfp").setValue(profilePicture.name());
     }
 
     public void updateClass(String userID, String classID) {
@@ -247,6 +251,47 @@ public class UserRepository {
             List<String> childrenIDs = getChildrenIds(parentSnapshot);
             onSuccess.accept(childrenIDs);
         });
+    }
+
+    // Helper method to get students by their IDs
+    public void getStudentsByIds(List<String> studentIds,
+                                 java.util.function.Consumer<List<Student>> onSuccess,
+                                 java.util.function.Consumer<Exception> onError) {
+
+        if (studentIds == null || studentIds.isEmpty()) {
+            onSuccess.accept(new ArrayList<>());
+            return;
+        }
+
+        List<Student> students = new ArrayList<>();
+        final int[] remaining = {studentIds.size()};
+        final boolean[] failed = {false};
+
+        for (String studentId : studentIds) {
+            getUserById(studentId, new UserCallback() {
+                @Override
+                public void onSuccess(User user) {
+                    if (failed[0]) return;
+
+                    if (user instanceof Student) {
+                        students.add((Student) user);
+                    }
+
+                    remaining[0]--;
+
+                    if (remaining[0] == 0) {
+                        onSuccess.accept(students);
+                    }
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    if (failed[0]) return;
+                    failed[0] = true;
+                    onError.accept(e);
+                }
+            });
+        }
     }
 
     public interface UserCallback {
