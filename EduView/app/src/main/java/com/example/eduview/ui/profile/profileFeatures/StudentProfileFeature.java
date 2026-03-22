@@ -1,90 +1,94 @@
 package com.example.eduview.ui.profile.profileFeatures;
 
+import android.content.Context;
+import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.eduview.R;
 import com.example.eduview.data.model.Student;
+import com.example.eduview.ui.profile.ProfileUIState;
 import com.example.eduview.ui.profile.ProfileViewModel;
 import com.example.eduview.ui.profile.profileStates.StudentProfileState;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.imageview.ShapeableImageView;
 
 public class StudentProfileFeature {
 
-    private final ProfileViewModel viewModel;
+    private View root;
 
-    private final TextView classText;
-    private final TextView tvClassName;
-    private final TextView tvTeacherName;
-    private final TextView tvNotRegistered;
+    private final TextView tvClassLabel;
 
-    private final View cardClassInfo;
-    private final View cardQRCode;
-    private final View buttonScanQR;
-    private final View tvQRLabel;
-    private final View ivQRCode;
+    // --------------------- QR SECTION --------------------- //
 
-    public StudentProfileFeature(View root, ProfileViewModel viewModel) {
-        this.viewModel = viewModel;
+    private final MaterialCardView cardClassQRCode;
+    private final TextView tvQRLabel;
+    private final MaterialButton btnScanQR;
 
-        classText = root.findViewById(R.id.Teacher_Class_Text);
-        tvClassName = root.findViewById(R.id.tvClassName);
-        tvTeacherName = root.findViewById(R.id.tvTeacherName);
-        tvNotRegistered = root.findViewById(R.id.tvNotRegistered);
+
+    // --------------------- STUDENT: CLASS INFO --------------------- //
+    private final MaterialCardView cardClassInfo;
+    private final TextView tvClassName, tvTeacherName;
+
+    public StudentProfileFeature(View root) {
+        this.root = root;
+        tvClassLabel = root.findViewById(R.id.Teacher_Class_Text);
+
+        cardClassQRCode = root.findViewById(R.id.mcvClassQRCode);
+        btnScanQR = root.findViewById(R.id.buttonScanQR);
 
         cardClassInfo = root.findViewById(R.id.cardClassInfo);
-        cardQRCode = root.findViewById(R.id.cardQRCode);
-        buttonScanQR = root.findViewById(R.id.buttonScanQR);
+        tvClassName = root.findViewById(R.id.tvClassName);
+        tvTeacherName = root.findViewById(R.id.tvTeacherName);
         tvQRLabel = root.findViewById(R.id.tvQRLabel);
-        ivQRCode = root.findViewById(R.id.ivQRCode);
     }
+    public void bind(ProfileUIState uiState) {
+        if (uiState == null || uiState.studentState == null) {
+            reset();
+            return;
+        }
 
-    public void bind(StudentProfileState state) {
+        StudentProfileState state = uiState.studentState;
 
-        if (state == null) return;
+        reset();
 
-        boolean registered = state.isRegistered();
+        Context context = root.getContext();
 
-        classText.setText(
-                state.isLoading()
-                        ? "Loading..."
-                        : state.getClassName() != null
-                        ? "Class: " + state.getClassName()
-                        : "Class: Not Registered"
-        );
+        if (state.isLoading()) {
+            return;
+        }
+        Log.d("TESTER", uiState.displayName + " is registered " + state.isRegistered());
 
-        tvClassName.setText(
-                state.getClassName() != null
-                        ? "Class: " + state.getClassName()
-                        : "Class: None"
-        );
+        tvClassLabel.setVisibility(View.VISIBLE);
+        btnScanQR.setVisibility(View.VISIBLE);
+        tvQRLabel.setVisibility(View.VISIBLE);
 
-        tvTeacherName.setText(
-                state.getTeacherName() != null
-                        ? "Teacher: " + state.getTeacherName()
-                        : "Teacher: Unknown"
-        );
+        cardClassInfo.setVisibility(state.isRegistered() ? View.VISIBLE : View.GONE);
+        cardClassQRCode.setVisibility(state.isRegistered() ? View.GONE : View.VISIBLE);
+        if (!state.isRegistered()) {
+            tvClassLabel.setText("Class: Not Registered");
 
-        // Visibility
-        classText.setVisibility(View.VISIBLE);
-        cardClassInfo.setVisibility(registered ? View.VISIBLE : View.GONE);
-        tvNotRegistered.setVisibility(registered ? View.GONE : View.VISIBLE);
-
-        cardQRCode.setVisibility(registered ? View.GONE : View.VISIBLE);
-        buttonScanQR.setVisibility(registered ? View.GONE : View.VISIBLE);
-        tvQRLabel.setVisibility(registered ? View.GONE : View.VISIBLE);
-        ivQRCode.setVisibility(registered ? View.GONE : View.VISIBLE);
-
-
-    }
-
-    public void handleStudent(Student student) {
-        String classId = student.getClassId();
-
-        if (classId == null || classId.isEmpty()) {
-            viewModel.setStudentUnregistered();
         } else {
-            viewModel.loadStudentProfile(classId);
+            tvClassName.setText("Class: " + state.getClassName());
+            tvTeacherName.setText("Teacher: " + state.getTeacherName());
+            tvClassLabel.setText("Class: " + state.getClassName());
+
+        }
+        if (state.getErrorMessage() != null) {
+            Toast.makeText(context, state.getErrorMessage(), Toast.LENGTH_SHORT).show();
         }
     }
+
+    private void reset() {
+        cardClassQRCode.setVisibility(View.GONE);
+        btnScanQR.setVisibility(View.GONE);
+        cardClassInfo.setVisibility(View.GONE);
+        tvClassLabel.setVisibility(View.GONE);
+    }
+
+
 
 }

@@ -13,7 +13,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.eduview.AuthRepository;
+import com.example.eduview.AuthService;
 import com.example.eduview.R;
 
 import java.util.ArrayList;
@@ -86,8 +86,8 @@ public class ParentSignupFragment extends Fragment {
         }
     }
 
-    public List<AuthRepository.ChildInfo> getChildrenInfo() {
-        List<AuthRepository.ChildInfo> children = new ArrayList<>();
+    public List<AuthService.ChildInfo> getChildrenInfo() {
+        List<AuthService.ChildInfo> children = new ArrayList<>();
         Set<String> usernames = new HashSet<>();
         
         for (int i = 0; i < formList.size(); i++) {
@@ -118,7 +118,7 @@ public class ParentSignupFragment extends Fragment {
                 
                 // Append @eduview.com to the username to treat it as an email in the database
                 String email = username.toLowerCase() + "@eduview.com";
-                children.add(new AuthRepository.ChildInfo(firstName, lastName, email));
+                children.add(new AuthService.ChildInfo(firstName, lastName, email));
             }
         }
         return children;

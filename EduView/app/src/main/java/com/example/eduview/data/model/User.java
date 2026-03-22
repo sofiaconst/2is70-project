@@ -76,4 +76,5 @@ public class User {
     public int getProfilePictureResourceId() {
         return getProfilePicture().getDrawableId();
     }
+
 }

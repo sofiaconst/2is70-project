@@ -103,9 +103,6 @@ public class SessionManager {
         });
     }
 
-    public boolean isLoggedIn() {
-        return currentUser != null;
-    }
 
     public void logoutCurrentUser(SessionCallback callback) {
         currentUser = null;

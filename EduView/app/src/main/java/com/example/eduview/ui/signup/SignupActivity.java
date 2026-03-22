@@ -21,7 +21,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
-import com.example.eduview.AuthRepository;
+import com.example.eduview.AuthService;
 import com.example.eduview.R;
 import com.example.eduview.ui.login.LoginActivity;
 
@@ -143,7 +143,7 @@ public class SignupActivity extends AppCompatActivity {
         });
 
         // Initialize AuthRepository
-        AuthRepository authRepository = new AuthRepository();
+        AuthService authService = new AuthService();
 
         // Add role tracking
         final String[] selectedRole = {null};
@@ -198,7 +198,7 @@ public class SignupActivity extends AppCompatActivity {
             // Disable button to prevent double clicks
             btnSignUp.setEnabled(false);
 
-            AuthRepository.AuthCallback callback = new AuthRepository.AuthCallback() {
+            AuthService.AuthCallback callback = new AuthService.AuthCallback() {
                 @Override
                 public void onSuccess() {
                     btnSignUp.setEnabled(true);
@@ -223,12 +223,12 @@ public class SignupActivity extends AppCompatActivity {
                         Toast.makeText(this, "Please enter classroom name", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    authRepository.signUpTeacher(firstName, lastName, email, password, className, callback);
+                    authService.signUpTeacher(firstName, lastName, email, password, className, callback);
                 }
             } else if ("Parent".equals(selectedRole[0])) {
                 Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
                 if (fragment instanceof ParentSignupFragment) {
-                    List<AuthRepository.ChildInfo> childrenInfo = ((ParentSignupFragment) fragment).getChildrenInfo();
+                    List<AuthService.ChildInfo> childrenInfo = ((ParentSignupFragment) fragment).getChildrenInfo();
                     
                     if (childrenInfo == null) {
                         // Error already shown in fragment via Toast
@@ -241,7 +241,7 @@ public class SignupActivity extends AppCompatActivity {
                         Toast.makeText(this, "Please provide information for all children", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    authRepository.signUpParent(firstName, lastName, email, password, childrenInfo, callback);
+                    authService.signUpParent(firstName, lastName, email, password, childrenInfo, callback);
                 }
             }
         });

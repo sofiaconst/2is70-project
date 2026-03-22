@@ -8,13 +8,16 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.eduview.AuthService;
+import com.example.eduview.R;
 import com.example.eduview.data.model.Classroom;
 import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.ProfilePicture;
 import com.example.eduview.data.model.Student;
+import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.User;
 import com.example.eduview.data.repository.AuthRepository;
 import com.example.eduview.data.repository.ClassroomRepository;
+import com.example.eduview.data.repository.SessionManager;
 import com.example.eduview.data.repository.UserRepository;
 
 import com.example.eduview.ui.profile.profileStates.StudentProfileState;
@@ -30,81 +33,42 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.example.eduview.domain.usecase.FetchClassroomNameUseCase;
-import com.example.eduview.domain.usecase.GenerateQRCodeUseCase;
+//import com.example.eduview.domain.usecase.FetchClassroomNameUseCase;
+//import com.example.eduview.domain.usecase.GenerateQRCodeUseCase;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ProfileViewModel extends ViewModel {
 
-    // Reposiories
-    private final AuthRepository authRepository = new AuthRepository();
-    private final UserRepository userRepository = new UserRepository();
-    private final ClassroomRepository classroomRepository = new ClassroomRepository();
-
-    // Data
-    private final MutableLiveData<User> currentUser = new MutableLiveData<>();
-    private final MutableLiveData<String> classroomName = new MutableLiveData<>();
-    private final MutableLiveData<String> joinStatus = new MutableLiveData<>();
-    private final MutableLiveData<List<Student>> childrenData = new MutableLiveData<>();
-    private final MutableLiveData<StudentProfileState> studentState = new MutableLiveData<>();
-    private final MutableLiveData<TeacherProfileState> teacherState = new MutableLiveData<>();
-    private final MutableLiveData<String> addChildStatus = new MutableLiveData<>();
-
-    public LiveData<String> getAddChildStatus() {
-        return addChildStatus;
-    }
-
-    // Constructor
-    public ProfileViewModel() {
-        loadCurrentUser();
-    }
-
-
-    /**
-     * Temporarily load current user (delegate from MainViewModel if needed)
-     */
-    public void loadCurrentUser() {
-        String userId = authRepository.getCurrentUserId();
-        if (userId == null) return;
-
-        // You can replace this with your repository call to fetch the user
-        userRepository.getUserById(userId, new UserRepository.UserCallback() {
-            @Override
-            public void onSuccess(User user) {
-                currentUser.postValue(user);
-            }
-
-            @Override
-            public void onError(Exception e) {
-                Log.e("ProfileViewModel", "Failed to load user", e);
-            }
-        });
-    }
-
-
-    private final SessionManager sessionManager;
-    private final FetchClassroomNameUseCase fetchClassroomNameUseCase;
-    private final GenerateQRCodeUseCase generateQRCodeUseCase;
-
     private final MutableLiveData<ProfileUIState> uiState = new MutableLiveData<>();
-    private final MutableLiveData<List<Student>> classroomStudents = new MutableLiveData<>(new ArrayList<>());
-    private final MutableLiveData<Boolean> studentsLoading = new MutableLiveData<>(false);
-    private final MutableLiveData<String> message = new MutableLiveData<>();
+
+    // Repositories
+
+    private SessionManager sessionManager;
+    private UserRepository userRepository = new UserRepository();
+    private ClassroomRepository classroomRepository = new ClassroomRepository();
+    private User currentUser;
+
+    // Use Cases
+    //private final FetchClassroomNameUseCase fetchClassroomNameUseCase;
+    //private final GenerateQRCodeUseCase generateQRCodeUseCase;
 
     public ProfileViewModel() {
+        // Setup Repos
         this.sessionManager = SessionManager.getInstance();
-
         this.classroomRepository = new ClassroomRepository();
-        this.userRepository = new UserRepository();
 
-        this.fetchClassroomNameUseCase = new FetchClassroomNameUseCase(classroomRepository);
-        this.generateQRCodeUseCase = new GenerateQRCodeUseCase();
+        currentUser = sessionManager.getCurrentUser();
 
-        observeUser();
+        buildState();
+//        this.fetchClassroomNameUseCase = new FetchClassroomNameUseCase(classroomRepository);
+//        this.generateQRCodeUseCase = new GenerateQRCodeUseCase();
+//
+//        observeUser();
     }
 
+    /*
     public ProfileViewModel(SessionManager sessionManager,
                             FetchClassroomNameUseCase fetchClassroomNameUseCase,
                             GenerateQRCodeUseCase generateQRCodeUseCase,
@@ -119,6 +83,209 @@ public class ProfileViewModel extends ViewModel {
 
         observeUser();
     }
+
+ */
+
+    private void buildState() {
+
+        if (currentUser == null) return;
+
+        String displayName = currentUser.getFirstName() + " " + currentUser.getLastName();
+        String roleText = currentUser.getRole().name();
+
+        StudentProfileState studentState = null;
+        TeacherProfileState teacherState = null;
+        //ParentProfileState parentState = null;
+
+        switch (currentUser.getRole()) {
+
+            case STUDENT:
+                studentState = buildStudentState((Student) currentUser);
+                break;
+
+            case TEACHER:
+                //teacherState = buildTeacherState((Teacher) currentUser);
+                break;
+
+            case PARENT:
+                //parentState = buildParentState((Parent) currentUser);
+                break;
+        }
+
+        ProfileUIState state = new ProfileUIState(
+                displayName,
+                roleText,
+                R.drawable.pfp_diplo_green,
+                studentState,
+                teacherState
+                //parentState
+        );
+
+        uiState.setValue(state);
+    }
+
+    // UI State
+    private StudentProfileState buildStudentState(Student student) {
+
+        Log.d("TESTER", student.getClassId());
+        if (student.getClassId() == null || student.getClassId().isEmpty()) {
+
+            return StudentProfileState.notRegistered();
+        }
+
+        loadStudentClass(student.getClassId());
+        return StudentProfileState.loading();
+    }
+
+    private TeacherProfileState buildTeacherState(Teacher teacher) {
+
+        Log.d("TESTER", teacher.getClassId());
+
+        loadTeacherClass(teacher.getClassId());
+        return TeacherProfileState.loading();
+    }
+
+    private void loadStudentClass(String classId) {
+        classroomRepository.getClassroomById(classId, new ClassroomRepository.ClassroomCallback<Classroom>() {
+            @Override
+            public void onSuccess(Classroom classroom) {
+                if (classroom == null) {
+                    updateStudentState(
+                            StudentProfileState.error("Classroom not found")
+                    );
+                    return;
+                }
+
+                String className = classroom.getName();
+                String teacherId = classroom.getTeacherId();
+
+                if (teacherId == null || teacherId.isEmpty()) {
+                    updateStudentState(StudentProfileState.success(className, null));
+                    return;
+                }
+
+                // Second call: fetch teacher
+                userRepository.getUserById(teacherId, new UserRepository.UserCallback() {
+                    @Override
+                    public void onSuccess(User teacher) {
+                        String teacherName = teacher.getFirstName() + " " + teacher.getLastName();
+
+                        updateStudentState(
+                                StudentProfileState.success(className, teacherName)
+                        );
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+
+                        // Still show class name even if teacher fails
+                        updateStudentState(
+                                StudentProfileState.success(className, null)
+                        );
+                    }
+                });
+            }
+            @Override
+            public void onError(Exception e) {
+                updateStudentState(
+                        StudentProfileState.error(e != null ? e.getMessage() : "Failed to load classroom")
+                );
+            }
+        });
+
+    }
+
+    private void loadTeacherClass(String classId) {
+        /*classroomRepository.getClassroomById(classId, new ClassroomRepository.ClassroomCallback<Classroom>() {
+            @Override
+            public void onSuccess(Classroom classroom) {
+                String classId = classroom.getId();
+                String className = classroom.getName();
+
+                List<Student> students = classroom.getStudents(); // or fetch separately
+                Bitmap qr = qrCodeGenerator.generateQRCode(classId);
+
+                updateTeacherState(TeacherProfileState.success(classId, className, qr, students));
+            }
+
+            @Override
+            public void onError(Exception e) {
+                updateTeacherState(TeacherProfileState.error(e.getMessage()));
+            }
+        });*/
+    }
+
+    private void updateStudentState(StudentProfileState newStudentState) {
+
+        ProfileUIState current = uiState.getValue();
+        if (current == null) return;
+
+        ProfileUIState updated = new ProfileUIState(
+                current.displayName,
+                current.roleText,
+                current.profilePictureResId,
+                newStudentState,
+                current.teacherState
+                //current.parentState
+        );
+
+        uiState.setValue(updated);
+    }
+
+    private void updateTeacherState(TeacherProfileState newTeacherState) {
+
+        ProfileUIState current = uiState.getValue();
+        if (current == null) return;
+
+        ProfileUIState updated = new ProfileUIState(
+                current.displayName,
+                current.roleText,
+                current.profilePictureResId,
+                current.studentState,
+                newTeacherState
+                //current.parentState
+        );
+
+        uiState.setValue(updated);
+    }
+
+    // Functionality
+    public void joinClass(String classCode) {
+        updateStudentState(StudentProfileState.loading());
+
+        classroomRepository.joinClassroom(currentUser.getUserId(), classCode, new ClassroomRepository.ClassroomCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                loadStudentClass(((Student) sessionManager.getCurrentUser()).getClassId());
+            }
+            @Override
+            public void onError(Exception e) {
+                updateStudentState(StudentProfileState.error(e.getMessage()));
+            }
+        });
+    }
+
+    public LiveData<ProfileUIState> getUIState() {
+        return uiState;
+    }
+
+    public void logout() {
+        sessionManager.logoutCurrentUser(null);
+    }
+
+    //================================== OLD ARCHITECTURE====================================//
+    // Data
+   /* private final MutableLiveData<String> classroomName = new MutableLiveData<>();
+    private final MutableLiveData<String> joinStatus = new MutableLiveData<>();
+    private final MutableLiveData<List<Student>> childrenData = new MutableLiveData<>();
+    private final MutableLiveData<StudentProfileState> studentState = new MutableLiveData<>();
+    private final MutableLiveData<TeacherProfileState> teacherState = new MutableLiveData<>();
+    private final MutableLiveData<String> addChildStatus = new MutableLiveData<>();
+
+    private final MutableLiveData<List<Student>> classroomStudents = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<Boolean> studentsLoading = new MutableLiveData<>(false);
+    private final MutableLiveData<String> message = new MutableLiveData<>();
+
 
     private void observeUser() {
         User user = sessionManager.getCurrentUser();
@@ -160,29 +327,6 @@ public class ProfileViewModel extends ViewModel {
         });
     }
 
-    /**
-     * Join a classroom using the class code scanned
-     */
-    public void joinClass(String classCode) {
-        String userId = authRepository.getCurrentUserId();
-        if (userId == null) {
-            joinStatus.postValue("User not logged in.");
-            return;
-        }
-
-        classroomRepository.joinClassroom(userId, classCode, new ClassroomRepository.ClassroomCallback<Void>() {
-            @Override
-            public void onSuccess(Void result) {
-                joinStatus.postValue("Joined class successfully!");
-                loadCurrentUser(); // refresh user info to reflect classroom membership
-            }
-
-            @Override
-            public void onError(Exception e) {
-                joinStatus.postValue("Failed to join class: " + e.getMessage());
-            }
-        });
-    }
 
     private void updateClassroomName(User user, String className) {
         ProfileUIState current = uiState.getValue();
@@ -208,48 +352,7 @@ public class ProfileViewModel extends ViewModel {
             }
         });
     }
-
-    public void loadStudentProfile(String classId) {
-        studentState.postValue(StudentProfileState.loading());
-
-        classroomRepository.getClassroomById(classId, new ClassroomRepository.ClassroomCallback<Classroom>() {
-            @Override
-            public void onSuccess(Classroom classroom) {
-                if (classroom == null) {
-                    studentState.postValue(StudentProfileState.error("Classroom not found"));
-                    return;
-                }
-
-                String teacherId = classroom.getTeacherId();
-                if (teacherId == null || teacherId.isEmpty()) {
-                    // No teacher assigned
-                    studentState.postValue(StudentProfileState.success(classroom.getName(), null));
-                    return;
-                }
-
-                // Fetch teacher details
-                userRepository.getUserById(teacherId, new UserRepository.UserCallback() {
-                    @Override
-                    public void onSuccess(User teacher) {
-                        String teacherName = teacher.getFirstName() + " " + teacher.getLastName();
-                        studentState.postValue(StudentProfileState.success(classroom.getName(), teacherName));
-                    }
-
-                    @Override
-                    public void onError(Exception e) {
-                        // Could still display class name even if teacher fails
-                        studentState.postValue(StudentProfileState.success(classroom.getName(), null));
-                    }
-                });
-            }
-
-            @Override
-            public void onError(Exception e) {
-                studentState.postValue(StudentProfileState.error(e.getMessage()));
-            }
-        });
-    }
-
+*//*
     private ProfileUIState mapUserToState(User user, Bitmap qrBitmap, String className) {
         String displayName = user.getFirstName() + " " + user.getLastName();
         String roleText = user.getRole().name();
@@ -269,34 +372,12 @@ public class ProfileViewModel extends ViewModel {
         return new ProfileUIState(
                 displayName,
                 roleText,
-                classText,
                 user.getProfilePictureResourceId(),
                 showScan,
                 qrBitmap
         );
-    }
+    }*//*
 
-    public void setStudentUnregistered() {
-        studentState.postValue(StudentProfileState.notRegistered());
-    }
-
-
-
-    public LiveData<ProfileUIState> getUIState() {
-        return uiState;
-    }
-
-    public LiveData<List<Student>> getClassroomStudents() {
-        return classroomStudents;
-    }
-
-    public LiveData<Boolean> getStudentsLoading() {
-        return studentsLoading;
-    }
-
-    public LiveData<String> getMessage() {
-        return message;
-    }
 
     public void loadTeacherStudents() {
         User currentUser = sessionManager.getCurrentUser();
@@ -366,7 +447,7 @@ public class ProfileViewModel extends ViewModel {
 
         userRepository.updateProfilePicture(user.getUserId(), pfp);
         user.setProfilePicture(pfp);
-        
+
         // Refresh UI
         ProfileUIState current = uiState.getValue();
         if (current != null) {
@@ -374,24 +455,7 @@ public class ProfileViewModel extends ViewModel {
         }
     }
 
-    public void logout() {
-        authRepository.logout();
-        currentUser.setValue(null);
-        classroomName.setValue(null);
-        childrenData.setValue(null);
-    }
 
-    // Getters
-    public LiveData<User> getCurrentUser() { return currentUser; }
-    public LiveData<String> getClassroomName() {
-        return classroomName;
-    }
-    public LiveData<String> getJoinStatus() { return joinStatus; }
-    public LiveData<List<Student>> getChildrenData() {
-        return childrenData;
-    }
-    public LiveData<StudentProfileState> getStudentState() {return studentState;}
-    public LiveData<TeacherProfileState> getTeacherState() {return teacherState;}
 
     public void loadChildrenData(Parent parent) {
         List<String> childrenIds = parent.getChildrenIDs();
@@ -452,12 +516,12 @@ public class ProfileViewModel extends ViewModel {
     }
 
     public void generateTeacherQR(String classId) {
-        /*
+        *//*
         Bitmap qr = generateQRCode(classId);
 
         teacherState.setValue(teacherState.copyWithQr(qr));
 
-         */
+         *//*
     }
 
     public void addChild(String parentId, String fName, String lName, String email, String password) {
@@ -515,5 +579,35 @@ public class ProfileViewModel extends ViewModel {
 
     }
 
+    public LiveData<String> getAddChildStatus() {
+        return addChildStatus;
+    }
+
+    public LiveData<List<Student>> getClassroomStudents() {
+        return classroomStudents;
+    }
+
+    public LiveData<Boolean> getStudentsLoading() {
+        return studentsLoading;
+    }
+
+    public LiveData<String> getMessage() {
+        return message;
+    }
+
+
+    // Getters
+
+    public LiveData<User> getCurrentUser() { return currentUser; }
+    public LiveData<String> getClassroomName() {
+        return classroomName;
+    }
+    public LiveData<String> getJoinStatus() { return joinStatus; }
+    public LiveData<List<Student>> getChildrenData() {
+        return childrenData;
+    }
+    public LiveData<StudentProfileState> getStudentState() {return studentState;}
+    public LiveData<TeacherProfileState> getTeacherState() {return teacherState;}
+*/
 
 }

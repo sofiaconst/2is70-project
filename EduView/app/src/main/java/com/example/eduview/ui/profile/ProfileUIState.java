@@ -2,30 +2,39 @@ package com.example.eduview.ui.profile;
 
 import android.graphics.Bitmap;
 
+import com.example.eduview.ui.profile.profileStates.StudentProfileState;
+import com.example.eduview.ui.profile.profileStates.TeacherProfileState;
+
+//TODO: Implement feature for ParentState
 public class ProfileUIState {
 
     public final String displayName;
     public final String roleText;
-    public final String classText;
     public final int profilePictureResId;
 
-    public final boolean showScanButton;
+    // -------- FEATURES (nullable = inactive) -------- //
+    public final StudentProfileState studentState;
+    public final TeacherProfileState teacherState;
+    //public final ParentProfileState parentState;
 
-    public final Bitmap qrBitmap;
+//    public final boolean showScanButton;
+//
+//    public final Bitmap qrBitmap;
 
     public ProfileUIState(
             String displayName,
             String roleText,
-            String classText,
             int profilePictureResId,
-            boolean showScanButton,
-            Bitmap qrBitmap
+            StudentProfileState studentState,
+            TeacherProfileState teacherState
+            //ParentProfileState parentState
     ) {
         this.displayName = displayName;
         this.roleText = roleText;
-        this.classText = classText;
         this.profilePictureResId = profilePictureResId;
-        this.showScanButton = showScanButton;
-        this.qrBitmap = qrBitmap;
+        this.studentState = studentState;
+        this.teacherState = teacherState;
+        //this.parentState = parentState;
     }
+
 }
