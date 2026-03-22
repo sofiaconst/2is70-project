@@ -16,11 +16,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.eduview.R;
 import com.example.eduview.ui.adapters.ChildAdapter;
+import com.example.eduview.ui.adapters.PfpAdapter;
 import com.example.eduview.ui.adapters.StudentManagerAdapter;
 import com.example.eduview.ui.login.LoginActivity;
 import com.example.eduview.ui.profile.profileFeatures.StudentProfileFeature;
@@ -154,28 +156,25 @@ public class ProfileFragment extends Fragment {
         rvStudents.setAdapter(studentManagerAdapter);
     }
     private void render(ProfileUIState state) {
-
+        // parentFeature.bind(state);
         if (state == null) return;
-        // Base UI
+
         tvFullName.setText(state.displayName);
         tvUserRole.setText(state.roleText);
         ivPfp.setImageResource(state.profilePictureResId);
 
         resetVisibility();
 
-//        // QR
-//        btnScanQR.setVisibility(state.showScanButton ? View.VISIBLE : View.GONE);
-//
-//        if (state.qrBitmap != null) {
-//            cardQRCode.setVisibility(View.VISIBLE);
-//            ivQRCode.setImageBitmap(state.qrBitmap);
-//        }
 
-        // Delegate to features
-        studentFeature.bind(state);
-        teacherFeature.bind(state);
+        if (state.studentState != null) {
+            studentFeature.bind(state);
+        }
+
+        if (state.teacherState != null) {
+            teacherFeature.bind(state);
+        }
+
         // parentFeature.bind(state);
-
     }
 
     private void resetVisibility() {
@@ -201,8 +200,9 @@ public class ProfileFragment extends Fragment {
     }
 
     private void showPfpSelectionDialog() {
-    /*
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_pfp_selection, null);
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_pfp_selection, null);
+
         RecyclerView rvPfps = dialogView.findViewById(R.id.rvPfpSelection);
 
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
@@ -219,7 +219,7 @@ public class ProfileFragment extends Fragment {
         rvPfps.setLayoutManager(new GridLayoutManager(requireContext(), 3));
         rvPfps.setAdapter(adapter);
 
-        dialog.show();*/
+        dialog.show();
     }
 
     private void startScanner() {
@@ -371,73 +371,3 @@ public class ProfileFragment extends Fragment {
 //    }
 //
 // */
-//
-//
-//
-//    private void setupRoleBasedListeners (User user){
-//        btnLogout.setOnClickListener(v -> {
-//            profileVM.logout();
-//            Log.d("ProfileFragment", "Navigating to LoginActivity");
-//            startActivity(new Intent(requireActivity(), LoginActivity.class));
-//            requireActivity().finish();
-//        });
-//
-//        switch (user.getRole()) {
-//            case PARENT:
-//                if (btnAddChild != null) {
-//                    btnAddChild.setOnClickListener(v -> showAddChildDialog());
-//                }
-//                break;
-//
-//            case STUDENT:
-//                btnScanQR.setOnClickListener(v -> startScanner());
-//                break;
-//
-//            case TEACHER:
-//                break;
-//        }
-//    }
-//
-//    private void setupRoleBasedObservers (User user){
-//        switch (user.getRole()) {
-//            case PARENT:
-//                profileVM.getChildrenData().observe(getViewLifecycleOwner(), children -> {
-//                    if (children != null) {
-//                        childAdapter.setChildren(children);
-//                        tvNoChildren.setVisibility(children.isEmpty() ? View.VISIBLE : View.GONE);
-//                        rvChildren.setVisibility(children.isEmpty() ? View.GONE : View.VISIBLE);
-//                    }
-//                });
-//                break;
-//
-//            case STUDENT:
-//                profileVM.getJoinStatus().observe(getViewLifecycleOwner(), status -> {
-//                    if (status != null) {
-//                        Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
-//                    }
-//                });
-//
-//                profileVM.getStudentState().observe(getViewLifecycleOwner(), state -> {
-//                    studentFeature.bind(state);
-//
-//                    if (state != null && state.getErrorMessage() != null) {
-//                        Toast.makeText(getContext(), state.getErrorMessage(), Toast.LENGTH_SHORT).show();
-//                    }
-//                });
-//                break;
-//
-//            case TEACHER:
-//                profileVM.getTeacherState().observe(getViewLifecycleOwner(), state -> {
-//                    teacherFeature.bind(state);
-//
-//                    if (state != null && state.getErrorMessage() != null) {
-//                        Toast.makeText(getContext(), state.getErrorMessage(), Toast.LENGTH_SHORT).show();
-//                    }
-//                });
-//                break;
-//        }
-//
-//    }
-//
-//}
-

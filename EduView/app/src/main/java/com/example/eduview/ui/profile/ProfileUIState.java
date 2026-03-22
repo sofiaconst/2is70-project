@@ -17,10 +17,6 @@ public class ProfileUIState {
     public final TeacherProfileState teacherState;
     //public final ParentProfileState parentState;
 
-//    public final boolean showScanButton;
-//
-//    public final Bitmap qrBitmap;
-
     public ProfileUIState(
             String displayName,
             String roleText,

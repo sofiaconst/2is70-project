@@ -80,6 +80,8 @@ public class StudentProfileFeature {
         if (state.getErrorMessage() != null) {
             Toast.makeText(context, state.getErrorMessage(), Toast.LENGTH_SHORT).show();
         }
+
+        Log.d("TESTER", tvClassLabel.getText().toString());
     }
 
     private void reset() {

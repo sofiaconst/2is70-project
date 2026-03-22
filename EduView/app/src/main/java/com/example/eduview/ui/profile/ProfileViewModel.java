@@ -92,6 +92,7 @@ public class ProfileViewModel extends ViewModel {
 
         String displayName = currentUser.getFirstName() + " " + currentUser.getLastName();
         String roleText = currentUser.getRole().name();
+        int profilePictureResId = currentUser.getProfilePictureResourceId();
 
         StudentProfileState studentState = null;
         TeacherProfileState teacherState = null;
@@ -115,7 +116,7 @@ public class ProfileViewModel extends ViewModel {
         ProfileUIState state = new ProfileUIState(
                 displayName,
                 roleText,
-                R.drawable.pfp_diplo_green,
+                profilePictureResId,
                 studentState,
                 teacherState
                 //parentState
@@ -198,26 +199,6 @@ public class ProfileViewModel extends ViewModel {
         });
 
     }
-
-//    private void loadTeacherClass(String classId) {
-//        classroomRepository.getClassroomById(classId, new ClassroomRepository.ClassroomCallback<Classroom>() {
-//            @Override
-//            public void onSuccess(Classroom classroom) {
-//                String classId = classroom.getId();
-//                String className = classroom.getName();
-//
-//                List<Student> students = classroom.getStudents(); // or fetch separately
-//                Bitmap qr = qrCodeGenerator.generateQRCode(classId);
-//
-//                updateTeacherState(TeacherProfileState.success(classId, className, qr, students));
-//            }
-//
-//            @Override
-//            public void onError(Exception e) {
-//                updateTeacherState(TeacherProfileState.error(e.getMessage()));
-//            }
-//        });
-//    }
 
     private void loadTeacherClass(String classId) {
 
@@ -367,6 +348,26 @@ public class ProfileViewModel extends ViewModel {
 
     public void logout() {
         sessionManager.logoutCurrentUser(null);
+    }
+
+    public void updateProfilePicture(ProfilePicture pfp) {
+        User user = sessionManager.getCurrentUser();
+        if (user == null) return;
+
+        userRepository.updateProfilePicture(user.getUserId(), pfp);
+        user.setProfilePicture(pfp);
+
+        ProfileUIState current = uiState.getValue();
+        if (current == null) return;
+
+        uiState.postValue(new ProfileUIState(
+                user.getFirstName() + " " + user.getLastName(),
+                user.getRole().name(),
+                user.getProfilePictureResourceId(),
+                current.studentState,
+                current.teacherState
+                // parentState later
+        ));
     }
 
     public LiveData<ProfileUIState> getUIState() {
@@ -540,20 +541,6 @@ public class ProfileViewModel extends ViewModel {
                         message.postValue("Failed to remove student");
                     }
                 });
-    }
-
-    public void updateProfilePicture(ProfilePicture pfp) {
-        User user = sessionManager.getCurrentUser();
-        if (user == null) return;
-
-        userRepository.updateProfilePicture(user.getUserId(), pfp);
-        user.setProfilePicture(pfp);
-
-        // Refresh UI
-        ProfileUIState current = uiState.getValue();
-        if (current != null) {
-            uiState.postValue(mapUserToState(user, current.qrBitmap, current.classText.replace("Class: ", "")));
-        }
     }
 
 
