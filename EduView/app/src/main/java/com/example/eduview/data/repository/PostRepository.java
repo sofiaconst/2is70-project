@@ -2,7 +2,6 @@ package com.example.eduview.data.repository;
 
 import com.example.eduview.data.model.Post;
 import com.example.eduview.data.model.PostType;
-import com.example.eduview.data.model.User;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -11,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class PostRepository  {
+public class PostRepository {
     //Database reference to the posts node
     private final DatabaseReference postRef;
     private final DatabaseReference classRef;
@@ -26,8 +25,8 @@ public class PostRepository  {
         postRef = db.getReference("posts");
         classRef = db.getReference("classrooms");
         rootRef = db.getReference();
-
     }
+
     /**
      * Constructor used for testing the application.
      * Initializes Firebase database references for the post node.
@@ -42,7 +41,6 @@ public class PostRepository  {
     /**
      * Fetches a post from Firebase Realtime Database using its post ID.
      *
-     *
      * @param postId the unique ID of the post to retrieve
      * @param onSuccess callback invoked with the fetched Post if retrieval succeeds
      * @param onError callback invoked if the post does not exist or the read fails
@@ -50,29 +48,27 @@ public class PostRepository  {
     public void fetchPost(String postId, Consumer<Post> onSuccess, Consumer<Exception> onError) {
         postRef.child(postId).get().addOnCompleteListener(task -> {
 
-            if (!task.isSuccessful()) { //If the firebase request fails, return an error
+            if (!task.isSuccessful()) {
                 onError.accept(new RuntimeException("Failed to fetch post"));
                 return;
             }
 
-            DataSnapshot snapshot = task.getResult(); //Store firebase results in snapshot
+            DataSnapshot snapshot = task.getResult();
 
-            if (!snapshot.exists()) { //If there is no such post, return an error
-                onError.accept(new RuntimeException("Pist not found"));
+            if (!snapshot.exists()) {
+                onError.accept(new RuntimeException("Post not found"));
                 return;
             }
 
-            //Set the caption, imageURL, and AUthorID of the post object being fetched
             String caption = snapshot.child("caption").getValue(String.class);
             String imageUrl = snapshot.child("imageUrl").getValue(String.class);
             String authorId = snapshot.child("authorId").getValue(String.class);
+            Long timestamp = snapshot.child("timestamp").getValue(Long.class);
 
-            //Create the post object with the above
-            Post post = new Post(caption, imageUrl, authorId);
+            Post post = new Post(authorId, caption, imageUrl);
+            post.setTimestamp(timestamp != null ? timestamp : 0L);
 
-            //Let The callback accept the post object created above
             onSuccess.accept(post);
-
         });
     }
 
@@ -111,7 +107,6 @@ public class PostRepository  {
                 return;
         }
 
-        //Store the post object and generate a unique postID.
         String postId = postRef.push().getKey();
 
         if (postId == null) {
@@ -119,12 +114,14 @@ public class PostRepository  {
             return;
         }
 
+        post.setTimestamp(System.currentTimeMillis());
+
         Map<String, Object> updates = new HashMap<>();
         updates.put("/posts/" + postId, post);
         updates.put("/classrooms/" + classId + "/feed/" + feedPath + "/" + postId, true);
+
         rootRef.updateChildren(updates)
                 .addOnSuccessListener(unused -> onSuccess.accept(postId))
                 .addOnFailureListener(onError::accept);
     }
-
 }

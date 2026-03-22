@@ -29,20 +29,32 @@
         android:textColor="@color/black"
         android:textSize="20sp"
         android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/pfp"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvPostDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text=""
+        android:textColor="#666666"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="@id/tvStudentName"
+        app:layout_constraintTop_toBottomOf="@id/tvStudentName" />
 
     <TextView
         android:id="@+id/tvPostContent"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="8dp"
         android:text="Check out my science project on plant cells!"
         android:textAlignment="viewStart"
         android:textColor="#444444"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/pfp" />
+        app:layout_constraintTop_toBottomOf="@id/tvPostDate" />
 
     <View
         android:id="@+id/divider1"
@@ -71,7 +83,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvPostContent"
         app:layout_constraintVertical_bias="0.0"
-         />
+        />
 
     <LinearLayout
         android:id="@+id/layoutLike"

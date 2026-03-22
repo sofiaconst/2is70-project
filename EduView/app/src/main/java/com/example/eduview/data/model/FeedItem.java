@@ -11,6 +11,7 @@ public class FeedItem {
     private String authorName;
     private String content;
     private String imageUrl;
+    private long timestamp;
 
     // optional for pending
     private boolean isPending;
@@ -40,6 +41,8 @@ public class FeedItem {
         return imageUrl;
     }
 
+    public long getTimestamp() { return timestamp; }
+
     public boolean isPending() {
         return isPending;
     }
@@ -53,5 +56,8 @@ public class FeedItem {
     }
     public void setPostId(String postId) {
         this.postId = postId;
+    }
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 }

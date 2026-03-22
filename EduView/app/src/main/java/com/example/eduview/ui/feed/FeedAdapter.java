@@ -1,5 +1,6 @@
 package com.example.eduview.ui.feed;
 
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,17 +10,17 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 
 import com.example.eduview.R;
 import com.example.eduview.data.model.FeedItem;
 import com.example.eduview.data.model.FeedType;
-import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -84,6 +85,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private void bindPost(@NonNull PostViewHolder holder, @NonNull FeedItem item) {
         holder.tvStudentName.setText(item.getAuthorName());
         holder.tvPostContent.setText(item.getContent());
+        holder.tvPostDate.setText(formatTimestamp(item.getTimestamp()));
 
         if (item.getImageUrl() == null || item.getImageUrl().isEmpty()) {
             holder.ivPostImage.setVisibility(View.GONE);
@@ -99,7 +101,9 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     private void bindAnnouncement(@NonNull AnnouncementViewHolder holder, @NonNull FeedItem item) {
+        holder.tvAnnouncementAuthor.setText(item.getAuthorName());
         holder.tvAnnouncementContent.setText(item.getContent());
+        holder.tvAnnouncementDate.setText(formatTimestamp(item.getTimestamp()));
 
         if (item.getImageUrl() == null || item.getImageUrl().isEmpty()) {
             holder.ivAnnouncementImage.setVisibility(View.GONE);
@@ -116,6 +120,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private void bindPending(@NonNull PendingViewHolder holder, @NonNull FeedItem item) {
         holder.tvPendingName.setText(item.getAuthorName());
         holder.tvPendingContent.setText(item.getContent());
+        holder.tvPendingDate.setText(formatTimestamp(item.getTimestamp()));
 
         if (item.getImageUrl() == null || item.getImageUrl().isEmpty()) {
             holder.ivPendingImage.setVisibility(View.GONE);
@@ -141,6 +146,13 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         });
     }
 
+    private String formatTimestamp(long timestamp) {
+        if (timestamp <= 0) {
+            return "";
+        }
+        return DateFormat.format("dd MMM yyyy, HH:mm", new Date(timestamp)).toString();
+    }
+
     @Override
     public int getItemCount() {
         return items.size();
@@ -149,12 +161,14 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     static class PostViewHolder extends RecyclerView.ViewHolder {
         TextView tvStudentName;
         TextView tvPostContent;
+        TextView tvPostDate;
         ImageView ivPostImage;
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
             tvStudentName = itemView.findViewById(R.id.tvStudentName);
             tvPostContent = itemView.findViewById(R.id.tvPostContent);
+            tvPostDate = itemView.findViewById(R.id.tvPostDate);
             ivPostImage = itemView.findViewById(R.id.ivPostImage);
         }
     }
@@ -164,12 +178,14 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         TextView tvAnnouncementContent;
         ImageView ivAnnouncementImage;
         TextView textViewRole;
+        TextView tvAnnouncementDate;
 
         public AnnouncementViewHolder(@NonNull View itemView) {
             super(itemView);
             tvAnnouncementAuthor = itemView.findViewById(R.id.tvAnnouncementAuthor);
             textViewRole = itemView.findViewById(R.id.textViewRole);
             tvAnnouncementContent = itemView.findViewById(R.id.tvAnnouncementContent);
+            tvAnnouncementDate = itemView.findViewById(R.id.tvAnnouncementDate);
             ivAnnouncementImage = itemView.findViewById(R.id.ivAnnouncementImage);
 
         }
@@ -178,6 +194,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     static class PendingViewHolder extends RecyclerView.ViewHolder {
         TextView tvPendingName;
         TextView tvPendingContent;
+        TextView tvPendingDate;
         ImageView ivPendingImage;
         ImageButton btnApprove;
         ImageButton btnReject;
@@ -186,6 +203,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             super(itemView);
             tvPendingName = itemView.findViewById(R.id.tvPendingName);
             tvPendingContent = itemView.findViewById(R.id.tvPendingContent);
+            tvPendingDate = itemView.findViewById(R.id.tvPendingDate);
             ivPendingImage = itemView.findViewById(R.id.PendingImage);
             btnApprove = itemView.findViewById(R.id.btnAcceptPost);
             btnReject = itemView.findViewById(R.id.btnRejectPost);

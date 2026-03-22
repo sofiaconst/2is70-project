@@ -33,16 +33,28 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
+        android:id="@+id/tvPendingDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="2dp"
+        android:text=""
+        android:textColor="#666666"
+        android:textSize="12sp"
+        app:layout_constraintStart_toEndOf="@+id/pfp"
+        app:layout_constraintTop_toBottomOf="@id/tvPendingName" />
+
+    <TextView
         android:id="@+id/tvPendingContent"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="8dp"
         android:text="Check out my science project on plant cells!"
         android:textAlignment="viewStart"
         android:textColor="#444444"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/pfp" />
+        app:layout_constraintTop_toBottomOf="@id/tvPendingDate" />
 
     <View
         android:id="@+id/divider1"
@@ -117,7 +129,6 @@
             android:src="@drawable/ic_reject_post"
             android:scaleType="fitCenter" />
     </LinearLayout>
-
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
