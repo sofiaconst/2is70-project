@@ -90,15 +90,14 @@
         android:adjustViewBounds="true"
         android:maxHeight="300dp"
         android:scaleType="centerInside"
-        android:src="@android:drawable/ic_menu_gallery"
+        android:src="@drawable/feed_image_placeholder"
         android:visibility="visible"
         android:background="@drawable/feed_image_bg"
         app:layout_constraintBottom_toBottomOf="@+id/layoutModeration"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvAnnouncementContent"
-        app:layout_constraintVertical_bias="0.0"
-        app:tint="@color/black" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <LinearLayout
         android:id="@+id/layoutLike"
@@ -107,7 +106,7 @@
         android:layout_marginTop="12dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        app:layout_constraintBaseline_toBottomOf="@id/ivPostImage"
+        app:layout_constraintBaseline_toBottomOf="@id/ivAnnouncementImage"
         app:layout_constraintEnd_toEndOf="parent">
 
     </LinearLayout>
