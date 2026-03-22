@@ -1,17 +1,18 @@
 package com.example.eduview.ui.feed;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.widget.ViewPager2;
-
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
 import com.example.eduview.R;
 import com.example.eduview.data.model.User;
@@ -26,13 +27,18 @@ public class FeedFragment extends Fragment {
     private FeedViewModel feedViewModel;
     private User user;
 
-    TabLayout teacherTabs;
-    ViewPager2 viewPager;
-    FeedTabViewAdapter feedTabViewAdapter;
+    private TabLayout teacherTabs;
+    private ViewPager2 viewPager;
+
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private int retryCount = 0;
+    private static final int MAX_RETRIES = 10;
+    private static final long RETRY_DELAY_MS = 200;
 
     public FeedFragment() {
         // Required empty public constructor
     }
+
     public static FeedFragment newInstance(String param1, String param2) {
         FeedFragment fragment = new FeedFragment();
         Bundle args = new Bundle();
@@ -42,14 +48,13 @@ public class FeedFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("FeedFragment","OnCreate");
+        Log.d("FeedFragment", "OnCreate");
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Log.d("FeedFragment", "Fragment created");
-
 
         View view = inflater.inflate(R.layout.fragment_feed, container, false);
         mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
@@ -61,15 +66,27 @@ public class FeedFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Log.d("FeedFragment","View is created");
-        TabLayout teacherTabs = view.findViewById(R.id.TeacherTabs);
-        ViewPager2 viewPager = view.findViewById(R.id.viewPager);
+        Log.d("FeedFragment", "View is created");
 
+        teacherTabs = view.findViewById(R.id.TeacherTabs);
+        viewPager = view.findViewById(R.id.viewPager);
+
+        trySetupFeed();
+    }
+
+    private void trySetupFeed() {
         user = mainViewModel.getCurrentUser();
+
         if (user == null) {
-            Log.e("FeedFragment", "Current user is NULL, session not ready yet");
+            retryCount++;
+            Log.e("FeedFragment", "Current user is NULL, retry " + retryCount);
+
+            if (retryCount < MAX_RETRIES) {
+                handler.postDelayed(this::trySetupFeed, RETRY_DELAY_MS);
+            }
             return;
         }
+
         Log.d("FeedFragment", "User received: " + user.getUserId());
         Log.d("FeedFragment", "User role: " + user.getRole());
 
@@ -85,8 +102,18 @@ public class FeedFragment extends Fragment {
 
         feedViewModel.loadPostsForUser(user);
         feedViewModel.loadPublishedPosts();
-        Log.d("FeedFragment", "Loading posts for user");
+        feedViewModel.loadAnnouncements();
+
+        if (isTeacher) {
+            feedViewModel.loadPendingPosts();
+        }
+
+        Log.d("FeedFragment", "Loading feed for user");
     }
 
-
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        handler.removeCallbacksAndMessages(null);
+    }
 }
