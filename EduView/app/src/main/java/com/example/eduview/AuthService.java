@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class AuthService {
 
@@ -197,6 +198,82 @@ public class AuthService {
                     callback.onError(task.getException());
                 }
             });
+    }
+
+    public void addChildToParent(String parentId, ChildInfo child, String parentPassword, AuthCallback callback) {
+        String parentEmail = firebaseAuth.getCurrentUser().getEmail();
+
+        checkEmailExists(child.email, exists -> {
+            if (exists) {
+                callback.onFailure(new Exception("Email already exists"));
+                return;
+            }
+            firebaseAuth.createUserWithEmailAndPassword(child.email, parentPassword)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            String childUid = firebaseAuth.getCurrentUser().getUid();
+
+                            // 1. Store in users table
+                            User childUser = new User(child.firstName, child.lastName, child.email, "Student");
+                            rootRef.child("users").child(childUid).setValue(childUser)
+                                    .addOnCompleteListener(userTask -> {
+                                        if (userTask.isSuccessful()) {
+                                            // 2. Store in students table
+                                            Map<String, Object> studentData = new HashMap<>();
+                                            studentData.put("classroom", "");
+                                            rootRef.child("students").child(childUid).setValue(studentData)
+                                                    .addOnCompleteListener(studentTask -> {
+                                                        if (studentTask.isSuccessful()) {
+                                                            // 3. Add to parent's children list
+                                                            rootRef.child("parents").child(parentId).child("children").get()
+                                                                    .addOnCompleteListener(getTask -> {
+                                                                        if (getTask.isSuccessful()) {
+                                                                            Map<String, String> childrenMap = (Map<String, String>) getTask.getResult().getValue();
+                                                                            if (childrenMap == null) childrenMap = new HashMap<>();
+
+                                                                            int nextIndex = childrenMap.size() + 1;
+                                                                            childrenMap.put("student_" + nextIndex, childUid);
+
+                                                                            rootRef.child("parents").child(parentId).child("children").setValue(childrenMap)
+                                                                                    .addOnCompleteListener(updateTask -> {
+                                                                                        // Re-authenticate as parent
+                                                                                        firebaseAuth.signInWithEmailAndPassword(parentEmail, parentPassword)
+                                                                                                .addOnCompleteListener(reAuthTask -> {
+                                                                                                    if (reAuthTask.isSuccessful()) {
+                                                                                                        callback.onSuccess();
+                                                                                                    } else {
+                                                                                                        callback.onFailure(reAuthTask.getException());
+                                                                                                    }
+                                                                                                });
+                                                                                    });
+                                                                        } else {
+                                                                            callback.onFailure(getTask.getException());
+                                                                        }
+                                                                    });
+                                                        } else {
+                                                            callback.onFailure(studentTask.getException());
+                                                        }
+                                                    });
+                                        } else {
+                                            callback.onFailure(userTask.getException());
+                                        }
+                                    });
+                        } else {
+                            callback.onFailure(task.getException());
+                        }
+                    });
+        });
+    }
+
+    public void checkEmailExists(String email, Consumer<Boolean> callback) {
+        rootRef.child("users").orderByChild("email").equalTo(email).get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        callback.accept(task.getResult().exists());
+                    } else {
+                        callback.accept(false);
+                    }
+                });
     }
 
     private interface ChildAuthCallback {

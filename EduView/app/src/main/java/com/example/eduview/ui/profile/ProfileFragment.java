@@ -7,9 +7,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
@@ -25,6 +28,7 @@ import com.example.eduview.ui.adapters.ChildAdapter;
 import com.example.eduview.ui.adapters.PfpAdapter;
 import com.example.eduview.ui.adapters.StudentManagerAdapter;
 import com.example.eduview.ui.login.LoginActivity;
+import com.example.eduview.ui.profile.profileFeatures.ParentProfileFeature;
 import com.example.eduview.ui.profile.profileFeatures.StudentProfileFeature;
 import com.example.eduview.ui.profile.profileFeatures.TeacherProfileFeature;
 import com.google.android.material.button.MaterialButton;
@@ -71,7 +75,7 @@ public class ProfileFragment extends Fragment {
     // --------------------- FEATURES --------------------- //
     private StudentProfileFeature studentFeature;
     private TeacherProfileFeature teacherFeature;
-    // private ParentProfileFeature parentFeature;
+    private ParentProfileFeature parentFeature;
 
     public ProfileFragment() {
     }
@@ -136,7 +140,7 @@ public class ProfileFragment extends Fragment {
 
         studentFeature = new StudentProfileFeature(getView());
         teacherFeature = new TeacherProfileFeature(getView(), studentManagerAdapter);
-        //parentFeature = new ParentProfileFeature(getView(), profileVM);
+        parentFeature = new ParentProfileFeature(getView(), childAdapter);
 
         profileVM.getUIState().observe(getViewLifecycleOwner(), this::render);
     }
@@ -154,9 +158,14 @@ public class ProfileFragment extends Fragment {
 
         rvStudents.setLayoutManager(new LinearLayoutManager(getContext()));
         rvStudents.setAdapter(studentManagerAdapter);
+
+        childAdapter = new ChildAdapter();
+        rvChildren.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvChildren.setAdapter(childAdapter);
+
     }
+
     private void render(ProfileUIState state) {
-        // parentFeature.bind(state);
         if (state == null) return;
 
         tvFullName.setText(state.displayName);
@@ -174,7 +183,9 @@ public class ProfileFragment extends Fragment {
             teacherFeature.bind(state);
         }
 
-        // parentFeature.bind(state);
+        if (state.parentState != null) {
+            parentFeature.bind(state);
+        }
     }
 
     private void resetVisibility() {
@@ -223,7 +234,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private void startScanner() {
-      ScanOptions options = new ScanOptions();
+        ScanOptions options = new ScanOptions();
         options.setPrompt("Scan the Classroom QR Code");
         options.setBeepEnabled(true);
         options.setOrientationLocked(true);
@@ -236,15 +247,13 @@ public class ProfileFragment extends Fragment {
                 if (result.getContents() != null) {
                     String scannedCode = result.getContents();
                     Log.d("ProfileFragment", "Scanned QR code = " + scannedCode);
-
-                    // NEW: delegate to ProfileViewModel instead of MainViewModel
                     profileVM.joinClass(scannedCode);
                 }
             }
     );
 
     private void showAddChildDialog() {
-/*        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_child, null);
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_child, null);
         AlertDialog dialog = new AlertDialog.Builder(getContext(), R.style.TransparentDialog)
                 .setView(dialogView)
                 .create();
@@ -256,118 +265,38 @@ public class ProfileFragment extends Fragment {
         Button btnAdd = dialogView.findViewById(R.id.btnAdd);
         Button btnCancel = dialogView.findViewById(R.id.btnCancel);
 
-        btnAdd.setOnClickListener(v -> {
-            User currentUser = profileVM.getCurrentUser().getValue();
-            if (!(currentUser instanceof Parent)) return;
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
 
+        btnAdd.setOnClickListener(v -> {
             profileVM.addChild(
-                    currentUser.getUserId(),
                     etFirstName.getText().toString().trim(),
                     etLastName.getText().toString().trim(),
                     etEmail.getText().toString().trim(),
                     etPassword.getText().toString().trim()
             );
-        });*/
+        });
+
+
+        // Observe status
+        profileVM.getAddChildStatus().observe(getViewLifecycleOwner(), status -> {
+            if (status == null) return;
+
+            if (status.equals("LOADING")) {
+                btnAdd.setEnabled(false);
+                btnAdd.setText("Adding...");
+            } else if (status.equals("SUCCESS")) {
+                Toast.makeText(getContext(), "Child added successfully!", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            } else if (status.startsWith("ERROR")) {
+                btnAdd.setEnabled(true);
+                btnAdd.setText("Add");
+                Toast.makeText(getContext(), status, Toast.LENGTH_LONG).show();
+            } else {
+                // validation message
+                Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        dialog.show();
     }
 }
-
-
-
-//=================OLD ARCHITECTURE================//
-//
-//
-//
-//
-//    //---------------------SOFIA-----------------//
-//
-/// /---------------------MINE-----------------//
-//
-//        btnCancel.setOnClickListener(v -> dialog.dismiss());
-//
-//        dialog.show();
-//
-//        profileVM.getAddChildStatus().observe(getViewLifecycleOwner(), status -> {
-//            if (status == null) return;
-//
-//            if (status.equals("LOADING")) {
-//                btnAdd.setEnabled(false);
-//                btnAdd.setText("Adding...");
-//            } else if (status.equals("SUCCESS")) {
-//                Toast.makeText(getContext(), "Child added successfully!", Toast.LENGTH_SHORT).show();
-//                dialog.dismiss();
-//            } else if (status.startsWith("ERROR")) {
-//                btnAdd.setEnabled(true);
-//                btnAdd.setText("Add");
-//                Toast.makeText(getContext(), status, Toast.LENGTH_LONG).show();
-//            } else {
-//                // validation message
-//                Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
-//            }
-//        });
-//    }
-//
-//    private void updateParentUI (Parent parent){
-//
-//        profileVM.loadChildrenData(parent);
-//        cardMyChildren.setVisibility(View.VISIBLE);
-//        tvClassLabel.setVisibility(View.VISIBLE);
-//        tvClassLabel.setText("");
-//
-//    }
-//
-//
-//
-////---------------------MINE-----------------//
-////---------------------SOFIA-----------------//
-//
-//    @Override
-//    public void onResume () {
-//        super.onResume();
-//        profileVM.loadTeacherStudents();
-//    }
-//
-//    // ---------- old architecture, here for reference
-//
-//    private void render (ProfileUIState state){
-//        tvFullName.setText(state.displayName);
-//        tvUserRole.setText(state.roleText);
-//        tvClassLabel.setText(state.classText);
-//        ivPfp.setImageResource(state.profilePictureResId);
-//
-//        btnScanQR.setVisibility(state.showScanButton ? View.VISIBLE : View.GONE);
-//
-//        if (state.qrBitmap != null) {
-//            tvQRCodeLabel.setVisibility(View.VISIBLE);
-//            ivQRCode.setVisibility(View.VISIBLE);
-//            ivQRCode.setImageBitmap(state.qrBitmap);
-//        } else {
-//            tvQRCodeLabel.setVisibility(View.GONE);
-//            ivQRCode.setVisibility(View.GONE);
-//        }
-//
-//        boolean isTeacher = "TEACHER".equalsIgnoreCase(state.roleText);
-//        cardManageStudents.setVisibility(isTeacher ? View.VISIBLE : View.GONE);
-//    }
-//
-//
-//    private void observeState () {
-//        profileVM.getUIState().observe(getViewLifecycleOwner(), this::render);
-//
-//        profileVM.getClassroomStudents().observe(getViewLifecycleOwner(), students -> {
-//            studentManagerAdapter.submitList(students);
-//        });
-//
-//        profileVM.getStudentsLoading().observe(getViewLifecycleOwner(), loading -> {
-//            pbStudents.setVisibility(loading ? View.VISIBLE : View.GONE);
-//        });
-//
-//        profileVM.getMessage().observe(getViewLifecycleOwner(), msg -> {
-//            if (msg != null && !msg.isEmpty()) {
-//                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
-//
-//
-//            }
-//        });
-//    }
-//
-// */

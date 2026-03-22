@@ -2,6 +2,7 @@ package com.example.eduview.ui.profile;
 
 import android.graphics.Bitmap;
 
+import com.example.eduview.ui.profile.profileStates.ParentProfileState;
 import com.example.eduview.ui.profile.profileStates.StudentProfileState;
 import com.example.eduview.ui.profile.profileStates.TeacherProfileState;
 
@@ -15,22 +16,22 @@ public class ProfileUIState {
     // -------- FEATURES (nullable = inactive) -------- //
     public final StudentProfileState studentState;
     public final TeacherProfileState teacherState;
-    //public final ParentProfileState parentState;
+    public final ParentProfileState parentState;
 
     public ProfileUIState(
             String displayName,
             String roleText,
             int profilePictureResId,
             StudentProfileState studentState,
-            TeacherProfileState teacherState
-            //ParentProfileState parentState
+            TeacherProfileState teacherState,
+            ParentProfileState parentState
     ) {
         this.displayName = displayName;
         this.roleText = roleText;
         this.profilePictureResId = profilePictureResId;
         this.studentState = studentState;
         this.teacherState = teacherState;
-        //this.parentState = parentState;
+        this.parentState = parentState;
     }
 
 }
