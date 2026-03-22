@@ -1,5 +1,6 @@
 package com.example.eduview.ui.profile;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -128,23 +129,29 @@ public class ProfileFragment extends Fragment {
 
         profileVM = new ViewModelProvider(this).get(ProfileViewModel.class);
 
-        studentFeature = new StudentProfileFeature(getView());
-        teacherFeature = new TeacherProfileFeature(getView());
-        //parentFeature = new ParentProfileFeature(getView(), profileVM);
-
         setupRecyclerViews();
-        //setupStudentList();
         setupListeners();
+
+        studentFeature = new StudentProfileFeature(getView());
+        teacherFeature = new TeacherProfileFeature(getView(), studentManagerAdapter);
+        //parentFeature = new ParentProfileFeature(getView(), profileVM);
 
         profileVM.getUIState().observe(getViewLifecycleOwner(), this::render);
     }
 
-    //TODO: Setup studentManageStudent RecylerView
     private void setupRecyclerViews() {
-//        childAdapter = new ChildAdapter();
-//        rvChildren.setLayoutManager(new LinearLayoutManager(getContext()));
-//        rvChildren.setAdapter(childAdapter);
-        // setup  studentManageStudent here
+        studentManagerAdapter = new StudentManagerAdapter(student -> {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Remove student")
+                    .setMessage("Remove " + student.getFirstName() + "?")
+                    .setPositiveButton("Remove", (d, w) ->
+                            profileVM.removeStudentFromClass(student))
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
+
+        rvStudents.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvStudents.setAdapter(studentManagerAdapter);
     }
     private void render(ProfileUIState state) {
 
@@ -166,7 +173,7 @@ public class ProfileFragment extends Fragment {
 
         // Delegate to features
         studentFeature.bind(state);
-        //teacherFeature.bind(state);
+        teacherFeature.bind(state);
         // parentFeature.bind(state);
 
     }
@@ -269,20 +276,6 @@ public class ProfileFragment extends Fragment {
 //=================OLD ARCHITECTURE================//
 //
 //
-//    private void setupStudentList () {
-//        studentManagerAdapter = new StudentManagerAdapter(student ->
-//                new AlertDialog.Builder(requireContext())
-//                        .setTitle("Remove student")
-//                        .setMessage("Remove " + student.getFirstName() + " " + student.getLastName() + " from this class?")
-//                        .setPositiveButton("Remove", (dialog, which) ->
-//                                profileVM.removeStudentFromClass(student))
-//                        .setNegativeButton("Cancel", null)
-//                        .show()
-//        );
-//
-//        rvStudents.setLayoutManager(new LinearLayoutManager(requireContext()));
-//        rvStudents.setAdapter(studentManagerAdapter);
-//    }
 //
 //
 //    //---------------------SOFIA-----------------//
@@ -334,7 +327,7 @@ public class ProfileFragment extends Fragment {
 //    }
 //
 //    // ---------- old architecture, here for reference
-///*
+//
 //    private void render (ProfileUIState state){
 //        tvFullName.setText(state.displayName);
 //        tvUserRole.setText(state.roleText);
@@ -379,32 +372,7 @@ public class ProfileFragment extends Fragment {
 //
 // */
 //
-//    private void updateUI (User user){
-//        updateBaseUI(user);
-//        resetVisibility();
 //
-//        switch (user.getRole()) {
-//            case TEACHER:
-//                teacherFeature.handleTeacher((Teacher) user);
-//                break;
-//
-//            case STUDENT:
-//                studentFeature.handleStudent((Student) user);
-//                break;
-//
-//            case PARENT:
-//                setupRecyclerViews();
-//                updateParentUI((Parent) user);
-//
-//                break;
-//        }
-//    }
-//
-//
-//    private void updateBaseUI (User user){
-//        tvFullName.setText(user.getFirstName() + " " + user.getLastName());
-//        tvUserRole.setText(user.getRole().name());
-//    }
 //
 //    private void setupRoleBasedListeners (User user){
 //        btnLogout.setOnClickListener(v -> {
@@ -473,26 +441,3 @@ public class ProfileFragment extends Fragment {
 //
 //}
 
-    /*
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        profileVM = new ViewModelProvider(this).get(ProfileViewModel.class);
-
-        studentFeature = new StudentProfileFeature(getView(), profileVM);
-        teacherFeature = new TeacherProfileFeature(getView(), profileVM);
-
-        profileVM.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
-            if (user != null) {
-                Log.d("TESTER", user.getFirstName());
-                updateUI(user);
-                setupRoleBasedObservers(user);
-                setupRoleBasedListeners(user);
-            } else {
-                Log.e("ProfileFragment", "Current user is null");
-            }
-        });
-    }
-
- */

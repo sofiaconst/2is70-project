@@ -104,7 +104,7 @@ public class ProfileViewModel extends ViewModel {
                 break;
 
             case TEACHER:
-                //teacherState = buildTeacherState((Teacher) currentUser);
+                teacherState = buildTeacherState((Teacher) currentUser);
                 break;
 
             case PARENT:
@@ -138,10 +138,14 @@ public class ProfileViewModel extends ViewModel {
     }
 
     private TeacherProfileState buildTeacherState(Teacher teacher) {
+        String classId = teacher.getClassId();
 
-        Log.d("TESTER", teacher.getClassId());
+        if (classId == null || classId.isEmpty()) {
+            return TeacherProfileState.error("No class assigned");
+        }
 
-        loadTeacherClass(teacher.getClassId());
+        loadTeacherClass(classId);
+
         return TeacherProfileState.loading();
     }
 
@@ -195,24 +199,98 @@ public class ProfileViewModel extends ViewModel {
 
     }
 
+//    private void loadTeacherClass(String classId) {
+//        classroomRepository.getClassroomById(classId, new ClassroomRepository.ClassroomCallback<Classroom>() {
+//            @Override
+//            public void onSuccess(Classroom classroom) {
+//                String classId = classroom.getId();
+//                String className = classroom.getName();
+//
+//                List<Student> students = classroom.getStudents(); // or fetch separately
+//                Bitmap qr = qrCodeGenerator.generateQRCode(classId);
+//
+//                updateTeacherState(TeacherProfileState.success(classId, className, qr, students));
+//            }
+//
+//            @Override
+//            public void onError(Exception e) {
+//                updateTeacherState(TeacherProfileState.error(e.getMessage()));
+//            }
+//        });
+//    }
+
     private void loadTeacherClass(String classId) {
-        /*classroomRepository.getClassroomById(classId, new ClassroomRepository.ClassroomCallback<Classroom>() {
+
+        classroomRepository.getClassroomById(classId, new ClassroomRepository.ClassroomCallback<Classroom>() {
+
             @Override
             public void onSuccess(Classroom classroom) {
-                String classId = classroom.getId();
+                if (classroom == null) {
+                    updateTeacherState(TeacherProfileState.error("Class not found"));
+                    return;
+                }
+
                 String className = classroom.getName();
+                Bitmap qr = generateQRCode(classId);
 
-                List<Student> students = classroom.getStudents(); // or fetch separately
-                Bitmap qr = qrCodeGenerator.generateQRCode(classId);
-
-                updateTeacherState(TeacherProfileState.success(classId, className, qr, students));
+                loadTeacherStudents(classId, className, qr);
             }
 
             @Override
             public void onError(Exception e) {
-                updateTeacherState(TeacherProfileState.error(e.getMessage()));
+                updateTeacherState(TeacherProfileState.error(e != null ? e.getMessage() : "Failed to load classroom"));
             }
-        });*/
+        });
+    }
+
+    private void loadTeacherStudents(String classId, String className, Bitmap qr) {
+        classroomRepository.getStudentIdsForClassroom(classId,
+                new ClassroomRepository.ClassroomCallback<List<String>>() {
+                    @Override
+                    public void onSuccess(List<String> studentIds) {
+                        userRepository.getStudentsByIds(studentIds,
+                                students -> {
+                                    Log.d("TESTER", Arrays.toString(students.toArray()));
+                                    updateTeacherState(TeacherProfileState.success(className, qr, students));
+                                },
+                                e -> {
+                                    updateTeacherState(TeacherProfileState.success(className, qr, new ArrayList<>()));
+                                }
+                        );
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        updateTeacherState(TeacherProfileState.success(className, qr, new ArrayList<>()));
+                    }
+                });
+    }
+
+    public void removeStudentFromClass(Student student) {
+        User currentUser = sessionManager.getCurrentUser();
+
+        if (!(currentUser instanceof Teacher) || student == null) return;
+
+        String classId = ((Teacher) currentUser).getClassId();
+
+        classroomRepository.removeStudentFromClassroom(
+                classId,
+                student.getUserId(),
+                new ClassroomRepository.ClassroomCallback<Void>() {
+
+                    @Override
+                    public void onSuccess(Void result) {
+                        loadTeacherClass(classId);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        updateTeacherState(
+                                TeacherProfileState.error("Failed to remove student")
+                        );
+                    }
+                }
+        );
     }
 
     private void updateStudentState(StudentProfileState newStudentState) {
@@ -233,7 +311,6 @@ public class ProfileViewModel extends ViewModel {
     }
 
     private void updateTeacherState(TeacherProfileState newTeacherState) {
-
         ProfileUIState current = uiState.getValue();
         if (current == null) return;
 
@@ -265,13 +342,37 @@ public class ProfileViewModel extends ViewModel {
         });
     }
 
-    public LiveData<ProfileUIState> getUIState() {
-        return uiState;
+    private Bitmap generateQRCode(String classCode) {
+        if (classCode == null || classCode.trim().isEmpty()) {
+            Log.d("TESTER", "Tryna generate QR Code but its empty");
+            return null;
+        }
+
+        Log.d("TESTER", "There is a QR Code");
+        try {
+            BitMatrix bitMatrix = new MultiFormatWriter().encode(
+                    classCode,
+                    BarcodeFormat.QR_CODE,
+                    500,
+                    500
+            );
+            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+            return barcodeEncoder.createBitmap(bitMatrix);
+
+        } catch (WriterException e) {
+            Log.e("ProfileViewModel", "QR generation failed", e);
+            return null;
+        }
     }
 
     public void logout() {
         sessionManager.logoutCurrentUser(null);
     }
+
+    public LiveData<ProfileUIState> getUIState() {
+        return uiState;
+    }
+
 
     //================================== OLD ARCHITECTURE====================================//
     // Data
@@ -493,35 +594,6 @@ public class ProfileViewModel extends ViewModel {
                 }
             });
         }
-    }
-
-    public Bitmap generateQRCode(String classCode) {
-        if (classCode == null || classCode.trim().isEmpty()) {
-            return null;
-        }
-
-        try {
-            BitMatrix bitMatrix = new MultiFormatWriter().encode(
-                    classCode,
-                    BarcodeFormat.QR_CODE,
-                    500,
-                    500
-            );
-            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
-            return barcodeEncoder.createBitmap(bitMatrix);
-        } catch (WriterException e) {
-            Log.e("ProfileFragment", "Error generating QR code", e);
-            return null;
-        }
-    }
-
-    public void generateTeacherQR(String classId) {
-        *//*
-        Bitmap qr = generateQRCode(classId);
-
-        teacherState.setValue(teacherState.copyWithQr(qr));
-
-         *//*
     }
 
     public void addChild(String parentId, String fName, String lName, String email, String password) {
