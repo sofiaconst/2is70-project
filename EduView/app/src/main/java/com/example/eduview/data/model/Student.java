@@ -10,8 +10,8 @@ public class Student extends User {
     //Empty Constructor needed for Firebase
     public Student() {}
 
-    public Student(String id, String firstName, String lastName, String classroom){
-        super(id, firstName, lastName, STUDENT);
+    public Student(String id, String firstName, String lastName, String email, String classroom){
+        super(id, firstName, lastName, email, STUDENT);
         this.classroomId = classroom;
     }
 

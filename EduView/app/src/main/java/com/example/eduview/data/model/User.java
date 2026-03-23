@@ -13,15 +13,18 @@ public class User {
     private UserRole role;
     @PropertyName("pfp")
     private String profilePictureName;
+    @PropertyName("email")
+    private String email;
 
     //Empty Constructor needed for Firebase
     public User() {}
 
     //User profile Creation constructor
-    public User(String userId, String firstName, String lastName, UserRole role) {
+    public User(String userId, String firstName, String lastName, String email, UserRole role) {
         this.userId = userId;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.email = email;
         this.role = role;
         this.profilePictureName = ProfilePicture.DEFAULT.name();
     }
@@ -46,6 +49,7 @@ public class User {
     }
     public String getLastName() {return lastName;}
     public UserRole getRole() { return role; }
+    public String getEmail() { return email; }
     
     @PropertyName("pfp")
     public String getProfilePictureName() {
@@ -55,6 +59,10 @@ public class User {
     @PropertyName("pfp")
     public void setProfilePictureName(String profilePictureName) {
         this.profilePictureName = profilePictureName;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     @Exclude

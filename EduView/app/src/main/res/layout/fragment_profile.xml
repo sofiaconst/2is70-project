@@ -128,65 +128,6 @@
                     tools:layout_marginTop="10dp"
                     tools:visibility="visible"/>
 
-                <TextView
-                    android:id="@+id/BioLabelText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginTop="25dp"
-                    android:fontFamily="@font/robotomono"
-                    android:text="About Me"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    app:layout_constraintBottom_toTopOf="@id/aboutMeCard"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/tvEditPfp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnSaveBio"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="10dp"
-                    android:fontFamily="@font/robotomono"
-                    android:text="Save"
-                    android:textColor="@color/aqua"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    app:layout_constraintBottom_toBottomOf="@id/BioLabelText"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/BioLabelText" />
-
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/aboutMeCard"
-                    android:layout_width="0dp"
-                    android:layout_height="110dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    app:cardBackgroundColor="#F3F0F0"
-                    app:cardCornerRadius="12dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/BioLabelText"
-                    app:strokeColor="@android:color/black"
-                    app:strokeWidth="1dp"
-                    tools:layout_constraintTop_toBottomOf="@id/BioLabelText">
-
-                    <EditText
-                        android:id="@+id/etAboutMe"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/transparent"
-                        android:gravity="top|start"
-                        android:hint="A little bit about me..."
-                        android:inputType="textMultiLine"
-                        android:isScrollContainer="true"
-                        android:overScrollMode="ifContentScrolls"
-                        android:padding="12dp"
-                        android:scrollbars="vertical" />
-
-                </com.google.android.material.card.MaterialCardView>
-
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <!-- "Class QR Code" Section -->

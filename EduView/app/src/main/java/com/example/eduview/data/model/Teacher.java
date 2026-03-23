@@ -1,37 +1,27 @@
 package com.example.eduview.data.model;
 
-import static com.example.eduview.data.model.UserRole.STUDENT;
 import static com.example.eduview.data.model.UserRole.TEACHER;
-
-import com.google.firebase.database.PropertyName;
 
 public class Teacher extends User {
 
-    private String email;
     private String classroom;
 
     //Empty Constructor needed for Firebase
     public Teacher() {}
 
     public Teacher(String id, String firstName, String lastName, String email, String classroom){
-        super(id, firstName, lastName, TEACHER);
-        this.email = email;
+        super(id, firstName, lastName, email, TEACHER);
         this.classroom = classroom;
     }
 
     public Teacher(String id, String firstName, String lastName, String classroom){
-        super(id, firstName, lastName, TEACHER);
-        this.email = null;
+        super(id, firstName, lastName, null, TEACHER);
         this.classroom = classroom;
     }
 
     /*
     Getters
      */
-    public String getEmail() {
-        return email;
-    }
-
     public String getClassId() {
         return classroom;
     }
