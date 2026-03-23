@@ -15,6 +15,48 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <LinearLayout
+        android:id="@+id/emptyAnnouncementsState"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/ivEmptyAnnouncements"
+            android:layout_width="320dp"
+            android:layout_height="320dp"
+            android:adjustViewBounds="true"
+            android:src="@drawable/sleepy_dino"
+            android:contentDescription="No announcements" />
+
+        <TextView
+            android:id="@+id/tvEmptyAnnouncementsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="-30dp"
+            android:text="No announcements yet"
+            android:textColor="@android:color/black"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvEmptyAnnouncementsSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:gravity="center"
+            android:text="There is nothing to show here yet."
+            android:textColor="#666666"
+            android:textSize="15sp" />
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/parentAnnouncementTabsContainer"
         android:layout_width="0dp"
         android:layout_height="0dp"

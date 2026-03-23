@@ -63,6 +63,8 @@ public class Posts extends Fragment {
 
     private void setupNormalPostsList(@NonNull View view, @NonNull FeedViewModel feedViewModel) {
         RecyclerView recyclerPosts = view.findViewById(R.id.recyclerPosts);
+        View emptyPostsState = view.findViewById(R.id.emptyPostsState);
+
         recyclerPosts.setVisibility(View.VISIBLE);
 
         feedAdapter = new FeedAdapter(feedViewModel);
@@ -74,17 +76,27 @@ public class Posts extends Fragment {
             parentTabsContainer.setVisibility(View.GONE);
         }
 
-        observePublishedPosts(feedViewModel);
+        observePublishedPosts(feedViewModel, recyclerPosts, emptyPostsState);
         feedViewModel.getRefreshTrigger().observe(getViewLifecycleOwner(), refreshCount -> {
-            observePublishedPosts(feedViewModel);
+            observePublishedPosts(feedViewModel, recyclerPosts, emptyPostsState);
         });
     }
 
-    private void observePublishedPosts(@NonNull FeedViewModel feedViewModel) {
+    private void observePublishedPosts(@NonNull FeedViewModel feedViewModel,
+                                       @NonNull RecyclerView recyclerPosts,
+                                       @NonNull View emptyPostsState) {
         if (feedViewModel.getPublishedPosts() != null) {
             feedViewModel.getPublishedPosts().observe(getViewLifecycleOwner(), items -> {
                 if (items != null) {
                     feedAdapter.setItems(items);
+
+                    if (items.isEmpty()) {
+                        recyclerPosts.setVisibility(View.GONE);
+                        emptyPostsState.setVisibility(View.VISIBLE);
+                    } else {
+                        recyclerPosts.setVisibility(View.VISIBLE);
+                        emptyPostsState.setVisibility(View.GONE);
+                    }
                 }
             });
         }
@@ -96,6 +108,11 @@ public class Posts extends Fragment {
 
         RecyclerView recyclerPosts = view.findViewById(R.id.recyclerPosts);
         recyclerPosts.setVisibility(View.GONE);
+
+        View emptyPostsState = view.findViewById(R.id.emptyPostsState);
+        if (emptyPostsState != null) {
+            emptyPostsState.setVisibility(View.GONE);
+        }
 
         View parentTabsContainer = view.findViewById(R.id.parentTabsContainer);
         parentTabsContainer.setVisibility(View.VISIBLE);

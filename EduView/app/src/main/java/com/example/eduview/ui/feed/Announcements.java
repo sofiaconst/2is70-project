@@ -59,6 +59,8 @@ public class Announcements extends Fragment {
 
     private void setupNormalAnnouncementsList(@NonNull View view, @NonNull FeedViewModel feedViewModel) {
         RecyclerView recyclerAnnouncements = view.findViewById(R.id.recyclerAnnouncements);
+        View emptyAnnouncementsState = view.findViewById(R.id.emptyAnnouncementsState);
+
         recyclerAnnouncements.setVisibility(View.VISIBLE);
 
         feedAdapter = new FeedAdapter(feedViewModel);
@@ -72,10 +74,27 @@ public class Announcements extends Fragment {
 
         feedViewModel.loadAnnouncements();
 
+        observeAnnouncements(feedViewModel, recyclerAnnouncements, emptyAnnouncementsState);
+        feedViewModel.getRefreshTrigger().observe(getViewLifecycleOwner(), refreshCount -> {
+            observeAnnouncements(feedViewModel, recyclerAnnouncements, emptyAnnouncementsState);
+        });
+    }
+
+    private void observeAnnouncements(@NonNull FeedViewModel feedViewModel,
+                                      @NonNull RecyclerView recyclerAnnouncements,
+                                      @NonNull View emptyAnnouncementsState) {
         if (feedViewModel.getAnnouncements() != null) {
             feedViewModel.getAnnouncements().observe(getViewLifecycleOwner(), items -> {
                 if (items != null) {
                     feedAdapter.setItems(items);
+
+                    if (items.isEmpty()) {
+                        recyclerAnnouncements.setVisibility(View.GONE);
+                        emptyAnnouncementsState.setVisibility(View.VISIBLE);
+                    } else {
+                        recyclerAnnouncements.setVisibility(View.VISIBLE);
+                        emptyAnnouncementsState.setVisibility(View.GONE);
+                    }
                 }
             });
         }
@@ -87,6 +106,11 @@ public class Announcements extends Fragment {
 
         RecyclerView recyclerAnnouncements = view.findViewById(R.id.recyclerAnnouncements);
         recyclerAnnouncements.setVisibility(View.GONE);
+
+        View emptyAnnouncementsState = view.findViewById(R.id.emptyAnnouncementsState);
+        if (emptyAnnouncementsState != null) {
+            emptyAnnouncementsState.setVisibility(View.GONE);
+        }
 
         View parentTabsContainer = view.findViewById(R.id.parentAnnouncementTabsContainer);
         parentTabsContainer.setVisibility(View.VISIBLE);
