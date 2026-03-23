@@ -216,6 +216,7 @@ public class FeedRepository {
 
                                     String firstName = userSnapshot.child("first_name").getValue(String.class);
                                     String lastName = userSnapshot.child("last_name").getValue(String.class);
+                                    String pfp = userSnapshot.child("pfp").getValue(String.class);
 
                                     if (firstName == null) firstName = "";
                                     if (lastName == null) lastName = "";
@@ -225,6 +226,7 @@ public class FeedRepository {
                                     item.setPostId(postId);
                                     item.setImageUrl(imageUrl);
                                     item.setTimestamp(finalTimestamp);
+                                    item.setAuthorPfpName(pfp);
                                     items.add(item);
 
                                     if (completed[0] == postIds.size()) {

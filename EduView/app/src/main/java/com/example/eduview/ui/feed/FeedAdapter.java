@@ -11,16 +11,16 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import com.bumptech.glide.Glide;
 
+import com.bumptech.glide.Glide;
 import com.example.eduview.R;
 import com.example.eduview.data.model.FeedItem;
 import com.example.eduview.data.model.FeedType;
+import com.example.eduview.data.model.ProfilePicture;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -86,11 +86,12 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         holder.tvStudentName.setText(item.getAuthorName());
         holder.tvPostContent.setText(item.getContent());
         holder.tvPostDate.setText(formatTimestamp(item.getTimestamp()));
+        setProfilePicture(holder.ivProfilePicture, item.getAuthorPfpName());
 
         if (item.getImageUrl() == null || item.getImageUrl().isEmpty()) {
             holder.ivPostImage.setVisibility(View.GONE);
         } else {
-            Log.d("FeedAdapter", "Url "+ item.getImageUrl());
+            Log.d("FeedAdapter", "Url " + item.getImageUrl());
             holder.ivPostImage.setVisibility(View.VISIBLE);
             Glide.with(holder.itemView.getContext())
                     .load(item.getImageUrl())
@@ -104,6 +105,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         holder.tvAnnouncementAuthor.setText(item.getAuthorName());
         holder.tvAnnouncementContent.setText(item.getContent());
         holder.tvAnnouncementDate.setText(formatTimestamp(item.getTimestamp()));
+        setProfilePicture(holder.ivProfilePicture, item.getAuthorPfpName());
 
         if (item.getImageUrl() == null || item.getImageUrl().isEmpty()) {
             holder.ivAnnouncementImage.setVisibility(View.GONE);
@@ -121,6 +123,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         holder.tvPendingName.setText(item.getAuthorName());
         holder.tvPendingContent.setText(item.getContent());
         holder.tvPendingDate.setText(formatTimestamp(item.getTimestamp()));
+        setProfilePicture(holder.ivProfilePicture, item.getAuthorPfpName());
 
         if (item.getImageUrl() == null || item.getImageUrl().isEmpty()) {
             holder.ivPendingImage.setVisibility(View.GONE);
@@ -146,6 +149,22 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         });
     }
 
+    private void setProfilePicture(@NonNull View profileView, String profilePictureName) {
+        ProfilePicture profilePicture;
+
+        if (profilePictureName == null) {
+            profilePicture = ProfilePicture.DEFAULT;
+        } else {
+            try {
+                profilePicture = ProfilePicture.valueOf(profilePictureName);
+            } catch (IllegalArgumentException e) {
+                profilePicture = ProfilePicture.DEFAULT;
+            }
+        }
+
+        profileView.setBackgroundResource(profilePicture.getDrawableId());
+    }
+
     private String formatTimestamp(long timestamp) {
         if (timestamp <= 0) {
             return "";
@@ -163,6 +182,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         TextView tvPostContent;
         TextView tvPostDate;
         ImageView ivPostImage;
+        View ivProfilePicture;
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -170,6 +190,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             tvPostContent = itemView.findViewById(R.id.tvPostContent);
             tvPostDate = itemView.findViewById(R.id.tvPostDate);
             ivPostImage = itemView.findViewById(R.id.ivPostImage);
+            ivProfilePicture = itemView.findViewById(R.id.pfp);
         }
     }
 
@@ -179,6 +200,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         ImageView ivAnnouncementImage;
         TextView textViewRole;
         TextView tvAnnouncementDate;
+        View ivProfilePicture;
 
         public AnnouncementViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -187,7 +209,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             tvAnnouncementContent = itemView.findViewById(R.id.tvAnnouncementContent);
             tvAnnouncementDate = itemView.findViewById(R.id.tvAnnouncementDate);
             ivAnnouncementImage = itemView.findViewById(R.id.ivAnnouncementImage);
-
+            ivProfilePicture = itemView.findViewById(R.id.pfp);
         }
     }
 
@@ -198,6 +220,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         ImageView ivPendingImage;
         ImageButton btnApprove;
         ImageButton btnReject;
+        View ivProfilePicture;
 
         public PendingViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -207,6 +230,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             ivPendingImage = itemView.findViewById(R.id.PendingImage);
             btnApprove = itemView.findViewById(R.id.btnAcceptPost);
             btnReject = itemView.findViewById(R.id.btnRejectPost);
+            ivProfilePicture = itemView.findViewById(R.id.pfp);
         }
     }
 }
