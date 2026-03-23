@@ -123,6 +123,7 @@ public class UserRepository {
                     userId,
                     base.firstName,
                     base.lastName,
+                    base.email,
                     classId
             );
             student.setProfilePictureName(base.pfp);
@@ -147,14 +148,13 @@ public class UserRepository {
 
             // Role-specific fields
             String classId = snapshot.child("classroom").getValue(String.class);
-            String email = snapshot.child("email").getValue(String.class);
 
             // Create Teacher object
             Teacher teacher = new Teacher(
                     userId,
                     base.firstName,
                     base.lastName,
-                    email,
+                    base.email,
                     classId
             );
             teacher.setProfilePictureName(base.pfp);
@@ -178,7 +178,6 @@ public class UserRepository {
             }
 
             // Role-specific fields
-            String email = snapshot.child("email").getValue(String.class);
             List<String> childrenIDs = getChildrenIds(snapshot); // assumes a helper method
 
             // Create Parent object
@@ -186,7 +185,7 @@ public class UserRepository {
                     userId,
                     base.firstName,
                     base.lastName,
-                    email,
+                    base.email,
                     childrenIDs
             );
             parent.setProfilePictureName(base.pfp);

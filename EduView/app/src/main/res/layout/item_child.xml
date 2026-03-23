@@ -40,27 +40,27 @@
             tools:text="Class 2A" />
 
         <TextView
-            android:id="@+id/tvEmailLabel"
+            android:id="@+id/tvUsernameLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:fontFamily="@font/robotomono"
-            android:text="Email:"
+            android:text="Username:"
             android:textColor="#5D4037"
             android:textSize="14sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvChildClass" />
 
         <TextView
-            android:id="@+id/tvChildEmail"
+            android:id="@+id/tvChildUsername"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/robotomono"
             android:textColor="#3E2723"
             android:textSize="14sp"
-            app:layout_constraintBaseline_toBaselineOf="@id/tvEmailLabel"
+            app:layout_constraintBaseline_toBaselineOf="@id/tvUsernameLabel"
             app:layout_constraintEnd_toEndOf="parent"
-            tools:text="jane.doe@email.com" />
+            tools:text="janedoe" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

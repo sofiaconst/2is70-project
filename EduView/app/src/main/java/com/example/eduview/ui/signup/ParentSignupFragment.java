@@ -1,5 +1,6 @@
 package com.example.eduview.ui.signup;
 
+import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -89,6 +90,7 @@ public class ParentSignupFragment extends Fragment {
     public List<AuthService.ChildInfo> getChildrenInfo() {
         List<AuthService.ChildInfo> children = new ArrayList<>();
         Set<String> usernames = new HashSet<>();
+        boolean allValid = true;
         
         for (int i = 0; i < formList.size(); i++) {
             View form = formList.get(i);
@@ -101,26 +103,44 @@ public class ParentSignupFragment extends Fragment {
                 String lastName = etChildLastName.getText().toString().trim();
                 String username = etChildUsername.getText().toString().trim();
                 
+                // Reset background/color to normal state
+                etChildUsername.setBackgroundResource(R.drawable.bg_input_rounded);
+
                 if (firstName.isEmpty() || lastName.isEmpty() || username.isEmpty()) {
-                    continue; // Will be handled by the size check in Activity
+                    allValid = false;
+                    continue; 
                 }
 
-                if (username.contains("@")) {
-                    Toast.makeText(getContext(), "Child " + (i+1) + " username cannot contain '@'", Toast.LENGTH_SHORT).show();
-                    return null;
+                if (username.contains("@") || username.contains(" ")) {
+                    etChildUsername.setBackgroundResource(R.drawable.bg_input_error); // Assuming you have an error drawable, or use a color filter
+                    Toast.makeText(getContext(), "Username must not contain space characters nor @ symbols", Toast.LENGTH_SHORT).show();
+                    allValid = false;
+                    continue;
                 }
 
                 if (usernames.contains(username.toLowerCase())) {
-                    Toast.makeText(getContext(), "Duplicate username: " + username, Toast.LENGTH_SHORT).show();
-                    return null;
+                    etChildUsername.setBackgroundResource(R.drawable.bg_input_error);
+                    Toast.makeText(getContext(), "Duplicate username within form: " + username, Toast.LENGTH_SHORT).show();
+                    allValid = false;
+                    continue;
                 }
                 usernames.add(username.toLowerCase());
                 
-                // Append @eduview.com to the username to treat it as an email in the database
                 String email = username.toLowerCase() + "@eduview.com";
                 children.add(new AuthService.ChildInfo(firstName, lastName, email));
             }
         }
-        return children;
+        return allValid ? children : null;
+    }
+
+    public void markUsernameError(String email) {
+        String username = email.replace("@eduview.com", "");
+        for (View form : formList) {
+            EditText etChildUsername = form.findViewById(R.id.et_child_username);
+            if (etChildUsername != null && etChildUsername.getText().toString().trim().equalsIgnoreCase(username)) {
+                etChildUsername.setBackgroundResource(R.drawable.bg_input_error);
+                return;
+            }
+        }
     }
 }

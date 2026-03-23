@@ -261,7 +261,7 @@ public class ProfileFragment extends Fragment {
 
         EditText etFirstName = dialogView.findViewById(R.id.etChildFirstName);
         EditText etLastName = dialogView.findViewById(R.id.etChildLastName);
-        EditText etEmail = dialogView.findViewById(R.id.etChildEmail);
+        EditText etUsername = dialogView.findViewById(R.id.etChildUsername);
         EditText etPassword = dialogView.findViewById(R.id.etParentPassword);
         Button btnAdd = dialogView.findViewById(R.id.btnAdd);
         Button btnCancel = dialogView.findViewById(R.id.btnCancel);
@@ -272,7 +272,7 @@ public class ProfileFragment extends Fragment {
             profileVM.addChild(
                     etFirstName.getText().toString().trim(),
                     etLastName.getText().toString().trim(),
-                    etEmail.getText().toString().trim(),
+                    etUsername.getText().toString().trim(),
                     etPassword.getText().toString().trim()
             );
         });

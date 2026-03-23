@@ -11,10 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.eduview.R;
 import com.example.eduview.data.model.Classroom;
 import com.example.eduview.data.model.Student;
-import com.example.eduview.data.model.User;
 import com.example.eduview.data.repository.ClassroomRepository;
-import com.example.eduview.data.repository.UserRepository;
-import com.example.eduview.ui.profile.profileStates.StudentProfileState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,24 +51,31 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
     static class ChildViewHolder extends RecyclerView.ViewHolder {
         private final TextView tvName;
         private final TextView tvClass;
-        private final TextView tvEmail;
+        private final TextView tvUsername;
 
         public ChildViewHolder(@NonNull View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvChildName);
             tvClass = itemView.findViewById(R.id.tvChildClass);
-            tvEmail = itemView.findViewById(R.id.tvChildEmail);
+            tvUsername = itemView.findViewById(R.id.tvChildUsername);
         }
 
         public void bind(Student child, ClassroomRepository classroomRepository) {
             tvName.setText(child.getFirstName() + " " + child.getLastName());
-            //tvEmail.setText(child.getEmail() != null ? child.getEmail() : "No email");
+            
+            // Extract username from email (e.g., "john.doe@eduview.com" -> "john.doe")
+            String email = child.getEmail();
+            if (email != null && email.contains("@")) {
+                String username = email.split("@")[0];
+                tvUsername.setText(username);
+            } else {
+                tvUsername.setText(email != null ? email : "N/A");
+            }
 
             String classId = child.getClassId();
             if (classId == null || classId.isEmpty()) {
                 tvClass.setText("Not registered to a class");
             } else {
-
                 classroomRepository.getClassroomById(classId, new ClassroomRepository.ClassroomCallback<Classroom>() {
                     @Override
                     public void onSuccess(Classroom classroom) {
@@ -83,8 +87,6 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
                         tvClass.setText("Class: " + classId);
                     }
                 });
-
-
             }
         }
     }

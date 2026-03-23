@@ -7,7 +7,6 @@ import com.google.firebase.database.PropertyName;
 import java.util.List;
 
 public class Parent extends User {
-    private String email;
     private List<String> children;
 
 
@@ -15,14 +14,10 @@ public class Parent extends User {
     public Parent() {}
 
     public Parent(String id, String firstName, String lastName, String email, List<String> children){
-        super(id, firstName, lastName, PARENT);
-        this.email = email;
+        super(id, firstName, lastName, email, PARENT);
         this.children = children;
     }
 
-    public String getEmail() {
-        return email;
-    }
     @PropertyName("children")
     public List<String> getChildrenIDs() {
         return children;

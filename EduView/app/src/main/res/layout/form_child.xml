@@ -95,6 +95,14 @@
             android:text="Username of Child"
             android:textSize="12sp" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Username must not have any space character or @ symbols"
+            android:textSize="10sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="2dp"/>
+
         <EditText
             android:id="@+id/et_child_username"
             android:layout_width="match_parent"
