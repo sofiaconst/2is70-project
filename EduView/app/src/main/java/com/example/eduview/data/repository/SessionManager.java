@@ -103,9 +103,6 @@ public class SessionManager {
         });
     }
 
-    public boolean isLoggedIn() {
-        return currentUser != null;
-    }
 
     public void logoutCurrentUser(SessionCallback callback) {
         currentUser = null;
@@ -124,6 +121,30 @@ public class SessionManager {
     public User getCurrentUser() {
         requireLogin();
         return currentUser;
+    }
+
+    public void reloadSession(SessionCallback callback) {
+        FirebaseUser firebaseUser = authRepository.getCurrentFirebaseUser();
+
+        if (firebaseUser == null) {
+            callback.onError(new IllegalStateException("User not logged in"));
+            return;
+        }
+
+        String uid = firebaseUser.getUid();
+
+        userRepository.getUserById(uid, new UserRepository.UserCallback() {
+            @Override
+            public void onSuccess(User user) {
+                currentUser = user;
+                callback.onSuccess(currentUser);
+            }
+
+            @Override
+            public void onError(Exception error) {
+                callback.onError(error);
+            }
+        });
     }
 
     public interface SessionCallback {

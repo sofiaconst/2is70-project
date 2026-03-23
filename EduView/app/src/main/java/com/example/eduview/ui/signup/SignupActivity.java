@@ -182,6 +182,11 @@ public class SignupActivity extends AppCompatActivity {
                 return;
             }
 
+            if (!email.contains("@")) {
+                Toast.makeText(this, "Please enter a valid email address", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             if (!isPasswordValid(password)) {
                 tvPasswordError.setText(getPasswordRequirementsMessage(password));
                 tvPasswordError.setVisibility(View.VISIBLE);
@@ -190,9 +195,13 @@ public class SignupActivity extends AppCompatActivity {
                 tvPasswordError.setVisibility(View.GONE);
             }
 
+            // Disable button to prevent double clicks
+            btnSignUp.setEnabled(false);
+
             AuthService.AuthCallback callback = new AuthService.AuthCallback() {
                 @Override
                 public void onSuccess() {
+                    btnSignUp.setEnabled(true);
                     Toast.makeText(SignupActivity.this, "Sign Up Successful!", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(SignupActivity.this, LoginActivity.class));
                     finish();
@@ -200,6 +209,7 @@ public class SignupActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(Exception e) {
+                    btnSignUp.setEnabled(true);
                     Toast.makeText(SignupActivity.this, "Sign Up Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             };
@@ -209,6 +219,7 @@ public class SignupActivity extends AppCompatActivity {
                 if (fragment instanceof TeacherSignupFragment) {
                     String className = ((TeacherSignupFragment) fragment).getClassName();
                     if (className.isEmpty()) {
+                        btnSignUp.setEnabled(true);
                         Toast.makeText(this, "Please enter classroom name", Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -218,8 +229,16 @@ public class SignupActivity extends AppCompatActivity {
                 Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
                 if (fragment instanceof ParentSignupFragment) {
                     List<AuthService.ChildInfo> childrenInfo = ((ParentSignupFragment) fragment).getChildrenInfo();
+                    
+                    if (childrenInfo == null) {
+                        // Error already shown in fragment via Toast
+                        btnSignUp.setEnabled(true);
+                        return;
+                    }
+
                     if (childrenInfo.size() != ((ParentSignupFragment) fragment).getCounter()) {
-                        Toast.makeText(this, "Please provide children information", Toast.LENGTH_SHORT).show();
+                        btnSignUp.setEnabled(true);
+                        Toast.makeText(this, "Please provide information for all children", Toast.LENGTH_SHORT).show();
                         return;
                     }
                     authService.signUpParent(firstName, lastName, email, password, childrenInfo, callback);

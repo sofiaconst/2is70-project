@@ -3,18 +3,23 @@ package com.example.eduview.data.repository;
 import java.util.function.Consumer;
 
 import com.example.eduview.data.model.Classroom;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class ClassroomRepository {
 
+    private final DatabaseReference rootRef;
     private final DatabaseReference classroomsRef;
 
     public ClassroomRepository() {
-        FirebaseDatabase db = FirebaseDatabase.getInstance();
-        classroomsRef = db.getReference("classrooms");
-        //teachersRef = db.getReference("teachers");
-        //studentsRef = db.getReference("students");
+        rootRef = FirebaseDatabase.getInstance().getReference();
+        classroomsRef = rootRef.child("classrooms");
         
     }
 
@@ -30,27 +35,65 @@ public class ClassroomRepository {
         });
     }
 
-    // Gets teacher id for the classroom (NOT THE NAME)
-    public void getClassroomTeacher(
-            String classId, Consumer<String> onSuccess, Consumer<Exception> onError) {
-        classroomsRef.child(classId).child("teacher").get().addOnCompleteListener(task -> {
-            if (task.isSuccessful() && task.getResult().exists()) {
-                onSuccess.accept(task.getResult().getValue(String.class));
-            } else {
-                onError.accept(new RuntimeException("Teacher id not found for this classroom"));
-            }
-        });
-    }
 
-    // Add student to classroom
     public void joinClassroom(String studentId, String classId, ClassroomCallback<Void> classroomCallback) {
-        classroomsRef.child(classId).child("students").child(studentId)
-                .setValue(true)
-                .addOnSuccessListener(aVoid -> classroomCallback.onSuccess(null))
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("classrooms/" + classId + "/students/" + studentId, true);
+        updates.put("students/" + studentId + "/classroom", classId);
+
+        rootRef.updateChildren(updates)
+                .addOnSuccessListener(unused -> classroomCallback.onSuccess(null))
                 .addOnFailureListener(classroomCallback::onError);
     }
 
-    // Generic callback interface
+    public void getStudentIdsForClassroom(String classId, ClassroomCallback<List<String>> callback) {
+        classroomsRef.child(classId).child("students").get().addOnCompleteListener(task -> {
+            if (!task.isSuccessful()) {
+                callback.onError(new RuntimeException("Failed to fetch classroom students"));
+                return;
+            }
+
+            DataSnapshot snapshot = task.getResult();
+            List<String> studentIds = new ArrayList<>();
+
+            for (DataSnapshot child : snapshot.getChildren()) {
+                if (child.getKey() != null) {
+                    studentIds.add(child.getKey());
+                }
+            }
+
+            callback.onSuccess(studentIds);
+        });
+    }
+
+    public void removeStudentFromClassroom(String classId, String studentId, ClassroomCallback<Void> callback) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("classrooms/" + classId + "/students/" + studentId, null);
+        updates.put("students/" + studentId + "/classroom", "");
+
+        rootRef.updateChildren(updates)
+                .addOnSuccessListener(unused -> callback.onSuccess(null))
+                .addOnFailureListener(callback::onError);
+    }
+/*
+    public void joinClassroom(String studentId, String classCode, Runnable onSuccess, Consumer<Exception> onError) {
+        classroomsRef.child(classCode).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                // Register student in classrooms table: studentId: true
+                classroomsRef.child(classCode).child("students").child(studentId).setValue(true)
+                        .addOnSuccessListener(aVoid ->
+                                // Register class in students table: classroom: classCode
+                                studentsRef.child(studentId).child("classroom").setValue(classCode)
+                                        .addOnSuccessListener(aVoid1 -> onSuccess.run())
+                                        .addOnFailureListener(onError::accept)
+                        )
+                        .addOnFailureListener(onError::accept);
+            } else {
+                onError.accept(new RuntimeException("Invalid Class Code!"));
+            }
+        });
+    }*/
+
     public interface ClassroomCallback<T> {
         void onSuccess(T result);
         void onError(Exception e);

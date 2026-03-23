@@ -22,11 +22,11 @@
         <Button
             android:id="@+id/btn_minus"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginStart="12dp"
             android:text="@string/minus1"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:layout_marginStart="12dp"/>
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tv_counter"
@@ -42,7 +42,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/plus1"
-            android:textSize="12sp"
+            android:textSize="24sp"
             android:textStyle="bold"/>
     </LinearLayout>
 

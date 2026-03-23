@@ -21,8 +21,8 @@
     <string name="class_name">Class Name</string>
     <string name="enter_class_name">Enter the name of your class</string>
     <string name="number_of_children">Number of children:</string>
-    <string name="minus1">-1</string>
-    <string name="plus1">+1</string>
+    <string name="minus1">-</string>
+    <string name="plus1">+</string>
     <string name="_1">1</string>
     <string name="children_s_information">Children\'s information</string>
     <string name="first_name">First Name</string>

@@ -2,7 +2,6 @@ package com.example.eduview.ui.profile;
 
 import android.app.AlertDialog;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,17 +19,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.eduview.R;
-import com.example.eduview.data.model.Parent;
-import com.example.eduview.data.model.Student;
-import com.example.eduview.data.model.Teacher;
-import com.example.eduview.data.model.User;
 import com.example.eduview.ui.adapters.ChildAdapter;
+import com.example.eduview.ui.adapters.PfpAdapter;
+import com.example.eduview.ui.adapters.StudentManagerAdapter;
 import com.example.eduview.ui.login.LoginActivity;
-import com.example.eduview.ui.profile.profileStates.StudentProfileState;
+import com.example.eduview.ui.profile.profileFeatures.ParentProfileFeature;
+import com.example.eduview.ui.profile.profileFeatures.StudentProfileFeature;
+import com.example.eduview.ui.profile.profileFeatures.TeacherProfileFeature;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.journeyapps.barcodescanner.ScanContract;
@@ -37,161 +39,219 @@ import com.journeyapps.barcodescanner.ScanOptions;
 
 public class ProfileFragment extends Fragment {
 
+    // --------------------- VIEWMODEL --------------------- //
     private ProfileViewModel profileVM;
-    private ShapeableImageView profileImage;
-    private TextView userNameText,roleText,classText;
-    private EditText aboutMeEditText;
-    private Button btnSaveBio, logoutButton;
 
-    // Teacher QR Section
+    // --------------------- BASE UI --------------------- //
+    private ShapeableImageView ivPfp;
+    private TextView tvEditPfp;
+    private TextView tvFullName, tvUserRole, tvClassLabel;
+    private MaterialButton btnLogout;
+
+    // --------------------- QR SECTION --------------------- //
     private MaterialCardView cardQRCode;
-    private TextView tvQRLabel;
+    private TextView tvQRCodeLabel;
     private ImageView ivQRCode;
-    private Button buttonGenerateQR;
+    private MaterialButton btnScanQR;
 
-    // Parent Children Section
-    private MaterialCardView cardMyChildren;
-    private RecyclerView rvChildren;
-    private TextView tvNoChildren;
-    private ChildAdapter childAdapter;
-    private Button buttonScanQR; // Used by Student to scan class QR
-    private View btnAddChild; // Used by Parent to open dialog
 
-    // Student Class Info
+    // --------------------- STUDENT: CLASS INFO --------------------- //
     private MaterialCardView cardClassInfo;
-    private TextView tvTeacherName,tvClassName,tvNotRegistered,tvQRSubtext;
-    private StudentProfileFeature studentFeature;
+    private TextView tvClassName, tvTeacherName, tvNotRegistered;
 
-    public ProfileFragment() {}
+    // --------------------- PARENT: MY CHILDREN --------------------- //
+    private MaterialCardView cardMyChildren;
+    private TextView tvNoChildren;
+    private RecyclerView rvChildren;
+    private ChildAdapter childAdapter;
+    private View btnAddChild;
+
+    // --------------------- TEACHER: MANGAE STUDENTS --------------------- //
+    private MaterialCardView cardManageStudents;
+    private ProgressBar pbStudents;
+    private RecyclerView rvStudents;
+    private StudentManagerAdapter studentManagerAdapter;
+
+    // --------------------- FEATURES --------------------- //
+    private StudentProfileFeature studentFeature;
+    private TeacherProfileFeature teacherFeature;
+    private ParentProfileFeature parentFeature;
+
+    public ProfileFragment() {
+    }
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_profile, container, false);
-        initViews(root);
+
+        initBaseViews(root);
+        initClassQRCodeViews(root);
+        initClassInfoViews(root);
+        initMyChildrenViews(root);
+        initManageStudentsViews(root);
+
         return root;
     }
 
-    // Views initializer
-    private void initViews(View root) {
-        initBaseViews(root);
-        initTeacherViews(root);
-        initParentViews(root);
-        initStudentViews(root);
-    }
     private void initBaseViews(View root) {
-        profileImage = root.findViewById(R.id.profileImage);
-        userNameText = root.findViewById(R.id.User_name_text);
-        roleText = root.findViewById(R.id.materialCardView).findViewById(R.id.textViewRole);
-        classText = root.findViewById(R.id.Teacher_Class_Text);
-        aboutMeEditText = root.findViewById(R.id.etAboutMe);
-        btnSaveBio = root.findViewById(R.id.btnSaveBio);
-        logoutButton = root.findViewById(R.id.buttonLogout);
+        tvFullName = root.findViewById(R.id.User_name_text);
+        tvUserRole = root.findViewById(R.id.textViewRole);
+        tvClassLabel = root.findViewById(R.id.Teacher_Class_Text);
+        ivPfp = root.findViewById(R.id.profileImage);
+        tvEditPfp = root.findViewById(R.id.tvEditPfp);
+        btnLogout = root.findViewById(R.id.buttonLogout);
     }
-    private void initStudentViews(View root) {
-        // Student class info
+
+    private void initClassQRCodeViews(View root) {
+        tvQRCodeLabel = root.findViewById(R.id.tvQRLabel);
+        cardQRCode = root.findViewById(R.id.cardQRCode);
+        ivQRCode = root.findViewById(R.id.ivQRCode);
+        btnScanQR = root.findViewById(R.id.buttonScanQR);
+    }
+
+    private void initClassInfoViews(View root) {
         cardClassInfo = root.findViewById(R.id.cardClassInfo);
-        buttonScanQR = root.findViewById(R.id.buttonScanQR);
+        tvClassName = root.findViewById(R.id.tvClassName);
+        tvTeacherName = root.findViewById(R.id.tvTeacherName);
     }
-    private void initParentViews(View root) {
+
+    private void initMyChildrenViews(View root) {
         cardMyChildren = root.findViewById(R.id.cardMyChildren);
         rvChildren = root.findViewById(R.id.rvChildren);
         tvNoChildren = root.findViewById(R.id.tvNoChildren);
         btnAddChild = root.findViewById(R.id.btnAddChild);
     }
-    private void initTeacherViews(View root) {
-        cardQRCode = root.findViewById(R.id.cardQRCode);
-        tvQRLabel = root.findViewById(R.id.tvQRLabel);
-        ivQRCode = root.findViewById(R.id.ivQRCode);
-        buttonGenerateQR = root.findViewById(R.id.buttonGenerateQR);
-        tvQRSubtext = root.findViewById(R.id.tvQRSubtext);
-    }
 
-    private void setupRecyclerView() {
-        childAdapter = new ChildAdapter();
-        rvChildren.setLayoutManager(new LinearLayoutManager(getContext()));
-        rvChildren.setAdapter(childAdapter);
+    private void initManageStudentsViews(View root) {
+        cardManageStudents = root.findViewById(R.id.manageStudentsCard);
+        pbStudents = root.findViewById(R.id.progressStudents);
+        rvStudents = root.findViewById(R.id.rvStudents);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        setupViewModel();
-        setupObservers();
-        setupClickListeners();
-        studentFeature = new StudentProfileFeature(getView(), profileVM);
-    }
-
-    // Setup
-    private void setupViewModel() {
         profileVM = new ViewModelProvider(this).get(ProfileViewModel.class);
+
+        setupRecyclerViews();
+        setupListeners();
+
+        studentFeature = new StudentProfileFeature(getView());
+        teacherFeature = new TeacherProfileFeature(getView(), studentManagerAdapter);
+        parentFeature = new ParentProfileFeature(getView(), childAdapter);
+
+        profileVM.getUIState().observe(getViewLifecycleOwner(), this::render);
     }
-    private void setupObservers() {
-        profileVM.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
-            if (user != null) {
-                updateUI(user);
-            } else {
-                Log.e("ProfileFragment", "Current user is null");
-            }
+
+    private void setupRecyclerViews() {
+        studentManagerAdapter = new StudentManagerAdapter(student -> {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Remove student")
+                    .setMessage("Remove " + student.getFirstName() + "?")
+                    .setPositiveButton("Remove", (d, w) ->
+                            profileVM.removeStudentFromClass(student))
+                    .setNegativeButton("Cancel", null)
+                    .show();
         });
 
-        profileVM.getChildrenData().observe(getViewLifecycleOwner(), children -> {
-            if (children != null) {
-                childAdapter.setChildren(children);
-                tvNoChildren.setVisibility(children.isEmpty() ? View.VISIBLE : View.GONE);
-                rvChildren.setVisibility(children.isEmpty() ? View.GONE : View.VISIBLE);
-            }
-        });
+        rvStudents.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvStudents.setAdapter(studentManagerAdapter);
 
-        // Observe join status for toast
-        profileVM.getJoinStatus().observe(getViewLifecycleOwner(), status -> {
-            if (status != null) {
-                Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
-            }
-        });
+        childAdapter = new ChildAdapter();
+        rvChildren.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvChildren.setAdapter(childAdapter);
 
-        profileVM.getStudentState().observe(getViewLifecycleOwner(), state -> {
+    }
+
+    private void render(ProfileUIState state) {
+        if (state == null) return;
+
+        tvFullName.setText(state.displayName);
+        tvUserRole.setText(state.roleText);
+        ivPfp.setImageResource(state.profilePictureResId);
+
+        resetVisibility();
+
+
+        if (state.studentState != null) {
             studentFeature.bind(state);
+        }
 
-            if (state != null && state.getErrorMessage() != null) {
-                Toast.makeText(getContext(), state.getErrorMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+        if (state.teacherState != null) {
+            teacherFeature.bind(state);
+        }
+
+        if (state.parentState != null) {
+            parentFeature.bind(state);
+        }
     }
-    private void setupClickListeners() {
-        logoutButton.setOnClickListener(v -> {
+
+    private void resetVisibility() {
+        cardQRCode.setVisibility(View.GONE);
+        cardMyChildren.setVisibility(View.GONE);
+        tvClassLabel.setVisibility(View.GONE);
+        cardClassInfo.setVisibility(View.GONE);
+    }
+
+    private void setupListeners() {
+        tvEditPfp.setOnClickListener(v -> showPfpSelectionDialog());
+
+        btnLogout.setOnClickListener(v -> {
             profileVM.logout();
-            Log.d("ProfileFragment", "Navigating to LoginActivity");
             startActivity(new Intent(requireActivity(), LoginActivity.class));
             requireActivity().finish();
         });
 
-        buttonScanQR.setOnClickListener(v -> startScanner());
+        btnScanQR.setOnClickListener(v -> startScanner());
 
-        buttonGenerateQR.setOnClickListener(v -> {
-            User user = profileVM.getCurrentUser().getValue();
-            if (user instanceof Teacher) {
-                String classId = ((Teacher) user).getClassId();
+        btnAddChild.setOnClickListener(v -> showAddChildDialog());
 
-                Bitmap qrBitmap = profileVM.generateQRCode(classId);
-                if (qrBitmap != null) {
-                    ivQRCode.setImageBitmap(qrBitmap);
-                    tvQRLabel.setVisibility(View.VISIBLE);
-                    ivQRCode.setVisibility(View.VISIBLE);
-                } else {
-                    Toast.makeText(getContext(), "Could not generate QR code.", Toast.LENGTH_SHORT).show();
-                }
-            }
+    }
+
+    private void showPfpSelectionDialog() {
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_pfp_selection, null);
+
+        RecyclerView rvPfps = dialogView.findViewById(R.id.rvPfpSelection);
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setTitle("Choose Profile Picture")
+                .setView(dialogView)
+                .setNegativeButton("Cancel", null)
+                .create();
+
+        PfpAdapter adapter = new PfpAdapter(pfp -> {
+            profileVM.updateProfilePicture(pfp);
+            dialog.dismiss();
         });
 
-        if (btnAddChild != null) {
-            btnAddChild.setOnClickListener(v -> showAddChildDialog());
-        }
+        rvPfps.setLayoutManager(new GridLayoutManager(requireContext(), 3));
+        rvPfps.setAdapter(adapter);
+
+        dialog.show();
     }
+
+    private void startScanner() {
+        ScanOptions options = new ScanOptions();
+        options.setCaptureActivity(CustomScannerActivity.class);
+        options.setPrompt("Scan the Classroom QR Code");
+        options.setBeepEnabled(true);
+        options.setOrientationLocked(true);
+        qrCodeLauncher.launch(options);
+    }
+
+    private final ActivityResultLauncher<ScanOptions> qrCodeLauncher = registerForActivityResult(
+            new ScanContract(),
+            result -> {
+                if (result.getContents() != null) {
+                    String scannedCode = result.getContents();
+                    Log.d("ProfileFragment", "Scanned QR code = " + scannedCode);
+                    profileVM.joinClass(scannedCode);
+                }
+            }
+    );
 
     private void showAddChildDialog() {
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_child, null);
@@ -206,12 +266,10 @@ public class ProfileFragment extends Fragment {
         Button btnAdd = dialogView.findViewById(R.id.btnAdd);
         Button btnCancel = dialogView.findViewById(R.id.btnCancel);
 
-        btnAdd.setOnClickListener(v -> {
-            User currentUser = profileVM.getCurrentUser().getValue();
-            if (!(currentUser instanceof Parent)) return;
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
 
+        btnAdd.setOnClickListener(v -> {
             profileVM.addChild(
-                    currentUser.getUserId(),
                     etFirstName.getText().toString().trim(),
                     etLastName.getText().toString().trim(),
                     etEmail.getText().toString().trim(),
@@ -219,10 +277,8 @@ public class ProfileFragment extends Fragment {
             );
         });
 
-        btnCancel.setOnClickListener(v -> dialog.dismiss());
 
-        dialog.show();
-
+        // Observe status
         profileVM.getAddChildStatus().observe(getViewLifecycleOwner(), status -> {
             if (status == null) return;
 
@@ -241,83 +297,7 @@ public class ProfileFragment extends Fragment {
                 Toast.makeText(getContext(), status, Toast.LENGTH_SHORT).show();
             }
         });
+
+        dialog.show();
     }
-
-    // Update UI
-    private void updateUI(User user) {
-        updateBaseUI(user);
-        resetVisibility();
-
-        switch (user.getRole()) {
-            case TEACHER:
-                updateTeacherUI((Teacher) user);
-                break;
-
-            case STUDENT:
-                updateStudentUI((Student) user);
-                break;
-
-            case PARENT:
-                setupRecyclerView();
-                updateParentUI((Parent) user);
-                break;
-        }
-    }
-    private void updateBaseUI(User user) {
-        userNameText.setText(user.getFirstName() + " " + user.getLastName());
-        roleText.setText(user.getRole().name());
-        aboutMeEditText.setText(user.getBio());
-    }
-
-    private void updateStudentUI(Student student) {
-        classText.setVisibility(View.VISIBLE);
-        studentFeature.handleStudent(student);
-    }
-    private void updateTeacherUI(Teacher teacher) {
-        cardQRCode.setVisibility(View.VISIBLE);
-        classText.setVisibility(View.VISIBLE);
-        buttonGenerateQR.setVisibility(View.VISIBLE);
-        buttonScanQR.setVisibility(View.GONE);
-        tvQRLabel.setVisibility(View.VISIBLE);
-
-        String classId = teacher.getClassId();
-        if (classId == null || classId.isEmpty()) {
-            classText.setText("Class: None");
-        }
-    }
-    private void updateParentUI(Parent parent) {
-
-        profileVM.loadChildrenData(parent);
-        cardMyChildren.setVisibility(View.VISIBLE);
-        classText.setVisibility(View.VISIBLE);
-        classText.setText("Parent Profile");
-    }
-
-    private void resetVisibility() {
-        cardQRCode.setVisibility(View.GONE);
-        cardMyChildren.setVisibility(View.GONE);
-        classText.setVisibility(View.GONE);
-        cardClassInfo.setVisibility(View.GONE);
-    }
-
-    private void startScanner() {
-        ScanOptions options = new ScanOptions();
-        options.setPrompt("Scan the Classroom QR Code");
-        options.setBeepEnabled(true);
-        options.setOrientationLocked(true);
-        qrCodeLauncher.launch(options);
-    }
-
-    private final ActivityResultLauncher<ScanOptions> qrCodeLauncher = registerForActivityResult(
-            new ScanContract(),
-            result -> {
-                if (result.getContents() != null) {
-                    String scannedCode = result.getContents();
-                    Log.d("ProfileFragment", "Scanned QR code = " + scannedCode);
-
-                    // NEW: delegate to ProfileViewModel instead of MainViewModel
-                    profileVM.joinClass(scannedCode);
-                }
-            }
-    );
 }

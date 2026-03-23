@@ -1,5 +1,6 @@
 package com.example.eduview.data.model;
 
+import com.google.firebase.database.Exclude;
 import com.google.firebase.database.PropertyName;
 
 public class User {
@@ -11,9 +12,7 @@ public class User {
     @PropertyName("role")
     private UserRole role;
     @PropertyName("pfp")
-    private String profileImageURL; //Store as URL?
-    private String bio;
-    private String email;
+    private String profilePictureName;
 
     //Empty Constructor needed for Firebase
     public User() {}
@@ -24,7 +23,7 @@ public class User {
         this.firstName = firstName;
         this.lastName = lastName;
         this.role = role;
-        this.bio = "";
+        this.profilePictureName = ProfilePicture.DEFAULT.name();
     }
 
     public boolean isTeacher() {
@@ -46,16 +45,36 @@ public class User {
         return firstName;
     }
     public String getLastName() {return lastName;}
-  
-    public String getProfileImageURL() {return profileImageURL;}
-    public UserRole getRole() {
-        return role;
+    public UserRole getRole() { return role; }
+    
+    @PropertyName("pfp")
+    public String getProfilePictureName() {
+        return profilePictureName;
     }
-    public String getBio() { return bio; }
-    public String getEmail() { return email; }
 
-    // Setters
-    public void setProfileImageURL(String profileImageURL) {this.profileImageURL = profileImageURL;}
-    public void setBio(String bio) { this.bio = bio; }
-    public void setEmail(String email) { this.email = email; }
+    @PropertyName("pfp")
+    public void setProfilePictureName(String profilePictureName) {
+        this.profilePictureName = profilePictureName;
+    }
+
+    @Exclude
+    public ProfilePicture getProfilePicture() {
+        if (profilePictureName == null) return ProfilePicture.DEFAULT;
+        try {
+            return ProfilePicture.valueOf(profilePictureName);
+        } catch (IllegalArgumentException e) {
+            return ProfilePicture.DEFAULT;
+        }
+    }
+
+    @Exclude
+    public void setProfilePicture(ProfilePicture profilePicture) {
+        this.profilePictureName = profilePicture != null ? profilePicture.name() : ProfilePicture.DEFAULT.name();
+    }
+
+    @Exclude
+    public int getProfilePictureResourceId() {
+        return getProfilePicture().getDrawableId();
+    }
+
 }

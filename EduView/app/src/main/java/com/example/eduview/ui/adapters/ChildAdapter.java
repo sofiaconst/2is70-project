@@ -65,7 +65,7 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
 
         public void bind(Student child, ClassroomRepository classroomRepository) {
             tvName.setText(child.getFirstName() + " " + child.getLastName());
-            tvEmail.setText(child.getEmail() != null ? child.getEmail() : "No email");
+            //tvEmail.setText(child.getEmail() != null ? child.getEmail() : "No email");
 
             String classId = child.getClassId();
             if (classId == null || classId.isEmpty()) {

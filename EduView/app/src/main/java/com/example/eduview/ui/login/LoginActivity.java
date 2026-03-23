@@ -71,14 +71,20 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void attemptLogin() {
-        String email = etUsername.getText().toString().trim();
+        String input = etUsername.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
         Log.d(TAG, "Login button clicked");
 
-        if (email.isEmpty() || password.isEmpty()) {
+        if (input.isEmpty() || password.isEmpty()) {
             showError("Please fill in all fields.");
             return;
+        }
+
+        // Check if the input is a username (no @) and append @eduview.com if it is
+        String email = input;
+        if (!input.contains("@")) {
+            email = input + "@eduview.com";
         }
 
         authRepository.login(email, password)
@@ -117,16 +123,16 @@ public class LoginActivity extends AppCompatActivity {
         Log.d(TAG, "Opening password reset dialog");
 
         EditText resetEmailInput = new EditText(this);
-        resetEmailInput.setHint("Enter your email");
+        resetEmailInput.setHint("Enter your email or username");
         resetEmailInput.setInputType(
                 android.text.InputType.TYPE_CLASS_TEXT |
                         android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         );
 
-        // Prefill with current email if available
-        String currentEmail = etUsername.getText().toString().trim();
-        if (!currentEmail.isEmpty()) {
-            resetEmailInput.setText(currentEmail);
+        // Prefill with current email/username if available
+        String currentInput = etUsername.getText().toString().trim();
+        if (!currentInput.isEmpty()) {
+            resetEmailInput.setText(currentInput);
         }
 
         LinearLayout container = new LinearLayout(this);
@@ -139,7 +145,7 @@ public class LoginActivity extends AppCompatActivity {
 
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("Reset password")
-                .setMessage("Enter your email to receive a password reset link.")
+                .setMessage("Enter your email or username to receive a password reset link.")
                 .setView(container)
                 .setPositiveButton("Send", null)
                 .setNegativeButton("Cancel", null)
@@ -149,10 +155,20 @@ public class LoginActivity extends AppCompatActivity {
 
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
 
-            String email = resetEmailInput.getText().toString().trim();
+            String input = resetEmailInput.getText().toString().trim();
+
+            if (input.isEmpty()) {
+                resetEmailInput.setError("Please enter your email or username.");
+                return;
+            }
+
+            String email = input;
+            if (!input.contains("@")) {
+                email = input + "@eduview.com";
+            }
 
             if (!isValidEmail(email)) {
-                resetEmailInput.setError("Enter a valid email address.");
+                resetEmailInput.setError("Enter a valid email address or username.");
                 return;
             }
 
@@ -178,7 +194,7 @@ public class LoginActivity extends AppCompatActivity {
 
                     Toast.makeText(
                             LoginActivity.this,
-                            "If an account with that email exists, a reset link has been sent.",
+                            "If an account exists, a reset link has been sent.",
                             Toast.LENGTH_LONG
                     ).show();
 
