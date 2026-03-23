@@ -5,7 +5,7 @@
     android:layout_height="match_parent">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerAnnouncements"
+        android:id="@+id/recyclerPostsOnly"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:padding="8dp"
@@ -15,7 +15,7 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <LinearLayout
-        android:id="@+id/emptyAnnouncementsState"
+        android:id="@+id/emptyPostsOnlyState"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:gravity="center"
@@ -28,25 +28,25 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
-            android:id="@+id/ivEmptyAnnouncements"
+            android:id="@+id/ivEmptyPostsOnly"
             android:layout_width="320dp"
             android:layout_height="320dp"
             android:adjustViewBounds="true"
             android:src="@drawable/sleepy_dino"
-            android:contentDescription="No announcements" />
+            android:contentDescription="No posts" />
 
         <TextView
-            android:id="@+id/tvEmptyAnnouncementsTitle"
+            android:id="@+id/tvEmptyPostsMessage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="-30dp"
-            android:text="No announcements yet"
+            android:text="No posts yet"
             android:textColor="@android:color/black"
             android:textSize="22sp"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/tvEmptyAnnouncementsSubtitle"
+            android:id="@+id/tvEmptyPostsOnlySubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"

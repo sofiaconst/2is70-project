@@ -40,6 +40,8 @@ public class MainViewModel extends ViewModel {
             throw new IllegalStateException("User not loaded yet. Call startSession() first.");
         }
 
+        Log.d("MainViewModel", "Current role = " + currentUser.getRole());
+
         switch (currentUser.getRole()) {
             case PARENT:
                 return R.menu.bottom_nav_parent;

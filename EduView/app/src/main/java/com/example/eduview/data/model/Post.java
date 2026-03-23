@@ -11,6 +11,7 @@ public class Post {
     private String authorId;
     private String caption;
     private String imageUrl;
+    private long timestamp;
 
 //    @Exclude
 //    private User author;
@@ -39,6 +40,10 @@ public class Post {
 
     public String getImageUrl() {
         return imageUrl;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
     }
 
 //    public User getAuthor() {
@@ -74,7 +79,8 @@ public class Post {
         this.postType = postType;
     }
 
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
 
 }
-
-
