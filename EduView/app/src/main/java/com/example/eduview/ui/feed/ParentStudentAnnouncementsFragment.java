@@ -27,7 +27,9 @@ public class ParentStudentAnnouncementsFragment extends Fragment {
     private FeedAdapter feedAdapter;
     private String classroomId;
     private RecyclerView recyclerAnnouncements;
-    private TextView emptyMessage;
+    private View emptyState;
+    private TextView emptyTitle;
+    private TextView emptySubtitle;
 
     public ParentStudentAnnouncementsFragment() {
         // Required empty public constructor
@@ -52,9 +54,11 @@ public class ParentStudentAnnouncementsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         recyclerAnnouncements = view.findViewById(R.id.recyclerAnnouncementsOnly);
-        emptyMessage = view.findViewById(R.id.tvEmptyAnnouncementsMessage);
-
         recyclerAnnouncements.setLayoutManager(new LinearLayoutManager(requireContext()));
+
+        emptyState = view.findViewById(R.id.emptyAnnouncementsOnlyState);
+        emptyTitle = view.findViewById(R.id.tvEmptyAnnouncementsMessage);
+        emptySubtitle = view.findViewById(R.id.tvEmptyAnnouncementsOnlySubtitle);
 
         FeedViewModel sharedFeedViewModel =
                 new ViewModelProvider(requireParentFragment().requireParentFragment())
@@ -70,8 +74,11 @@ public class ParentStudentAnnouncementsFragment extends Fragment {
 
         if (classroomId == null || classroomId.isEmpty()) {
             recyclerAnnouncements.setVisibility(View.GONE);
-            emptyMessage.setVisibility(View.VISIBLE);
-            emptyMessage.setText("This child is not in a class yet.");
+            if (emptyState != null) {
+                emptyState.setVisibility(View.VISIBLE);
+                emptyTitle.setText("No Classroom");
+                emptySubtitle.setText("This child is not in a class yet.");
+            }
             return;
         }
 
@@ -90,13 +97,16 @@ public class ParentStudentAnnouncementsFragment extends Fragment {
             if (items != null) {
                 feedAdapter.setItems(items);
 
-                if (items.isEmpty()) {
-                    recyclerAnnouncements.setVisibility(View.GONE);
-                    emptyMessage.setVisibility(View.VISIBLE);
-                    emptyMessage.setText("No announcements for this child yet.");
-                } else {
-                    recyclerAnnouncements.setVisibility(View.VISIBLE);
-                    emptyMessage.setVisibility(View.GONE);
+                if (emptyState != null) {
+                    if (items.isEmpty()) {
+                        recyclerAnnouncements.setVisibility(View.GONE);
+                        emptyState.setVisibility(View.VISIBLE);
+                        emptyTitle.setText("No announcements yet");
+                        emptySubtitle.setText("There is nothing to show here yet.");
+                    } else {
+                        recyclerAnnouncements.setVisibility(View.VISIBLE);
+                        emptyState.setVisibility(View.GONE);
+                    }
                 }
             }
         });
