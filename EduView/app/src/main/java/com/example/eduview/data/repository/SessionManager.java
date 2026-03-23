@@ -123,6 +123,30 @@ public class SessionManager {
         return currentUser;
     }
 
+    public void reloadSession(SessionCallback callback) {
+        FirebaseUser firebaseUser = authRepository.getCurrentFirebaseUser();
+
+        if (firebaseUser == null) {
+            callback.onError(new IllegalStateException("User not logged in"));
+            return;
+        }
+
+        String uid = firebaseUser.getUid();
+
+        userRepository.getUserById(uid, new UserRepository.UserCallback() {
+            @Override
+            public void onSuccess(User user) {
+                currentUser = user;
+                callback.onSuccess(currentUser);
+            }
+
+            @Override
+            public void onError(Exception error) {
+                callback.onError(error);
+            }
+        });
+    }
+
     public interface SessionCallback {
         void onSuccess(User user);
         void onError(Exception e);

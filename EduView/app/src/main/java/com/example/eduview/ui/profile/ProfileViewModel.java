@@ -257,11 +257,20 @@ public class ProfileViewModel extends ViewModel {
     }
     public void joinClass(String classCode) {
         updateStudentState(StudentProfileState.loading());
-
         classroomRepository.joinClassroom(currentUser.getUserId(), classCode, new ClassroomRepository.ClassroomCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
-                loadStudentClass(((Student) sessionManager.getCurrentUser()).getClassId());
+                sessionManager.reloadSession(new SessionManager.SessionCallback() {
+                    @Override
+                    public void onSuccess(User user) {
+                        loadStudentClass(((Student) sessionManager.getCurrentUser()).getClassId());
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        updateStudentState(StudentProfileState.error(e.getMessage()));
+                    }
+                });
             }
             @Override
             public void onError(Exception e) {
@@ -415,6 +424,7 @@ public class ProfileViewModel extends ViewModel {
     // === SESSION === //
     public void logout() {
         currentUser = null;
+        uiState.postValue(null);
         sessionManager.logoutCurrentUser(null);
     }
 
