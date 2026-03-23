@@ -1,4 +1,4 @@
-package com.example.eduview.ui.profile;
+package com.example.eduview.ui.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,8 +9,12 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.eduview.R;
+import com.example.eduview.data.model.Classroom;
 import com.example.eduview.data.model.Student;
+import com.example.eduview.data.model.User;
 import com.example.eduview.data.repository.ClassroomRepository;
+import com.example.eduview.data.repository.UserRepository;
+import com.example.eduview.ui.profile.profileStates.StudentProfileState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +24,8 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
     private List<Student> children = new ArrayList<>();
     private final ClassroomRepository classroomRepository;
 
-    public ChildAdapter(ClassroomRepository classroomRepository) {
-        this.classroomRepository = classroomRepository;
+    public ChildAdapter() {
+        this.classroomRepository = new ClassroomRepository();
     }
 
     public void setChildren(List<Student> children) {
@@ -61,16 +65,26 @@ public class ChildAdapter extends RecyclerView.Adapter<ChildAdapter.ChildViewHol
 
         public void bind(Student child, ClassroomRepository classroomRepository) {
             tvName.setText(child.getFirstName() + " " + child.getLastName());
-            tvEmail.setText(child.getEmail() != null ? child.getEmail() : "No email");
+            //tvEmail.setText(child.getEmail() != null ? child.getEmail() : "No email");
 
             String classId = child.getClassId();
             if (classId == null || classId.isEmpty()) {
                 tvClass.setText("Not registered to a class");
             } else {
-                classroomRepository.getClassroomName(classId, 
-                    name -> tvClass.setText("Class " + name),
-                    error -> tvClass.setText("Class " + classId)
-                );
+
+                classroomRepository.getClassroomById(classId, new ClassroomRepository.ClassroomCallback<Classroom>() {
+                    @Override
+                    public void onSuccess(Classroom classroom) {
+                        tvClass.setText("Class: " + classroom.getName());
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        tvClass.setText("Class: " + classId);
+                    }
+                });
+
+
             }
         }
     }

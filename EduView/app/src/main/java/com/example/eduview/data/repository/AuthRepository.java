@@ -12,30 +12,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-/*
-AuthRepository should be responsible only for authentication with FirebaseAuth, not user profile data.
 
-Its responsibilities include:
-
- - Authentication lifecycle
-        login
-        register
-        logout
-
- - Authentication state
-        get current authenticated user
-        get user id
-
- - Credential management
-        password reset
-        possibly email verification
-
- - NOT responsible for
-        retrieving user profile data
-        classroom membership
-        names
-
- */
 public class AuthRepository {
     private static final String TAG = "AuthRepository";
     private final FirebaseAuth firebaseAuth;
@@ -110,4 +87,6 @@ public class AuthRepository {
     public boolean isLoggedIn() {
         return firebaseAuth.getCurrentUser() != null;
     }
+
+    public FirebaseUser getCurrentFirebaseUser() {return firebaseAuth.getCurrentUser();}
 }

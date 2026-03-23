@@ -1,0 +1,14 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- inside tint -->
+    <solid android:color="#FFEFEA"/>
+
+    <!-- rounded edges -->
+    <corners android:radius="12dp"/>
+
+    <!-- outline -->
+    <stroke
+        android:width="2.3dp"
+        android:color="#6F6F6F"/>
+
+</shape>

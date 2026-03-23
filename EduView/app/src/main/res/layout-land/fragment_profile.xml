@@ -195,7 +195,6 @@
                 app:iconPadding="12dp"
                 app:iconSize="30dp"
                 app:iconTint="@android:color/white" />
-
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>

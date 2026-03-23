@@ -1,0 +1,168 @@
+package com.example.eduview.ui.feed;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.eduview.R;
+import com.example.eduview.data.model.FeedItem;
+import com.example.eduview.data.model.FeedType;
+import com.google.android.material.button.MaterialButton;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+    private final List<FeedItem> items = new ArrayList<>();
+
+    public void setItems(List<FeedItem> newItems) {
+        items.clear();
+        if (newItems != null) {
+            items.addAll(newItems);
+        }
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return items.get(position).getType().ordinal();
+    }
+
+    @NonNull
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+
+        if (viewType == FeedType.POST.ordinal()) {
+            View view = inflater.inflate(R.layout.item_post, parent, false);
+            return new PostViewHolder(view);
+
+        } else if (viewType == FeedType.ANNOUNCEMENT.ordinal()) {
+            View view = inflater.inflate(R.layout.item_announcement, parent, false);
+            return new AnnouncementViewHolder(view);
+
+        } else {
+            View view = inflater.inflate(R.layout.item_pending, parent, false);
+            return new PendingViewHolder(view);
+        }
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        FeedItem item = items.get(position);
+
+        switch (item.getType()) {
+            case POST:
+                bindPost((PostViewHolder) holder, item);
+                break;
+
+            case ANNOUNCEMENT:
+                bindAnnouncement((AnnouncementViewHolder) holder, item);
+                break;
+
+            case PENDING:
+                bindPending((PendingViewHolder) holder, item);
+                break;
+        }
+    }
+
+    private void bindPost(@NonNull PostViewHolder holder, @NonNull FeedItem item) {
+        holder.tvStudentName.setText(item.getAuthorName());
+        holder.tvPostContent.setText(item.getContent());
+
+        if (item.getImageUrl() == null || item.getImageUrl().isEmpty()) {
+            holder.ivPostImage.setVisibility(View.GONE);
+        } else {
+            holder.ivPostImage.setVisibility(View.VISIBLE);
+            // later you can load the image here
+            // Glide.with(holder.itemView.getContext()).load(item.getImageUrl()).into(holder.ivPostImage);
+        }
+    }
+
+    private void bindAnnouncement(@NonNull AnnouncementViewHolder holder, @NonNull FeedItem item) {
+        holder.tvAnnouncementContent.setText(item.getContent());
+
+        if (item.getImageUrl() == null || item.getImageUrl().isEmpty()) {
+            holder.ivAnnouncementImage.setVisibility(View.GONE);
+        } else {
+            holder.ivAnnouncementImage.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void bindPending(@NonNull PendingViewHolder holder, @NonNull FeedItem item) {
+        holder.tvPendingName.setText(item.getAuthorName());
+        holder.tvPendingContent.setText(item.getContent());
+
+        if (item.getImageUrl() == null || item.getImageUrl().isEmpty()) {
+            holder.ivPendingImage.setVisibility(View.GONE);
+        } else {
+            holder.ivPendingImage.setVisibility(View.VISIBLE);
+        }
+
+        holder.btnApprove.setOnClickListener(v -> {
+            // add approve logic later
+        });
+
+        holder.btnReject.setOnClickListener(v -> {
+            // add reject logic later
+        });
+    }
+
+    @Override
+    public int getItemCount() {
+        return items.size();
+    }
+
+    static class PostViewHolder extends RecyclerView.ViewHolder {
+        TextView tvStudentName;
+        TextView tvPostContent;
+        ImageView ivPostImage;
+
+        public PostViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvStudentName = itemView.findViewById(R.id.tvStudentName);
+            tvPostContent = itemView.findViewById(R.id.tvPostContent);
+            ivPostImage = itemView.findViewById(R.id.ivPostImage);
+        }
+    }
+
+    static class AnnouncementViewHolder extends RecyclerView.ViewHolder {
+        TextView tvAnnouncementAuthor;
+        TextView tvAnnouncementContent;
+        ImageView ivAnnouncementImage;
+        TextView textViewRole;
+
+        public AnnouncementViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvAnnouncementAuthor = itemView.findViewById(R.id.tvAnnouncementAuthor);
+            textViewRole = itemView.findViewById(R.id.textViewRole);
+            tvAnnouncementContent = itemView.findViewById(R.id.tvAnnouncementContent);
+            ivAnnouncementImage = itemView.findViewById(R.id.ivAnnouncementImage);
+
+        }
+    }
+
+    static class PendingViewHolder extends RecyclerView.ViewHolder {
+        TextView tvPendingName;
+        TextView tvPendingContent;
+        ImageView ivPendingImage;
+        ImageButton btnApprove;
+        ImageButton btnReject;
+
+        public PendingViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvPendingName = itemView.findViewById(R.id.tvPendingName);
+            tvPendingContent = itemView.findViewById(R.id.tvPendingContent);
+            ivPendingImage = itemView.findViewById(R.id.PendingImage);
+            btnApprove = itemView.findViewById(R.id.btnAcceptPost);
+            btnReject = itemView.findViewById(R.id.btnRejectPost);
+        }
+    }
+}

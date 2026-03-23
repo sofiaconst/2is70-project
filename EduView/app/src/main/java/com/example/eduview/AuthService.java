@@ -1,38 +1,41 @@
 package com.example.eduview;
 
 import android.util.Log;
+
+import com.example.eduview.AuthService.Classroom;
+import com.example.eduview.AuthService.Teacher;
+import com.example.eduview.AuthService.User;
+import com.example.eduview.data.model.ProfilePicture;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-
-import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AuthRepository {
+public class AuthService {
 
     private final FirebaseAuth firebaseAuth;
     private final DatabaseReference rootRef;
 
-    public AuthRepository() {
+    public AuthService() {
         firebaseAuth = FirebaseAuth.getInstance();
         rootRef = FirebaseDatabase.getInstance().getReference();
     }
-
     public void checkEmailExists(String email, Consumer<Boolean> callback) {
         rootRef.child("users").orderByChild("email").equalTo(email).get()
-            .addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    callback.accept(task.getResult().exists());
-                } else {
-                    callback.accept(false);
-                }
-            });
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        callback.accept(task.getResult().exists());
+                    } else {
+                        callback.accept(false);
+                    }
+                });
     }
 
     public interface Consumer<T> {
@@ -68,55 +71,6 @@ public class AuthRepository {
                 });
         });
     }
-
-    public void signUpTeacher(String firstName, String lastName, String email, String password, String className, AuthCallback callback) {
-        checkEmailExists(email, exists -> {
-            if (exists) {
-                callback.onFailure(new Exception("Email already exists"));
-                return;
-            }
-            firebaseAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        String userId = firebaseAuth.getCurrentUser().getUid();
-
-                        // Generate a unique classroom ID
-                        String classroomId = rootRef.child("classrooms").push().getKey();
-
-                        // 1. Store in users table
-                        User user = new User(firstName, lastName, email, "Teacher");
-                        rootRef.child("users").child(userId).setValue(user)
-                            .addOnCompleteListener(userTask -> {
-                                if (userTask.isSuccessful()) {
-                                    // 2. Store in teachers table
-                                    rootRef.child("teachers").child(userId).setValue(new Teacher(classroomId))
-                                        .addOnCompleteListener(teacherTask -> {
-                                            if (teacherTask.isSuccessful()) {
-                                                // 3. Store in classrooms table
-                                                Classroom classroom = new Classroom(className, userId);
-                                                rootRef.child("classrooms").child(classroomId).setValue(classroom)
-                                                    .addOnCompleteListener(classroomTask -> {
-                                                        if (classroomTask.isSuccessful()) {
-                                                            callback.onSuccess();
-                                                        } else {
-                                                            callback.onFailure(classroomTask.getException());
-                                                        }
-                                                    });
-                                            } else {
-                                                callback.onFailure(teacherTask.getException());
-                                            }
-                                        });
-                                } else {
-                                    callback.onFailure(userTask.getException());
-                                }
-                            });
-                    } else {
-                        callback.onFailure(task.getException());
-                    }
-                });
-        });
-    }
-
     public void signUpParent(String firstName, String lastName, String email, String password, List<ChildInfo> children, AuthCallback callback) {
         // First check all emails
         List<String> allEmails = new ArrayList<>();
@@ -133,57 +87,57 @@ public class AuthRepository {
 
             // First, create the parent account
             firebaseAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        String parentId = firebaseAuth.getCurrentUser().getUid();
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            String parentId = firebaseAuth.getCurrentUser().getUid();
 
-                        // 1. Store Parent in users table
-                        User parentUser = new User(firstName, lastName, email, "Parent");
-                        rootRef.child("users").child(parentId).setValue(parentUser)
-                            .addOnCompleteListener(userTask -> {
-                                if (userTask.isSuccessful()) {
-                                    // Now create accounts for each child
-                                    signUpChildrenSequentially(children, password, 0, new ArrayList<>(), new ChildAuthCallback() {
-                                        @Override
-                                        public void onAllChildrenSignedUp(List<String> childUids) {
-                                            // 2. Store in parents table with child IDs
-                                            Map<String, String> childrenMap = new HashMap<>();
-                                            for (int i = 0; i < childUids.size(); i++) {
-                                                childrenMap.put("student_" + (i + 1), childUids.get(i));
-                                            }
+                            // 1. Store Parent in users table
+                            User parentUser = new User(firstName, lastName, email, "Parent");
+                            rootRef.child("users").child(parentId).setValue(parentUser)
+                                    .addOnCompleteListener(userTask -> {
+                                        if (userTask.isSuccessful()) {
+                                            // Now create accounts for each child
+                                            signUpChildrenSequentially(children, password, 0, new ArrayList<>(), new ChildAuthCallback() {
+                                                @Override
+                                                public void onAllChildrenSignedUp(List<String> childUids) {
+                                                    // 2. Store in parents table with child IDs
+                                                    Map<String, String> childrenMap = new HashMap<>();
+                                                    for (int i = 0; i < childUids.size(); i++) {
+                                                        childrenMap.put("student_" + (i + 1), childUids.get(i));
+                                                    }
 
-                                            rootRef.child("parents").child(parentId).child("children").setValue(childrenMap)
-                                                .addOnCompleteListener(parentTask -> {
-                                                    if (parentTask.isSuccessful()) {
-                                                        // IMPORTANT: After creating children, the last child is logged in.
-                                                        // We need to log back in as the parent so the app state is correct.
-                                                        firebaseAuth.signInWithEmailAndPassword(email, password)
-                                                            .addOnCompleteListener(reAuthTask -> {
-                                                                if (reAuthTask.isSuccessful()) {
-                                                                    callback.onSuccess();
+                                                    rootRef.child("parents").child(parentId).child("children").setValue(childrenMap)
+                                                            .addOnCompleteListener(parentTask -> {
+                                                                if (parentTask.isSuccessful()) {
+                                                                    // IMPORTANT: After creating children, the last child is logged in.
+                                                                    // We need to log back in as the parent so the app state is correct.
+                                                                    firebaseAuth.signInWithEmailAndPassword(email, password)
+                                                                            .addOnCompleteListener(reAuthTask -> {
+                                                                                if (reAuthTask.isSuccessful()) {
+                                                                                    callback.onSuccess();
+                                                                                } else {
+                                                                                    callback.onFailure(reAuthTask.getException());
+                                                                                }
+                                                                            });
                                                                 } else {
-                                                                    callback.onFailure(reAuthTask.getException());
+                                                                    callback.onFailure(parentTask.getException());
                                                                 }
                                                             });
-                                                    } else {
-                                                        callback.onFailure(parentTask.getException());
-                                                    }
-                                                });
-                                        }
+                                                }
 
-                                        @Override
-                                        public void onError(Exception e) {
-                                            callback.onFailure(e);
+                                                @Override
+                                                public void onError(Exception e) {
+                                                    callback.onFailure(e);
+                                                }
+                                            });
+                                        } else {
+                                            callback.onFailure(userTask.getException());
                                         }
                                     });
-                                } else {
-                                    callback.onFailure(userTask.getException());
-                                }
-                            });
-                    } else {
-                        callback.onFailure(task.getException());
-                    }
-                });
+                        } else {
+                            callback.onFailure(task.getException());
+                        }
+                    });
         });
     }
 
@@ -203,6 +157,57 @@ public class AuthRepository {
         }
     }
 
+    public void signUpTeacher(String firstName, String lastName, String email, String password, String className, AuthCallback callback) {
+        checkEmailExists(email, exists -> {
+            if (exists) {
+                callback.onFailure(new Exception("Email already exists"));
+                return;
+            }
+            firebaseAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        String userId = firebaseAuth.getCurrentUser().getUid();
+
+                        // Generate a unique classroom ID
+                        String classroomId = rootRef.child("classrooms").push().getKey();
+
+                    // 1. Store in users table
+                    User user = new User(firstName, lastName, email, "Teacher");
+                    user.pfp = ProfilePicture.DEFAULT.name();
+                    rootRef.child("users").child(userId).setValue(user)
+                        .addOnCompleteListener(userTask -> {
+                            if (userTask.isSuccessful()) {
+                                // 2. Store in teachers table
+                                rootRef.child("teachers").child(userId).setValue(new Teacher(classroomId))
+                                    .addOnCompleteListener(teacherTask -> {
+                                        if (teacherTask.isSuccessful()) {
+                                            // 3. Store in classrooms table
+                                            Classroom classroom = new Classroom(className, userId);
+                                            rootRef.child("classrooms").child(classroomId).setValue(classroom)
+                                                .addOnCompleteListener(classroomTask -> {
+                                                    if (classroomTask.isSuccessful()) {
+                                                        callback.onSuccess();
+                                                    } else {
+                                                        firebaseAuth.signOut();
+                                                        callback.onFailure(classroomTask.getException());
+                                                    }
+                                                });
+                                        } else {
+                                            firebaseAuth.signOut();
+                                            callback.onFailure(teacherTask.getException());
+                                        }
+                                    });
+                            } else {
+                                firebaseAuth.signOut();
+                                callback.onFailure(userTask.getException());
+                            }
+                        });
+                } else {
+                    callback.onFailure(task.getException());
+                }
+            });});
+    }
+
     private void signUpChildrenSequentially(List<ChildInfo> children, String password, int index, List<String> childUids, ChildAuthCallback callback) {
         if (index >= children.size()) {
             callback.onAllChildrenSignedUp(childUids);
@@ -218,6 +223,8 @@ public class AuthRepository {
 
                     // 1. Store in users table
                     User childUser = new User(child.firstName, child.lastName, child.email, "Student");
+                    childUser.bio = "";
+                    childUser.pfp = ProfilePicture.DEFAULT.name();
                     
                     rootRef.child("users").child(childUid).setValue(childUser)
                         .addOnCompleteListener(dbTask -> {
@@ -345,8 +352,6 @@ public class AuthRepository {
             this.last_name = last_name;
             this.email = email;
             this.role = role;
-            this.bio = "";
-            this.pfp = "";
         }
     }
 
