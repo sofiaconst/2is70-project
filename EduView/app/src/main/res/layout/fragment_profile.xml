@@ -31,20 +31,28 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/profileImage"
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/profileImageContainer"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="10dp"
-                    android:padding="2dp"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/pfp_photo_button_icon"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:shapeAppearanceOverlay="@style/CircleImage"
+                    app:cardCornerRadius="50dp"
+                    app:cardElevation="0dp"
                     app:strokeColor="@android:color/black"
-                    app:strokeWidth="2dp" />
+                    app:strokeWidth="2dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <ImageView
+                        android:id="@+id/profileImage"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="18dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/pfp_photo_button_icon" />
+
+                </com.google.android.material.card.MaterialCardView>
 
                 <TextView
                     android:id="@+id/tvEditPfp"
@@ -58,9 +66,9 @@
                     android:textColor="@color/aqua"
                     android:textSize="12sp"
                     android:textStyle="bold"
-                    app:layout_constraintEnd_toEndOf="@+id/profileImage"
-                    app:layout_constraintStart_toStartOf="@+id/profileImage"
-                    app:layout_constraintTop_toBottomOf="@+id/profileImage" />
+                    app:layout_constraintEnd_toEndOf="@+id/profileImageContainer"
+                    app:layout_constraintStart_toStartOf="@+id/profileImageContainer"
+                    app:layout_constraintTop_toBottomOf="@+id/profileImageContainer" />
 
                 <View
                     android:id="@+id/profile_bar"
@@ -69,7 +77,7 @@
                     android:layout_marginTop="10dp"
                     android:background="#BDBDBD"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/profileImage"
+                    app:layout_constraintStart_toEndOf="@+id/profileImageContainer"
                     app:layout_constraintTop_toBottomOf="@id/User_name_text" />
 
                 <TextView
@@ -83,7 +91,7 @@
                     android:textStyle="bold"
                     app:layout_constraintBottom_toTopOf="@+id/profile_bar"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/profileImage"
+                    app:layout_constraintStart_toEndOf="@+id/profileImageContainer"
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <com.google.android.material.card.MaterialCardView
@@ -94,7 +102,7 @@
                     app:cardBackgroundColor="#E2B35A"
                     app:cardCornerRadius="10dp"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/profileImage"
+                    app:layout_constraintStart_toEndOf="@+id/profileImageContainer"
                     app:layout_constraintTop_toBottomOf="@id/profile_bar"
                     app:strokeColor="@android:color/black"
                     app:strokeWidth="1dp">
@@ -123,7 +131,7 @@
                     android:textSize="18sp"
                     android:textStyle="bold"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/profileImage"
+                    app:layout_constraintStart_toEndOf="@+id/profileImageContainer"
                     app:layout_constraintTop_toBottomOf="@+id/materialCardView"
                     tools:layout_marginTop="10dp"
                     tools:visibility="visible"/>
@@ -381,9 +389,10 @@
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnAddChild"
                             style="@style/Widget.Material3.Button.IconButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
                             app:icon="@android:drawable/ic_menu_add"
+                            app:iconSize="32dp"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />

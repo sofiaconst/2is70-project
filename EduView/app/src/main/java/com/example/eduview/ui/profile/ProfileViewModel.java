@@ -371,10 +371,13 @@ public class ProfileViewModel extends ViewModel {
             @Override
             public void onFailure(Exception e) {
                 String errorMsg = e.getMessage();
-                if (errorMsg != null && (errorMsg.contains("Email already exists") || errorMsg.contains("Username already exists"))) {
-                    errorMsg = "Username already exists";
+                if (errorMsg != null && (errorMsg.contains("Email already exists") || 
+                                         errorMsg.contains("Username already exists") || 
+                                         errorMsg.contains("Username already taken"))) {
+                    addChildStatus.postValue("Username already exists");
+                } else {
+                    addChildStatus.postValue("ERROR: " + errorMsg);
                 }
-                addChildStatus.postValue("ERROR: " + errorMsg);
             }
         });
     }

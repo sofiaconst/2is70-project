@@ -33,7 +33,7 @@ import com.example.eduview.ui.profile.profileFeatures.StudentProfileFeature;
 import com.example.eduview.ui.profile.profileFeatures.TeacherProfileFeature;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.imageview.ShapeableImageView;
+import com.google.android.material.textfield.TextInputLayout;
 import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
 
@@ -43,7 +43,7 @@ public class ProfileFragment extends Fragment {
     private ProfileViewModel profileVM;
 
     // --------------------- BASE UI --------------------- //
-    private ShapeableImageView ivPfp;
+    private ImageView ivPfp;
     private TextView tvEditPfp;
     private TextView tvFullName, tvUserRole, tvClassLabel;
     private MaterialButton btnLogout;
@@ -263,18 +263,57 @@ public class ProfileFragment extends Fragment {
         EditText etLastName = dialogView.findViewById(R.id.etChildLastName);
         EditText etUsername = dialogView.findViewById(R.id.etChildUsername);
         EditText etPassword = dialogView.findViewById(R.id.etParentPassword);
+        
+        TextInputLayout tilFirstName = (TextInputLayout) etFirstName.getParent().getParent();
+        TextInputLayout tilLastName = (TextInputLayout) etLastName.getParent().getParent();
+        TextInputLayout tilUsername = (TextInputLayout) etUsername.getParent().getParent();
+        TextInputLayout tilPassword = (TextInputLayout) etPassword.getParent().getParent();
+
         Button btnAdd = dialogView.findViewById(R.id.btnAdd);
         Button btnCancel = dialogView.findViewById(R.id.btnCancel);
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
 
         btnAdd.setOnClickListener(v -> {
-            profileVM.addChild(
-                    etFirstName.getText().toString().trim(),
-                    etLastName.getText().toString().trim(),
-                    etUsername.getText().toString().trim(),
-                    etPassword.getText().toString().trim()
-            );
+            String firstName = etFirstName.getText().toString().trim();
+            String lastName = etLastName.getText().toString().trim();
+            String username = etUsername.getText().toString().trim();
+            String password = etPassword.getText().toString().trim();
+
+            boolean hasError = false;
+
+            // Reset backgrounds
+            etFirstName.setBackgroundResource(R.drawable.bg_input_rounded);
+            etLastName.setBackgroundResource(R.drawable.bg_input_rounded);
+            etUsername.setBackgroundResource(R.drawable.bg_input_rounded);
+            etPassword.setBackgroundResource(R.drawable.bg_input_rounded);
+
+            if (firstName.isEmpty()) {
+                etFirstName.setBackgroundResource(R.drawable.bg_input_error);
+                hasError = true;
+            }
+            if (lastName.isEmpty()) {
+                etLastName.setBackgroundResource(R.drawable.bg_input_error);
+                hasError = true;
+            }
+            if (username.isEmpty()) {
+                etUsername.setBackgroundResource(R.drawable.bg_input_error);
+                hasError = true;
+            } else if (username.contains("@") || username.contains(" ")) {
+                etUsername.setBackgroundResource(R.drawable.bg_input_error);
+                Toast.makeText(getContext(), "Username must not contain space characters nor @ symbols", Toast.LENGTH_SHORT).show();
+                hasError = true;
+            }
+            if (password.isEmpty()) {
+                etPassword.setBackgroundResource(R.drawable.bg_input_error);
+                hasError = true;
+            }
+
+            if (hasError) {
+                return;
+            }
+
+            profileVM.addChild(firstName, lastName, username, password);
         });
 
 
@@ -291,6 +330,9 @@ public class ProfileFragment extends Fragment {
             } else if (status.startsWith("ERROR")) {
                 btnAdd.setEnabled(true);
                 btnAdd.setText("Add");
+                if (status.contains("Username already taken")) {
+                    etUsername.setBackgroundResource(R.drawable.bg_input_error);
+                }
                 Toast.makeText(getContext(), status, Toast.LENGTH_LONG).show();
             } else {
                 // validation message

@@ -31,20 +31,28 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/profileImage"
-                    android:layout_width="170dp"
-                    android:layout_height="170dp"
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/profileImageContainer"
+                    android:layout_width="150dp"
+                    android:layout_height="150dp"
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="10dp"
-                    android:padding="2dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/pfp_photo_button_icon"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:shapeAppearanceOverlay="@style/CircleImage"
+                    app:cardCornerRadius="75dp"
+                    app:cardElevation="0dp"
                     app:strokeColor="@android:color/black"
-                    app:strokeWidth="2dp" />
+                    app:strokeWidth="2dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <ImageView
+                        android:id="@+id/profileImage"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="28dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/pfp_photo_button_icon" />
+
+                </com.google.android.material.card.MaterialCardView>
 
                 <View
                     android:id="@+id/profile_bar"
@@ -53,7 +61,7 @@
                     android:layout_marginTop="10dp"
                     android:background="#BDBDBD"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/profileImage"
+                    app:layout_constraintStart_toEndOf="@+id/profileImageContainer"
                     app:layout_constraintTop_toBottomOf="@id/User_name_text" />
 
                 <TextView
@@ -67,7 +75,7 @@
                     android:textStyle="bold"
                     app:layout_constraintBottom_toTopOf="@+id/profile_bar"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/profileImage"
+                    app:layout_constraintStart_toEndOf="@+id/profileImageContainer"
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <com.google.android.material.card.MaterialCardView
@@ -78,7 +86,7 @@
                     app:cardBackgroundColor="#E2B35A"
                     app:cardCornerRadius="10dp"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/profileImage"
+                    app:layout_constraintStart_toEndOf="@+id/profileImageContainer"
                     app:layout_constraintTop_toBottomOf="@id/profile_bar"
                     app:strokeColor="@android:color/black"
                     app:strokeWidth="1dp">
@@ -106,7 +114,7 @@
                     android:textSize="25sp"
                     android:textStyle="bold"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/profileImage"
+                    app:layout_constraintStart_toEndOf="@+id/profileImageContainer"
                     app:layout_constraintTop_toBottomOf="@+id/materialCardView" />
 
                 <TextView
@@ -120,7 +128,7 @@
                     android:textSize="25sp"
                     android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/profileImage" />
+                    app:layout_constraintTop_toBottomOf="@+id/profileImageContainer" />
 
                 <TextView
                     android:id="@+id/EditBioText"
