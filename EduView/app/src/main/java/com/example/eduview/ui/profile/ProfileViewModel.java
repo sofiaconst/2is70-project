@@ -411,6 +411,20 @@ public class ProfileViewModel extends ViewModel {
                 addChildStatus.postValue("SUCCESS"); // signal success
                 User currentUser = sessionManager.getCurrentUser();
                 loadParentChildren((Parent) currentUser);
+
+                sessionManager.reloadSession(new SessionManager.SessionCallback() {
+                    @Override
+                    public void onSuccess(User user) {
+                        addChildStatus.postValue("SUCCESS"); // signal success
+                        User currentUser = sessionManager.getCurrentUser();
+                        loadParentChildren((Parent) currentUser);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Log.e("ProfileViewModel", "Error when reloading the session:" + e.getMessage());
+                    }
+                });
             }
 
             @Override

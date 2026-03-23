@@ -75,7 +75,7 @@ public class ClassroomRepository {
                 .addOnSuccessListener(unused -> callback.onSuccess(null))
                 .addOnFailureListener(callback::onError);
     }
-
+/*
     public void joinClassroom(String studentId, String classCode, Runnable onSuccess, Consumer<Exception> onError) {
         classroomsRef.child(classCode).get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult().exists()) {
@@ -92,7 +92,7 @@ public class ClassroomRepository {
                 onError.accept(new RuntimeException("Invalid Class Code!"));
             }
         });
-    }
+    }*/
 
     public interface ClassroomCallback<T> {
         void onSuccess(T result);

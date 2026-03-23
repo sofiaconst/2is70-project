@@ -235,6 +235,7 @@ public class ProfileFragment extends Fragment {
 
     private void startScanner() {
         ScanOptions options = new ScanOptions();
+        options.setCaptureActivity(CustomScannerActivity.class);
         options.setPrompt("Scan the Classroom QR Code");
         options.setBeepEnabled(true);
         options.setOrientationLocked(true);

@@ -27,32 +27,6 @@ public class AuthService {
         firebaseAuth = FirebaseAuth.getInstance();
         rootRef = FirebaseDatabase.getInstance().getReference();
     }
-
-    public void checkEmailExists(String email, Consumer<Boolean> callback) {
-        rootRef.child("users").orderByChild("email").equalTo(email).get()
-            .addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    String userId = firebaseAuth.getCurrentUser().getUid();
-                    User user = new User(firstName, lastName, email, role);
-                    user.pfp = ProfilePicture.DEFAULT.name();
-
-                    rootRef.child("users").child(userId).setValue(user)
-                        .addOnCompleteListener(dbTask -> {
-                            if (dbTask.isSuccessful()) {
-                                Log.d("AuthRepository", "User data successfully written to Firebase.");
-                                callback.onSuccess();
-                            } else {
-                                Log.e("AuthRepository", "Failed to save user data to Firebase", dbTask.getException());
-                                firebaseAuth.signOut(); // Clean up session on failure
-                                callback.onFailure(dbTask.getException());
-                            }
-                        });
-                } else {
-                    callback.accept(false);
-                }
-            });
-    }
-/*
     public void checkEmailExists(String email, Consumer<Boolean> callback) {
         rootRef.child("users").orderByChild("email").equalTo(email).get()
                 .addOnCompleteListener(task -> {
@@ -63,7 +37,6 @@ public class AuthService {
                     }
                 });
     }
-*/
 
     public interface Consumer<T> {
         void accept(T t);
@@ -98,8 +71,7 @@ public class AuthService {
                 });
         });
     }
-
-       public void signUpParent(String firstName, String lastName, String email, String password, List<ChildInfo> children, AuthCallback callback) {
+    public void signUpParent(String firstName, String lastName, String email, String password, List<ChildInfo> children, AuthCallback callback) {
         // First check all emails
         List<String> allEmails = new ArrayList<>();
         allEmails.add(email);
@@ -115,63 +87,74 @@ public class AuthService {
 
             // First, create the parent account
             firebaseAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        String parentId = firebaseAuth.getCurrentUser().getUid();
-                        
-                    // 1. Store Parent in users table
-                    User parentUser = new User(firstName, lastName, email, "Parent");
-                    parentUser.pfp = ProfilePicture.DEFAULT.name();
-                    rootRef.child("users").child(parentId).setValue(parentUser)
-                        .addOnCompleteListener(userTask -> {
-                            if (userTask.isSuccessful()) {
-                                // Now create accounts for each child
-                                signUpChildrenSequentially(children, password, 0, new ArrayList<>(), new ChildAuthCallback() {
-                                    @Override
-                                    public void onAllChildrenSignedUp(List<String> childUids) {
-                                        // 2. Store in parents table with child IDs
-                                        Map<String, String> childrenMap = new HashMap<>();
-                                        for (int i = 0; i < childUids.size(); i++) {
-                                            childrenMap.put("student_" + (i + 1), childUids.get(i));
-                                        }
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            String parentId = firebaseAuth.getCurrentUser().getUid();
 
-                                        rootRef.child("parents").child(parentId).child("children").setValue(childrenMap)
-                                            .addOnCompleteListener(parentTask -> {
-                                                if (parentTask.isSuccessful()) {
-                                                    // IMPORTANT: After creating children, the last child is logged in.
-                                                    // We need to log back in as the parent so the app state is correct.
-                                                    firebaseAuth.signInWithEmailAndPassword(email, password)
-                                                        .addOnCompleteListener(reAuthTask -> {
-                                                            if (reAuthTask.isSuccessful()) {
-                                                                callback.onSuccess();
-                                                            } else {
-                                                                firebaseAuth.signOut();
-                                                                callback.onFailure(reAuthTask.getException());
-                                                            }
-                                                        });
-                                                } else {
-                                                    firebaseAuth.signOut();
-                                                    callback.onFailure(parentTask.getException());
+                            // 1. Store Parent in users table
+                            User parentUser = new User(firstName, lastName, email, "Parent");
+                            rootRef.child("users").child(parentId).setValue(parentUser)
+                                    .addOnCompleteListener(userTask -> {
+                                        if (userTask.isSuccessful()) {
+                                            // Now create accounts for each child
+                                            signUpChildrenSequentially(children, password, 0, new ArrayList<>(), new ChildAuthCallback() {
+                                                @Override
+                                                public void onAllChildrenSignedUp(List<String> childUids) {
+                                                    // 2. Store in parents table with child IDs
+                                                    Map<String, String> childrenMap = new HashMap<>();
+                                                    for (int i = 0; i < childUids.size(); i++) {
+                                                        childrenMap.put("student_" + (i + 1), childUids.get(i));
+                                                    }
+
+                                                    rootRef.child("parents").child(parentId).child("children").setValue(childrenMap)
+                                                            .addOnCompleteListener(parentTask -> {
+                                                                if (parentTask.isSuccessful()) {
+                                                                    // IMPORTANT: After creating children, the last child is logged in.
+                                                                    // We need to log back in as the parent so the app state is correct.
+                                                                    firebaseAuth.signInWithEmailAndPassword(email, password)
+                                                                            .addOnCompleteListener(reAuthTask -> {
+                                                                                if (reAuthTask.isSuccessful()) {
+                                                                                    callback.onSuccess();
+                                                                                } else {
+                                                                                    callback.onFailure(reAuthTask.getException());
+                                                                                }
+                                                                            });
+                                                                } else {
+                                                                    callback.onFailure(parentTask.getException());
+                                                                }
+                                                            });
+                                                }
+
+                                                @Override
+                                                public void onError(Exception e) {
+                                                    callback.onFailure(e);
                                                 }
                                             });
-                                    }
+                                        } else {
+                                            callback.onFailure(userTask.getException());
+                                        }
+                                    });
+                        } else {
+                            callback.onFailure(task.getException());
+                        }
+                    });
+        });
+    }
 
-                                    @Override
-                                    public void onError(Exception e) {
-                                        firebaseAuth.signOut(); // Ensure we sign out on any sequential error
-                                        callback.onFailure(e);
-                                    }
-                                });
-                            } else {
-                                firebaseAuth.signOut();
-                                callback.onFailure(userTask.getException());
-                            }
-                        });
-                } else {
-                    callback.onFailure(task.getException());
+    private void checkMultipleEmailsExist(List<String> emails, Consumer<Boolean> callback) {
+        AtomicInteger remaining = new AtomicInteger(emails.size());
+        AtomicBoolean anyExists = new AtomicBoolean(false);
+
+        for (String email : emails) {
+            checkEmailExists(email, exists -> {
+                if (exists) {
+                    anyExists.set(true);
+                }
+                if (remaining.decrementAndGet() == 0) {
+                    callback.accept(anyExists.get());
                 }
             });
-        });
+        }
     }
 
     public void signUpTeacher(String firstName, String lastName, String email, String password, String className, AuthCallback callback) {
