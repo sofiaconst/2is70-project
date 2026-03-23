@@ -5,7 +5,7 @@
     android:layout_height="match_parent">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerAnnouncements"
+        android:id="@+id/recyclerAnnouncementsOnly"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:padding="8dp"
@@ -15,7 +15,7 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <LinearLayout
-        android:id="@+id/emptyAnnouncementsState"
+        android:id="@+id/emptyAnnouncementsOnlyState"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:gravity="center"
@@ -28,7 +28,7 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
-            android:id="@+id/ivEmptyAnnouncements"
+            android:id="@+id/ivEmptyAnnouncementsOnly"
             android:layout_width="320dp"
             android:layout_height="320dp"
             android:adjustViewBounds="true"
@@ -36,7 +36,7 @@
             android:contentDescription="No announcements" />
 
         <TextView
-            android:id="@+id/tvEmptyAnnouncementsTitle"
+            android:id="@+id/tvEmptyAnnouncementsMessage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="-30dp"
@@ -46,7 +46,7 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/tvEmptyAnnouncementsSubtitle"
+            android:id="@+id/tvEmptyAnnouncementsOnlySubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
@@ -54,29 +54,6 @@
             android:text="There is nothing to show here yet."
             android:textColor="#666666"
             android:textSize="15sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/parentAnnouncementTabsContainer"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:orientation="vertical"
-        android:visibility="gone"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/childAnnouncementTabs"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:tabMode="scrollable" />
-
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/childAnnouncementViewPager"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

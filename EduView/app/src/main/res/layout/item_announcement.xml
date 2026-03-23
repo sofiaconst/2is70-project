@@ -60,16 +60,28 @@
     </com.google.android.material.card.MaterialCardView>
 
     <TextView
+        android:id="@+id/tvAnnouncementDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="2dp"
+        android:text=""
+        android:textColor="#666666"
+        android:textSize="12sp"
+        app:layout_constraintStart_toEndOf="@+id/pfp"
+        app:layout_constraintTop_toBottomOf="@id/tvAnnouncementAuthor" />
+
+    <TextView
         android:id="@+id/tvAnnouncementContent"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="8dp"
         android:text="Check out John's science project on plant cells!"
         android:textAlignment="viewStart"
         android:textColor="#444444"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/pfp" />
+        app:layout_constraintTop_toBottomOf="@id/tvAnnouncementDate" />
 
     <View
         android:id="@+id/divider1"
@@ -90,15 +102,14 @@
         android:adjustViewBounds="true"
         android:maxHeight="300dp"
         android:scaleType="centerInside"
-        android:src="@android:drawable/ic_menu_gallery"
+        android:src="@drawable/feed_image_placeholder"
         android:visibility="visible"
         android:background="@drawable/feed_image_bg"
         app:layout_constraintBottom_toBottomOf="@+id/layoutModeration"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvAnnouncementContent"
-        app:layout_constraintVertical_bias="0.0"
-        app:tint="@color/black" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <LinearLayout
         android:id="@+id/layoutLike"
@@ -107,7 +118,7 @@
         android:layout_marginTop="12dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        app:layout_constraintBaseline_toBottomOf="@id/ivPostImage"
+        app:layout_constraintBaseline_toBottomOf="@id/ivAnnouncementImage"
         app:layout_constraintEnd_toEndOf="parent">
 
     </LinearLayout>

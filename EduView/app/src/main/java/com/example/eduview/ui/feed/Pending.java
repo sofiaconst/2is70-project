@@ -13,11 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.eduview.R;
-import com.example.eduview.data.model.FeedItem;
-import com.example.eduview.data.model.FeedType;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class Pending extends Fragment {
 
@@ -39,19 +34,37 @@ public class Pending extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         RecyclerView recyclerPosts = view.findViewById(R.id.recyclerPending);
+        View emptyPendingState = view.findViewById(R.id.emptyPendingState);
 
-        feedAdapter = new FeedAdapter();
+        FeedViewModel feedViewModel = new ViewModelProvider(requireParentFragment()).get(FeedViewModel.class);
+        feedAdapter = new FeedAdapter(feedViewModel);
+
         recyclerPosts.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerPosts.setAdapter(feedAdapter);
 
-        FeedViewModel feedViewModel = new ViewModelProvider(requireParentFragment()).get(FeedViewModel.class);
-
         feedViewModel.loadPendingPosts();
 
+        observePending(feedViewModel, recyclerPosts, emptyPendingState);
+        feedViewModel.getRefreshTrigger().observe(getViewLifecycleOwner(), refreshCount -> {
+            observePending(feedViewModel, recyclerPosts, emptyPendingState);
+        });
+    }
+
+    private void observePending(@NonNull FeedViewModel feedViewModel,
+                                @NonNull RecyclerView recyclerPosts,
+                                @NonNull View emptyPendingState) {
         if (feedViewModel.getPendingPosts() != null) {
             feedViewModel.getPendingPosts().observe(getViewLifecycleOwner(), items -> {
                 if (items != null) {
                     feedAdapter.setItems(items);
+
+                    if (items.isEmpty()) {
+                        recyclerPosts.setVisibility(View.GONE);
+                        emptyPendingState.setVisibility(View.VISIBLE);
+                    } else {
+                        recyclerPosts.setVisibility(View.VISIBLE);
+                        emptyPendingState.setVisibility(View.GONE);
+                    }
                 }
             });
         }

@@ -12,19 +12,24 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class FeedRepository {
 
-    private DatabaseReference classroomRef = FirebaseDatabase.getInstance().getReference("classrooms");
-    private DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
-    private DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users");
+    private final DatabaseReference classroomRef = FirebaseDatabase.getInstance().getReference("classrooms");
+    private final DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
+    private final DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users");
 
     public LiveData<List<FeedItem>> fetchPublishedPosts(String classroomId) {
         Log.d("FeedRepository", "Fetching published posts for classroom: " + classroomId);
 
         MutableLiveData<List<FeedItem>> liveData = new MutableLiveData<>();
+        if (classroomId == null || classroomId.isEmpty()) {
+            Log.e("FeedRepository", "fetchPublishedPosts: classroomId is null");
+            liveData.setValue(new ArrayList<>());
+            return liveData;
+        }
 
         classroomRef.child(classroomId)
                 .child("feed")
@@ -36,10 +41,11 @@ public class FeedRepository {
 
                     if (!snapshot.exists()) {
                         Log.d("FeedRepository", "No published posts found for classroom: " + classroomId);
+                        liveData.setValue(new ArrayList<>());
                         return;
                     }
 
-                    List<String> postIds = new ArrayList<String>();
+                    List<String> postIds = new ArrayList<>();
                     for (DataSnapshot postRef : snapshot.getChildren()) {
                         String postId = postRef.getKey();
                         Log.d("FeedRepository", "Post ID found: " + postId);
@@ -47,7 +53,9 @@ public class FeedRepository {
                             postIds.add(postId);
                         }
                     }
-                    fetchPosts(postIds, FeedType.POST, liveData);
+
+                    Collections.reverse(postIds);
+                    fetchFeedItem(postIds, FeedType.POST, liveData);
                     Log.d("FeedRepository", "Total posts found: " + snapshot.getChildrenCount());
                 })
                 .addOnFailureListener(e -> {
@@ -58,9 +66,14 @@ public class FeedRepository {
     }
 
     public LiveData<List<FeedItem>> fetchPendingPosts(String classroomId) {
-        Log.d("FeedRepository", "Fetching published posts for classroom: " + classroomId);
+        Log.d("FeedRepository", "Fetching pending posts for classroom: " + classroomId);
 
         MutableLiveData<List<FeedItem>> liveData = new MutableLiveData<>();
+        if (classroomId == null || classroomId.isEmpty()) {
+            Log.e("FeedRepository", "fetchPendingPosts: classroomId is null");
+            liveData.setValue(new ArrayList<>());
+            return liveData;
+        }
 
         classroomRef.child(classroomId)
                 .child("feed")
@@ -68,14 +81,15 @@ public class FeedRepository {
                 .get()
                 .addOnSuccessListener(snapshot -> {
 
-                    Log.d("FeedRepository", "Published posts snapshot received");
+                    Log.d("FeedRepository", "Pending posts snapshot received");
 
                     if (!snapshot.exists()) {
-                        Log.d("FeedRepository", "No published posts found for classroom: " + classroomId);
+                        Log.d("FeedRepository", "No pending posts found for classroom: " + classroomId);
+                        liveData.setValue(new ArrayList<>());
                         return;
                     }
 
-                    List<String> postIds = new ArrayList<String>();
+                    List<String> postIds = new ArrayList<>();
                     for (DataSnapshot postRef : snapshot.getChildren()) {
                         String postId = postRef.getKey();
                         Log.d("FeedRepository", "Post ID found: " + postId);
@@ -83,7 +97,9 @@ public class FeedRepository {
                             postIds.add(postId);
                         }
                     }
-                    fetchPosts(postIds, FeedType.PENDING, liveData);
+
+                    Collections.reverse(postIds);
+                    fetchFeedItem(postIds, FeedType.PENDING, liveData);
                     Log.d("FeedRepository", "Total posts found: " + snapshot.getChildrenCount());
                 })
                 .addOnFailureListener(e -> {
@@ -94,9 +110,14 @@ public class FeedRepository {
     }
 
     public LiveData<List<FeedItem>> fetchAnnouncements(String classroomId) {
-        Log.d("FeedRepository", "Fetching published posts for classroom: " + classroomId);
+        Log.d("FeedRepository", "Fetching announcements for classroom: " + classroomId);
 
         MutableLiveData<List<FeedItem>> liveData = new MutableLiveData<>();
+        if (classroomId == null || classroomId.isEmpty()) {
+            Log.e("FeedRepository", "fetchAnnouncements: classroomId is null");
+            liveData.setValue(new ArrayList<>());
+            return liveData;
+        }
 
         classroomRef.child(classroomId)
                 .child("feed")
@@ -104,14 +125,15 @@ public class FeedRepository {
                 .get()
                 .addOnSuccessListener(snapshot -> {
 
-                    Log.d("FeedRepository", "Published posts snapshot received");
+                    Log.d("FeedRepository", "Announcements snapshot received");
 
                     if (!snapshot.exists()) {
-                        Log.d("FeedRepository", "No published posts found for classroom: " + classroomId);
+                        Log.d("FeedRepository", "No announcements found for classroom: " + classroomId);
+                        liveData.setValue(new ArrayList<>());
                         return;
                     }
 
-                    List<String> postIds = new ArrayList<String>();
+                    List<String> postIds = new ArrayList<>();
                     for (DataSnapshot postRef : snapshot.getChildren()) {
                         String postId = postRef.getKey();
                         Log.d("FeedRepository", "Post ID found: " + postId);
@@ -119,7 +141,9 @@ public class FeedRepository {
                             postIds.add(postId);
                         }
                     }
-                    fetchPosts(postIds, FeedType.ANNOUNCEMENT, liveData);
+
+                    Collections.reverse(postIds);
+                    fetchFeedItem(postIds, FeedType.ANNOUNCEMENT, liveData);
                     Log.d("FeedRepository", "Total posts found: " + snapshot.getChildrenCount());
                 })
                 .addOnFailureListener(e -> {
@@ -128,7 +152,8 @@ public class FeedRepository {
                 });
         return liveData;
     }
-    private void fetchPosts(List<String> postIds, FeedType feedItemType, MutableLiveData<List<FeedItem>> liveData) {
+
+    private void fetchFeedItem(List<String> postIds, FeedType feedItemType, MutableLiveData<List<FeedItem>> liveData) {
         ArrayList<FeedItem> items = new ArrayList<>();
 
         if (postIds.isEmpty()) {
@@ -136,8 +161,7 @@ public class FeedRepository {
             return;
         }
 
-        Log.d("FeedRepository", "Fetching Posts");
-
+        Log.d("FeedRepository", "Fetching posts");
         final int[] completed = {0};
 
         for (String postId : postIds) {
@@ -146,25 +170,45 @@ public class FeedRepository {
                     .addOnSuccessListener(snapshot -> {
                         String author = snapshot.child("authorId").getValue(String.class);
                         String content = snapshot.child("caption").getValue(String.class);
-                        String imageUrl = snapshot.child("image").getValue(String.class);
+                        String imageUrl = snapshot.child("imageUrl").getValue(String.class);
+                        Long timestamp = snapshot.child("timestamp").getValue(Long.class);
 
-                        Log.d("FeedRepository", "Post content retrieved.");
                         if (content == null) content = "";
+                        if (timestamp == null) timestamp = 0L;
+
+                        Log.d("FeedRepository", "ImageURL " + imageUrl);
+                        Log.d("FeedRepository", "Post content retrieved.");
 
                         if (author == null) {
                             completed[0]++;
+
                             FeedItem item = new FeedItem(feedItemType, "", content);
+                            item.setPostId(postId);
                             item.setImageUrl(imageUrl);
+                            item.setTimestamp(timestamp);
                             items.add(item);
 
                             if (completed[0] == postIds.size()) {
+                                boolean hasRealTimestamps = false;
+                                for (FeedItem feedItem : items) {
+                                    if (feedItem.getTimestamp() > 0) {
+                                        hasRealTimestamps = true;
+                                        break;
+                                    }
+                                }
+
+                                if (hasRealTimestamps) {
+                                    items.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
+                                }
+
                                 liveData.setValue(items);
                             }
-
                             return;
                         }
 
                         String finalContent = content;
+                        Long finalTimestamp = timestamp;
+
                         userRef.child(author)
                                 .get()
                                 .addOnSuccessListener(userSnapshot -> {
@@ -172,16 +216,32 @@ public class FeedRepository {
 
                                     String firstName = userSnapshot.child("first_name").getValue(String.class);
                                     String lastName = userSnapshot.child("last_name").getValue(String.class);
+                                    String pfp = userSnapshot.child("pfp").getValue(String.class);
 
                                     if (firstName == null) firstName = "";
                                     if (lastName == null) lastName = "";
                                     String authorName = (firstName + " " + lastName).trim();
 
                                     FeedItem item = new FeedItem(feedItemType, authorName, finalContent);
+                                    item.setPostId(postId);
                                     item.setImageUrl(imageUrl);
+                                    item.setTimestamp(finalTimestamp);
+                                    item.setAuthorPfpName(pfp);
                                     items.add(item);
 
                                     if (completed[0] == postIds.size()) {
+                                        boolean hasRealTimestamps = false;
+                                        for (FeedItem feedItem : items) {
+                                            if (feedItem.getTimestamp() > 0) {
+                                                hasRealTimestamps = true;
+                                                break;
+                                            }
+                                        }
+
+                                        if (hasRealTimestamps) {
+                                            items.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
+                                        }
+
                                         liveData.setValue(items);
                                     }
                                 })
@@ -190,10 +250,24 @@ public class FeedRepository {
                                     Log.e("FeedRepository", "Failed to fetch author name", e);
 
                                     FeedItem item = new FeedItem(feedItemType, "", finalContent);
+                                    item.setPostId(postId);
                                     item.setImageUrl(imageUrl);
+                                    item.setTimestamp(finalTimestamp);
                                     items.add(item);
 
                                     if (completed[0] == postIds.size()) {
+                                        boolean hasRealTimestamps = false;
+                                        for (FeedItem feedItem : items) {
+                                            if (feedItem.getTimestamp() > 0) {
+                                                hasRealTimestamps = true;
+                                                break;
+                                            }
+                                        }
+
+                                        if (hasRealTimestamps) {
+                                            items.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
+                                        }
+
                                         liveData.setValue(items);
                                     }
                                 });
@@ -203,6 +277,18 @@ public class FeedRepository {
                         Log.e("FeedRepository", "Failed to fetch post", e);
 
                         if (completed[0] == postIds.size()) {
+                            boolean hasRealTimestamps = false;
+                            for (FeedItem feedItem : items) {
+                                if (feedItem.getTimestamp() > 0) {
+                                    hasRealTimestamps = true;
+                                    break;
+                                }
+                            }
+
+                            if (hasRealTimestamps) {
+                                items.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
+                            }
+
                             liveData.setValue(items);
                         }
                     });
@@ -214,7 +300,7 @@ public class FeedRepository {
         DatabaseReference pendingRef = classroomRef
                 .child(classroomId)
                 .child("feed")
-                .child("pending_posts")
+                .child("pending")
                 .child(postId);
 
         DatabaseReference publishedRef = classroomRef
@@ -223,21 +309,16 @@ public class FeedRepository {
                 .child("published_posts")
                 .child(postId);
 
-        // 1. Add to published
-        publishedRef.setValue(true).addOnSuccessListener(aVoid -> {
-
-            // 2. Remove from pending
-            pendingRef.removeValue();
-
-        }).addOnFailureListener(e ->
-                Log.e("FeedRepository", "Failed to approve post", e)
-        );
+        publishedRef.setValue(true).addOnSuccessListener(aVoid -> pendingRef.removeValue())
+                .addOnFailureListener(e ->
+                        Log.e("FeedRepository", "Failed to approve post", e)
+                );
     }
-    public void rejectPost(String classroomId, String postId) {
 
+    public void rejectPost(String classroomId, String postId) {
         classroomRef.child(classroomId)
                 .child("feed")
-                .child("pending_posts")
+                .child("pending")
                 .child(postId)
                 .removeValue()
                 .addOnFailureListener(e ->
