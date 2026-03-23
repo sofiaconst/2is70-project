@@ -174,31 +174,55 @@ public class SignupActivity extends AppCompatActivity {
 
             String firstName = etFirstName.getText().toString().trim();
             String lastName = etLastName.getText().toString().trim();
-            String username = etEmail.getText().toString().trim();
+            String email = etEmail.getText().toString().trim();
             String password = etPassword.getText().toString().trim();
 
-            // Reset background
+            // Reset backgrounds
+            etFirstName.setBackgroundResource(R.drawable.bg_input_rounded);
+            etLastName.setBackgroundResource(R.drawable.bg_input_rounded);
             etEmail.setBackgroundResource(R.drawable.bg_input_rounded);
-
-            if (firstName.isEmpty() || lastName.isEmpty() || username.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
-                return;
+            etPassword.setBackgroundResource(R.drawable.bg_input_rounded);
+            
+            Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
+            if (currentFragment instanceof ParentSignupFragment) {
+                ((ParentSignupFragment) currentFragment).resetFields();
+            } else if (currentFragment instanceof TeacherSignupFragment) {
+                ((TeacherSignupFragment) currentFragment).resetFields();
             }
 
-            if (username.contains("@") || username.contains(" ")) {
+            boolean hasError = false;
+
+            if (firstName.isEmpty()) {
+                etFirstName.setBackgroundResource(R.drawable.bg_input_error);
+                hasError = true;
+            }
+            if (lastName.isEmpty()) {
+                etLastName.setBackgroundResource(R.drawable.bg_input_error);
+                hasError = true;
+            }
+            if (email.isEmpty()) {
                 etEmail.setBackgroundResource(R.drawable.bg_input_error);
-                Toast.makeText(this, "Username must not contain space characters nor @ symbols", Toast.LENGTH_SHORT).show();
-                return;
+                hasError = true;
+            } else if (!email.contains("@")) {
+                etEmail.setBackgroundResource(R.drawable.bg_input_error);
+                Toast.makeText(this, "Enter a valid email", Toast.LENGTH_SHORT).show();
+                hasError = true;
             }
-
-            String email = username.toLowerCase() + "@eduview.com";
-
-            if (!isPasswordValid(password)) {
+            if (password.isEmpty()) {
+                etPassword.setBackgroundResource(R.drawable.bg_input_error);
+                hasError = true;
+            } else if (!isPasswordValid(password)) {
+                etPassword.setBackgroundResource(R.drawable.bg_input_error);
                 tvPasswordError.setText(getPasswordRequirementsMessage(password));
                 tvPasswordError.setVisibility(View.VISIBLE);
-                return;
+                hasError = true;
             } else {
                 tvPasswordError.setVisibility(View.GONE);
+            }
+
+            if (hasError) {
+                Toast.makeText(this, "Please check the highlighted fields", Toast.LENGTH_SHORT).show();
+                return;
             }
 
             // Disable button to prevent double clicks
@@ -218,20 +242,27 @@ public class SignupActivity extends AppCompatActivity {
                     btnSignUp.setEnabled(true);
                     String errorMsg = e.getMessage();
                     if (errorMsg != null && (errorMsg.contains("Username already exists") || errorMsg.contains("Username already taken"))) {
-                        Toast.makeText(SignupActivity.this, "Username already taken", Toast.LENGTH_SHORT).show();
-                        
-                        // Check if it's the parent or child that exists
-                        // In a more complex scenario we'd need more info from AuthService, but for now:
-                        if (errorMsg.contains("Parent")) {
-                             etEmail.setBackgroundResource(R.drawable.bg_input_error);
-                        } else {
-                            // Find which child failed if possible, or just let fragment handle it if it was during sequential signup
-                            Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
-                            if (fragment instanceof ParentSignupFragment) {
-                                // This is a bit of a hack since we don't know which one failed exactly from the exception
-                                // but we can mark fields based on common patterns if needed.
-                                // The AuthService signUpParent could be improved to return which email failed.
+                        if (errorMsg.contains(email)) {
+                            etEmail.setBackgroundResource(R.drawable.bg_input_error);
+                            if ("Parent".equals(selectedRole[0])) {
+                                Toast.makeText(SignupActivity.this, "Parent's email already taken", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(SignupActivity.this, "Username already taken", Toast.LENGTH_SHORT).show();
                             }
+                        } else {
+                             // It might be a child's email
+                             if ("Parent".equals(selectedRole[0])) {
+                                 Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
+                                 if (fragment instanceof ParentSignupFragment) {
+                                     // Try to extract the email from the error message
+                                     String[] parts = errorMsg.split(": ");
+                                     if (parts.length > 1) {
+                                         String failedEmail = parts[1].trim();
+                                         ((ParentSignupFragment) fragment).markUsernameError(failedEmail);
+                                     }
+                                 }
+                             }
+                             Toast.makeText(SignupActivity.this, "Username already taken", Toast.LENGTH_SHORT).show();
                         }
                     } else {
                         Toast.makeText(SignupActivity.this, "Sign Up Failed: " + errorMsg, Toast.LENGTH_SHORT).show();
@@ -240,27 +271,27 @@ public class SignupActivity extends AppCompatActivity {
             };
 
             if ("Teacher".equals(selectedRole[0])) {
-                Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
-                if (fragment instanceof TeacherSignupFragment) {
-                    String className = ((TeacherSignupFragment) fragment).getClassName();
+                if (currentFragment instanceof TeacherSignupFragment) {
+                    String className = ((TeacherSignupFragment) currentFragment).getClassName();
                     if (className.isEmpty()) {
                         btnSignUp.setEnabled(true);
+                        ((TeacherSignupFragment) currentFragment).markClassNameError();
                         Toast.makeText(this, "Please enter classroom name", Toast.LENGTH_SHORT).show();
                         return;
                     }
                     authService.signUpTeacher(firstName, lastName, email, password, className, callback);
                 }
             } else if ("Parent".equals(selectedRole[0])) {
-                Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
-                if (fragment instanceof ParentSignupFragment) {
-                    List<AuthService.ChildInfo> childrenInfo = ((ParentSignupFragment) fragment).getChildrenInfo();
+                if (currentFragment instanceof ParentSignupFragment) {
+                    List<AuthService.ChildInfo> childrenInfo = ((ParentSignupFragment) currentFragment).getChildrenInfo();
                     
                     if (childrenInfo == null) {
                         btnSignUp.setEnabled(true);
+                        Toast.makeText(this, "Please check children's information", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
-                    if (childrenInfo.size() != ((ParentSignupFragment) fragment).getCounter()) {
+                    if (childrenInfo.size() != ((ParentSignupFragment) currentFragment).getCounter()) {
                         btnSignUp.setEnabled(true);
                         Toast.makeText(this, "Please provide information for all children", Toast.LENGTH_SHORT).show();
                         return;
@@ -270,8 +301,8 @@ public class SignupActivity extends AppCompatActivity {
                     for (AuthService.ChildInfo child : childrenInfo) {
                         if (child.email.equalsIgnoreCase(email)) {
                             btnSignUp.setEnabled(true);
-                            ((ParentSignupFragment) fragment).markUsernameError(child.email);
-                            Toast.makeText(this, "Child username cannot be the same as parent username", Toast.LENGTH_SHORT).show();
+                            ((ParentSignupFragment) currentFragment).markUsernameError(child.email);
+                            Toast.makeText(this, "Child username cannot be the same as parent email", Toast.LENGTH_SHORT).show();
                             return;
                         }
                     }

@@ -26,4 +26,16 @@ public class TeacherSignupFragment extends Fragment {
         }
         return "";
     }
+
+    public void markClassNameError() {
+        if (etClassName != null) {
+            etClassName.setBackgroundResource(R.drawable.bg_input_error);
+        }
+    }
+
+    public void resetFields() {
+        if (etClassName != null) {
+            etClassName.setBackgroundResource(R.drawable.bg_input_rounded);
+        }
+    }
 }

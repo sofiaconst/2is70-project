@@ -103,16 +103,28 @@ public class ParentSignupFragment extends Fragment {
                 String lastName = etChildLastName.getText().toString().trim();
                 String username = etChildUsername.getText().toString().trim();
                 
-                // Reset background/color to normal state
+                // Reset background to normal state
+                etChildFirstName.setBackgroundResource(R.drawable.bg_input_rounded);
+                etChildLastName.setBackgroundResource(R.drawable.bg_input_rounded);
                 etChildUsername.setBackgroundResource(R.drawable.bg_input_rounded);
 
-                if (firstName.isEmpty() || lastName.isEmpty() || username.isEmpty()) {
+                if (firstName.isEmpty()) {
+                    etChildFirstName.setBackgroundResource(R.drawable.bg_input_error);
                     allValid = false;
-                    continue; 
+                }
+                if (lastName.isEmpty()) {
+                    etChildLastName.setBackgroundResource(R.drawable.bg_input_error);
+                    allValid = false;
+                }
+                if (username.isEmpty()) {
+                    etChildUsername.setBackgroundResource(R.drawable.bg_input_error);
+                    allValid = false;
                 }
 
+                if (!allValid) continue;
+
                 if (username.contains("@") || username.contains(" ")) {
-                    etChildUsername.setBackgroundResource(R.drawable.bg_input_error); // Assuming you have an error drawable, or use a color filter
+                    etChildUsername.setBackgroundResource(R.drawable.bg_input_error);
                     Toast.makeText(getContext(), "Username must not contain space characters nor @ symbols", Toast.LENGTH_SHORT).show();
                     allValid = false;
                     continue;
@@ -141,6 +153,14 @@ public class ParentSignupFragment extends Fragment {
                 etChildUsername.setBackgroundResource(R.drawable.bg_input_error);
                 return;
             }
+        }
+    }
+
+    public void resetFields() {
+        for (View form : formList) {
+            form.findViewById(R.id.et_child_first_name).setBackgroundResource(R.drawable.bg_input_rounded);
+            form.findViewById(R.id.et_child_last_name).setBackgroundResource(R.drawable.bg_input_rounded);
+            form.findViewById(R.id.et_child_username).setBackgroundResource(R.drawable.bg_input_rounded);
         }
     }
 }
