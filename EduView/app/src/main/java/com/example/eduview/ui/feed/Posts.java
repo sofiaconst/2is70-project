@@ -22,8 +22,6 @@ import com.example.eduview.ui.main.MainViewModel;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
-import java.util.List;
-
 public class Posts extends Fragment {
 
     private RecyclerView recyclerPosts;
@@ -76,6 +74,13 @@ public class Posts extends Fragment {
             parentTabsContainer.setVisibility(View.GONE);
         }
 
+        observePublishedPosts(feedViewModel);
+        feedViewModel.getRefreshTrigger().observe(getViewLifecycleOwner(), refreshCount -> {
+            observePublishedPosts(feedViewModel);
+        });
+    }
+
+    private void observePublishedPosts(@NonNull FeedViewModel feedViewModel) {
         if (feedViewModel.getPublishedPosts() != null) {
             feedViewModel.getPublishedPosts().observe(getViewLifecycleOwner(), items -> {
                 if (items != null) {

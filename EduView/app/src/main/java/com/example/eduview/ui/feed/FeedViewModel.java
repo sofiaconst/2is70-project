@@ -27,17 +27,21 @@ public class FeedViewModel extends ViewModel {
     private LiveData<List<FeedItem>> pendingPosts;
 
     private final MutableLiveData<List<Student>> parentChildren = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<Integer> refreshTrigger = new MutableLiveData<>(0);
 
     private String classroomId;
+    private User currentUser;
 
     public void loadPostsForUser(User user) {
+        currentUser = user;
         classroomId = null;
+
         if (user instanceof Student) {
             classroomId = ((Student) user).getClassId();
-
         } else if (user instanceof Teacher) {
             classroomId = ((Teacher) user).getClassId();
         }
+
         Log.d("FeedViewModel", "Class id found for class: " + classroomId);
     }
 
@@ -117,13 +121,42 @@ public class FeedViewModel extends ViewModel {
         return parentChildren;
     }
 
+    public LiveData<Integer> getRefreshTrigger() {
+        return refreshTrigger;
+    }
+
+    public void reloadAll() {
+        Log.d("FeedViewModel", "Reloading all feed data");
+
+        if (currentUser == null) {
+            Log.e("FeedViewModel", "Cannot reload, currentUser is null");
+            return;
+        }
+
+        loadPostsForUser(currentUser);
+
+        if (!(currentUser instanceof Parent)) {
+            loadPublishedPosts();
+            loadAnnouncements();
+
+            if (currentUser instanceof Teacher) {
+                loadPendingPosts();
+            }
+        }
+
+        Integer currentValue = refreshTrigger.getValue();
+        if (currentValue == null) currentValue = 0;
+        refreshTrigger.setValue(currentValue + 1);
+    }
+
     public void approvePost(String postId) {
         if (classroomId == null || classroomId.isEmpty()) {
             Log.e("FeedViewModel", "Cannot approve post, classroomId is null");
             return;
         }
+
         feedRepository.approvePost(classroomId, postId);
-        loadPendingPosts();
+        reloadAll();
     }
 
     public void rejectPost(String postId) {
@@ -131,7 +164,8 @@ public class FeedViewModel extends ViewModel {
             Log.e("FeedViewModel", "Cannot reject post, classroomId is null");
             return;
         }
+
         feedRepository.rejectPost(classroomId, postId);
-        loadPendingPosts();
+        reloadAll();
     }
 }

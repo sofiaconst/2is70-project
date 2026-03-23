@@ -25,6 +25,9 @@ public class ParentStudentAnnouncementsFragment extends Fragment {
     private static final String ARG_CLASSROOM_ID = "classroom_id";
 
     private FeedAdapter feedAdapter;
+    private String classroomId;
+    private RecyclerView recyclerAnnouncements;
+    private TextView emptyMessage;
 
     public ParentStudentAnnouncementsFragment() {
         // Required empty public constructor
@@ -48,8 +51,8 @@ public class ParentStudentAnnouncementsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        RecyclerView recyclerAnnouncements = view.findViewById(R.id.recyclerAnnouncementsOnly);
-        TextView emptyMessage = view.findViewById(R.id.tvEmptyAnnouncementsMessage);
+        recyclerAnnouncements = view.findViewById(R.id.recyclerAnnouncementsOnly);
+        emptyMessage = view.findViewById(R.id.tvEmptyAnnouncementsMessage);
 
         recyclerAnnouncements.setLayoutManager(new LinearLayoutManager(requireContext()));
 
@@ -60,7 +63,7 @@ public class ParentStudentAnnouncementsFragment extends Fragment {
         feedAdapter = new FeedAdapter(sharedFeedViewModel);
         recyclerAnnouncements.setAdapter(feedAdapter);
 
-        String classroomId = null;
+        classroomId = null;
         if (getArguments() != null) {
             classroomId = getArguments().getString(ARG_CLASSROOM_ID);
         }
@@ -72,6 +75,14 @@ public class ParentStudentAnnouncementsFragment extends Fragment {
             return;
         }
 
+        loadAnnouncements();
+
+        sharedFeedViewModel.getRefreshTrigger().observe(getViewLifecycleOwner(), refreshCount -> {
+            loadAnnouncements();
+        });
+    }
+
+    private void loadAnnouncements() {
         FeedRepository feedRepository = new FeedRepository();
         LiveData<List<FeedItem>> announcementsLiveData = feedRepository.fetchAnnouncements(classroomId);
 

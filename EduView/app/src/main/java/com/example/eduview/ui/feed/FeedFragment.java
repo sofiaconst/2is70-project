@@ -7,6 +7,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,6 +20,7 @@ import com.example.eduview.R;
 import com.example.eduview.data.model.User;
 import com.example.eduview.data.model.UserRole;
 import com.example.eduview.ui.main.MainViewModel;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -29,6 +32,7 @@ public class FeedFragment extends Fragment {
 
     private TabLayout teacherTabs;
     private ViewPager2 viewPager;
+    private FloatingActionButton btnReloadFeed;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private int retryCount = 0;
@@ -70,6 +74,17 @@ public class FeedFragment extends Fragment {
 
         teacherTabs = view.findViewById(R.id.TeacherTabs);
         viewPager = view.findViewById(R.id.viewPager);
+        btnReloadFeed = view.findViewById(R.id.btnReloadFeed);
+
+        btnReloadFeed.setOnClickListener(v -> {
+            Log.d("FeedFragment", "Reload button clicked");
+            
+            // Start rotation animation
+            Animation rotation = AnimationUtils.loadAnimation(requireContext(), R.anim.rotate_refresh);
+            v.startAnimation(rotation);
+
+            feedViewModel.reloadAll();
+        });
 
         trySetupFeed();
     }
@@ -95,9 +110,9 @@ public class FeedFragment extends Fragment {
         viewPager.setAdapter(new FeedTabViewAdapter(this, isTeacher));
 
         new TabLayoutMediator(teacherTabs, viewPager, (tab, position) -> {
-            if (position == 0) tab.setText(getString(R.string.feed_title_1)); // Posts
-            else if (position == 1) tab.setText(getString(R.string.feed_title_2)); // Announcements
-            else if (position == 2 && isTeacher) tab.setText(getString(R.string.feed_title_3)); // Pending
+            if (position == 0) tab.setText(getString(R.string.feed_title_1));
+            else if (position == 1) tab.setText(getString(R.string.feed_title_2));
+            else if (position == 2 && isTeacher) tab.setText(getString(R.string.feed_title_3));
         }).attach();
 
         feedViewModel.loadPostsForUser(user);
