@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.firebase.auth)
+    implementation(libs.androidx.fragment.testing)
 //    implementation(libs.androidx.navigation.compose)
 //    implementation(libs.androidx.navigation.dynamic.features.fragment)
 //    androidTestImplementation(libs.androidx.navigation.testing)

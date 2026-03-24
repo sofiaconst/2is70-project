@@ -13,8 +13,12 @@ public class MainViewModel extends ViewModel {
     private User currentUser;
 
     public MainViewModel() {
-        // Use singleton SessionManager
-        this.sessionManager = SessionManager.getInstance();
+        this(SessionManager.getInstance());
+    }
+
+    //Constructor for Testing
+    public MainViewModel(SessionManager sessionManager) {
+        this.sessionManager = sessionManager;
     }
 
     public void startSession(Runnable onUserReady) {

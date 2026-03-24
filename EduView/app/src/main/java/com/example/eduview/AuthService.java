@@ -26,6 +26,12 @@ public class AuthService {
         rootRef = FirebaseDatabase.getInstance().getReference();
     }
 
+    //Constructor for Testing
+    public AuthService(FirebaseAuth firebaseAuth, DatabaseReference rootRef) {
+        this.firebaseAuth = firebaseAuth;
+        this.rootRef = rootRef;
+    }
+
     public void signOut() {
         firebaseAuth.signOut();
     }
