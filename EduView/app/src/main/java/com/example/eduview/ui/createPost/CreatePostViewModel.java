@@ -41,6 +41,14 @@ public class CreatePostViewModel extends ViewModel {
     }
 
     /**
+     * Constructor for testing.
+     * Creates the repository that actually talks to Firebase through repository.
+     */
+    public CreatePostViewModel(PostRepository repository) {
+        this.postRepository = repository;
+    }
+
+    /**
      * Allows the postFragment to create and store caption to refill upon screen rotation.
      */
     public LiveData<String> getCaption() {
