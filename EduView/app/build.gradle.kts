@@ -44,6 +44,9 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -80,6 +83,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.inline)
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
 
     // ZXing for QR Code generation and scanning
     implementation(libs.zxing.core)
