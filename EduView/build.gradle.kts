@@ -14,7 +14,12 @@ sonarqube {
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.token", System.getenv("SONAR_TOKEN") ?: "")
 
-        property("sonar.java.binaries", "app/build/tmp/kotlin-classes/debug,app/build/intermediates/javac/debug/classes")
+        property(
+            "sonar.java.binaries",
+            "app/build/tmp/kotlin-classes/debug,app/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes"
+        )
+//        property("sonar.test.inclusions", "app/src/test/**/*.java")
+
         property("sonar.junit.reportPaths", "app/build/test-results/testDebugUnitTest")
         property("sonar.coverage.jacoco.xmlReportPaths", "${rootProject.projectDir}/app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
         property("sonar.exclusions", "**/R.class, **/R$*.class, **/BuildConfig.*, **/Manifest*.*, build/**, **/*.xml")

@@ -19,8 +19,8 @@ import java.util.List;
 
 public class FeedViewModel extends ViewModel {
 
-    private FeedRepository feedRepository = new FeedRepository();
-    private UserRepository userRepository = new UserRepository();
+    private FeedRepository feedRepository;
+    private UserRepository userRepository;
 
     private LiveData<List<FeedItem>> publishedPosts;
     private LiveData<List<FeedItem>> announcements;
@@ -31,6 +31,17 @@ public class FeedViewModel extends ViewModel {
 
     private String classroomId;
     private User currentUser;
+
+    // normal app constructor
+    public FeedViewModel() {
+        this(new FeedRepository(), new UserRepository());
+    }
+
+    // test-friendly constructor
+    public FeedViewModel(FeedRepository feedRepository, UserRepository userRepository) {
+        this.feedRepository = feedRepository;
+        this.userRepository = userRepository;
+    }
 
     public void loadPostsForUser(User user) {
         currentUser = user;
