@@ -10,13 +10,13 @@
     <TextView
         android:id="@+id/EduviewTextMain"
         android:layout_width="0dp"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
         android:background="@color/main_color"
         android:fontFamily="@font/lalezar"
         android:text="@string/app_name"
         android:textAlignment="center"
         android:textColor="@color/white"
-        android:textSize="30sp"
+        android:textSize="35sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/nav_host_fragment_container"
         app:layout_constraintEnd_toEndOf="parent"
@@ -39,14 +39,13 @@
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/MainBottomNavigationView"
         android:layout_width="0dp"
-        android:layout_height="80dp"
+        android:layout_height="wrap_content"
         android:background="@color/main_color"
-        app:itemIconSize="25dp"
+        app:itemIconSize="30dp"
         app:labelVisibilityMode="unlabeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:menu="@menu/bottom_nav_main" />
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 
