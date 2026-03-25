@@ -1,14 +1,17 @@
 package com.example.eduview.ui.profile;
 
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ImageButton;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.eduview.R;
 import com.journeyapps.barcodescanner.CaptureManager;
 import com.journeyapps.barcodescanner.DecoratedBarcodeView;
+import com.journeyapps.barcodescanner.camera.CenterCropStrategy;
 
 public class CustomScannerActivity extends AppCompatActivity {
+
     private CaptureManager capture;
     private DecoratedBarcodeView barcodeScannerView;
 
@@ -18,6 +21,7 @@ public class CustomScannerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_custom_scanner);
 
         barcodeScannerView = findViewById(R.id.zxing_barcode_scanner);
+        barcodeScannerView.getBarcodeView().setPreviewScalingStrategy(new CenterCropStrategy());
 
         capture = new CaptureManager(this, barcodeScannerView);
         capture.initializeFromIntent(getIntent(), savedInstanceState);

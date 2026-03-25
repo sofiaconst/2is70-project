@@ -238,7 +238,7 @@ public class ProfileFragment extends Fragment {
         options.setCaptureActivity(CustomScannerActivity.class);
         options.setPrompt("Scan the Classroom QR Code");
         options.setBeepEnabled(true);
-        options.setOrientationLocked(true);
+        options.setOrientationLocked(false);
         qrCodeLauncher.launch(options);
     }
 
@@ -341,5 +341,16 @@ public class ProfileFragment extends Fragment {
         });
 
         dialog.show();
+
+        boolean isLandscape =
+                getResources().getConfiguration().orientation
+                        == android.content.res.Configuration.ORIENTATION_LANDSCAPE;
+
+        if (isLandscape) {
+            dialog.getWindow().setLayout(
+                    (int) (getResources().getDisplayMetrics().widthPixels * 0.8),
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+        }
     }
 }
