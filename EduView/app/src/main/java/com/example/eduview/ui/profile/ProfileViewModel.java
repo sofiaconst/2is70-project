@@ -35,16 +35,27 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ProfileViewModel extends ViewModel {
 
     // Repositories
-    private final SessionManager sessionManager = SessionManager.getInstance();
-    private final UserRepository userRepository = new UserRepository();
-    private final ClassroomRepository classroomRepository = new ClassroomRepository();
+    private final SessionManager sessionManager;
+    private final UserRepository userRepository;
+    private final ClassroomRepository classroomRepository;
 
     private final MutableLiveData<ProfileUIState> uiState = new MutableLiveData<>();
     private final MutableLiveData<String> addChildStatus = new MutableLiveData<>();
 
     private User currentUser;
 
+
     public ProfileViewModel() {
+        this(SessionManager.getInstance(), new UserRepository(), new ClassroomRepository());
+    }
+
+    public ProfileViewModel(SessionManager sessionManager,
+                            UserRepository userRepository,
+                            ClassroomRepository classroomRepository) {
+        this.sessionManager = sessionManager;
+        this.userRepository = userRepository;
+        this.classroomRepository = classroomRepository;
+
         currentUser = sessionManager.getCurrentUser();
         buildState();
     }

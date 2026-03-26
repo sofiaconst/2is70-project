@@ -44,6 +44,9 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -67,6 +70,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.firebase.auth)
+    implementation(libs.androidx.fragment.testing)
 //    implementation(libs.androidx.navigation.compose)
 //    implementation(libs.androidx.navigation.dynamic.features.fragment)
 //    androidTestImplementation(libs.androidx.navigation.testing)
@@ -80,6 +84,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.inline)
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
 
     // ZXing for QR Code generation and scanning
     implementation(libs.zxing.core)

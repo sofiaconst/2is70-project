@@ -22,6 +22,11 @@ public class ClassroomRepository {
         classroomsRef = rootRef.child("classrooms");
         
     }
+    //Constructor for testing
+    public ClassroomRepository(DatabaseReference rootRef, DatabaseReference classroomsRef) {
+        this.rootRef = rootRef;
+        this.classroomsRef = classroomsRef;
+    }
 
     // Fetch classroom by ID
     public void getClassroomById(String classId, ClassroomCallback<Classroom> classroomCallback) {

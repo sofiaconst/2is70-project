@@ -17,9 +17,25 @@ import java.util.List;
 
 public class FeedRepository {
 
-    private final DatabaseReference classroomRef = FirebaseDatabase.getInstance().getReference("classrooms");
-    private final DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
-    private final DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users");
+    private final DatabaseReference classroomRef;
+    private final DatabaseReference postsRef;
+    private final DatabaseReference userRef;
+
+    public FeedRepository() {
+        this(
+                FirebaseDatabase.getInstance().getReference("classrooms"),
+                FirebaseDatabase.getInstance().getReference("posts"),
+                FirebaseDatabase.getInstance().getReference("users")
+        );
+    }
+
+    public FeedRepository(DatabaseReference classroomRef,
+                          DatabaseReference postsRef,
+                          DatabaseReference userRef) {
+        this.classroomRef = classroomRef;
+        this.postsRef = postsRef;
+        this.userRef = userRef;
+    }
 
     public LiveData<List<FeedItem>> fetchPublishedPosts(String classroomId) {
         Log.d("FeedRepository", "Fetching published posts for classroom: " + classroomId);

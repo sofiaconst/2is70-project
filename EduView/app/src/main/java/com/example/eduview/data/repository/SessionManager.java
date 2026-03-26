@@ -70,9 +70,20 @@ public class SessionManager {
         this.userRepository = new UserRepository();
     }
 
+    //Constructor for Unit tests
+    public SessionManager(AuthRepository authRepository, UserRepository userRepository) {
+        this.authRepository = authRepository;
+        this.userRepository = userRepository;
+    }
+
     public static SessionManager getInstance() {
         if (instance == null) instance = new SessionManager();
         return instance;
+    }
+
+    // For Testing Profile fragment
+    public void setCurrentUserForTest(User user) {
+        this.currentUser = user;
     }
 
     public void initializeSession(SessionCallback callback) {
