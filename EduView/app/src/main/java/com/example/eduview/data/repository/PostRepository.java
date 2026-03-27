@@ -1,8 +1,6 @@
 package com.example.eduview.data.repository;
 
-import com.example.eduview.data.model.Post;
-import com.example.eduview.data.model.PostType;
-import com.google.firebase.database.DataSnapshot;
+import com.example.eduview.data.model.FeedItem;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -39,60 +37,23 @@ public class PostRepository {
     }
 
     /**
-     * Fetches a post from Firebase Realtime Database using its post ID.
-     *
-     * @param postId the unique ID of the post to retrieve
-     * @param onSuccess callback invoked with the fetched Post if retrieval succeeds
-     * @param onError callback invoked if the post does not exist or the read fails
-     */
-    public void fetchPost(String postId, Consumer<Post> onSuccess, Consumer<Exception> onError) {
-        postRef.child(postId).get().addOnCompleteListener(task -> {
-
-            if (!task.isSuccessful()) {
-                onError.accept(new RuntimeException("Failed to fetch post"));
-                return;
-            }
-
-            DataSnapshot snapshot = task.getResult();
-
-            if (!snapshot.exists()) {
-                onError.accept(new RuntimeException("Post not found"));
-                return;
-            }
-
-            String caption = snapshot.child("caption").getValue(String.class);
-            String imageUrl = snapshot.child("imageUrl").getValue(String.class);
-            String authorId = snapshot.child("authorId").getValue(String.class);
-            Long timestamp = snapshot.child("timestamp").getValue(Long.class);
-
-            Post post = new Post(authorId, caption, imageUrl);
-            post.setTimestamp(timestamp != null ? timestamp : 0L);
-
-            onSuccess.accept(post);
-        });
-    }
-
-    /**
      * Creates a new post in Firebase Realtime Database and links it to the
      * appropriate classroom feed category.
      *
-     * @param type the type of post, used to determine whether the post is stored
-     *             under announcements, pending, or published_posts
      * @param classId the ID of the classroom in which the post should appear
-     * @param post the post object to store
+     * @param feedItem the post object to store
      * @param onSuccess callback invoked with the generated post ID if creation succeeds
      * @param onError callback invoked if the post type is invalid, the post ID
      *                cannot be generated, or the Firebase write fails
      */
-    public void createPost(PostType type,
-                           String classId,
-                           Post post,
+    public void createPost(String classId,
+                           FeedItem feedItem,
                            Consumer<String> onSuccess,
                            Consumer<Exception> onError) {
 
         String feedPath;
 
-        switch (type) {
+        switch (feedItem.getType()) {
             case ANNOUNCEMENT:
                 feedPath = "announcements";
                 break;
@@ -114,10 +75,10 @@ public class PostRepository {
             return;
         }
 
-        post.setTimestamp(System.currentTimeMillis());
+        feedItem.setTimestamp(System.currentTimeMillis());
 
         Map<String, Object> updates = new HashMap<>();
-        updates.put("/posts/" + postId, post);
+        updates.put("/posts/" + postId, feedItem);
         updates.put("/classrooms/" + classId + "/feed/" + feedPath + "/" + postId, true);
 
         rootRef.updateChildren(updates)

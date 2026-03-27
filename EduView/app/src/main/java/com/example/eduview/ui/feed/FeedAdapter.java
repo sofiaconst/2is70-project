@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.eduview.R;
 import com.example.eduview.data.model.FeedItem;
-import com.example.eduview.data.model.FeedType;
+import com.example.eduview.data.model.FeedItemType;
 import com.example.eduview.data.model.ProfilePicture;
 
 import java.util.ArrayList;
@@ -49,11 +49,11 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
 
-        if (viewType == FeedType.POST.ordinal()) {
+        if (viewType == FeedItemType.PUBLISHED.ordinal()) {
             View view = inflater.inflate(R.layout.item_post, parent, false);
             return new PostViewHolder(view);
 
-        } else if (viewType == FeedType.ANNOUNCEMENT.ordinal()) {
+        } else if (viewType == FeedItemType.ANNOUNCEMENT.ordinal()) {
             View view = inflater.inflate(R.layout.item_announcement, parent, false);
             return new AnnouncementViewHolder(view);
 
@@ -68,7 +68,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         FeedItem item = items.get(position);
 
         switch (item.getType()) {
-            case POST:
+            case PUBLISHED:
                 bindPost((PostViewHolder) holder, item);
                 break;
 
@@ -84,7 +84,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private void bindPost(@NonNull PostViewHolder holder, @NonNull FeedItem item) {
         holder.tvStudentName.setText(item.getAuthorName());
-        holder.tvPostContent.setText(item.getContent());
+        holder.tvPostContent.setText(item.getCaption());
         holder.tvPostDate.setText(formatTimestamp(item.getTimestamp()));
         setProfilePicture(holder.ivProfilePicture, item.getAuthorPfpName());
 
@@ -103,7 +103,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private void bindAnnouncement(@NonNull AnnouncementViewHolder holder, @NonNull FeedItem item) {
         holder.tvAnnouncementAuthor.setText(item.getAuthorName());
-        holder.tvAnnouncementContent.setText(item.getContent());
+        holder.tvAnnouncementContent.setText(item.getCaption());
         holder.tvAnnouncementDate.setText(formatTimestamp(item.getTimestamp()));
         setProfilePicture(holder.ivProfilePicture, item.getAuthorPfpName());
 
@@ -121,7 +121,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private void bindPending(@NonNull PendingViewHolder holder, @NonNull FeedItem item) {
         holder.tvPendingName.setText(item.getAuthorName());
-        holder.tvPendingContent.setText(item.getContent());
+        holder.tvPendingContent.setText(item.getCaption());
         holder.tvPendingDate.setText(formatTimestamp(item.getTimestamp()));
         setProfilePicture(holder.ivProfilePicture, item.getAuthorPfpName());
 

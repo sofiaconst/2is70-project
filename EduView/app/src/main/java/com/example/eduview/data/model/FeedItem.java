@@ -1,64 +1,61 @@
 package com.example.eduview.data.model;
 
+import android.view.ViewDebug;
+
+import com.google.firebase.database.Exclude;
+
 public class FeedItem {
-
-    private FeedType type;
-
+    @Exclude
+    private FeedItemType type;
+    @Exclude
     private String postId;
-
+    @Exclude
     private String authorName;
-    private String content;
+
+    private String authorId;
+    private String caption;
     private String imageUrl;
     private long timestamp;
+
+    @Exclude
     private String authorPfpName;
 
-    // optional for pending
-    private boolean isPending;
-
-    public FeedItem(FeedType type, String authorName, String content) {
+    public FeedItem(FeedItemType type, String authorId, String caption) {
         this.type = type;
-        this.authorName = authorName;
-        this.content = content;
+        this.authorId = authorId;
+        this.caption = caption;
+        authorName = "";
     }
-
-    public FeedType getType() {
+    @Exclude
+    public FeedItemType getType() {
         return type;
     }
-
+    @Exclude
     public String getPostId() {
         return postId;
     }
-
+    @Exclude
     public String getAuthorName() {
         return authorName;
     }
+    public String getAuthorId() { return authorId; }
 
-    public String getContent() {
-        return content;
+    public String getCaption() {
+        return caption;
     }
 
     public String getImageUrl() {
         return imageUrl;
     }
 
-    public long getTimestamp() {
-        return timestamp;
-    }
-
+    public long getTimestamp() { return timestamp; }
+    @Exclude
     public String getAuthorPfpName() {
         return authorPfpName;
     }
 
-    public boolean isPending() {
-        return isPending;
-    }
-
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
-    }
-
-    public void setPending(boolean pending) {
-        isPending = pending;
     }
 
     public void setPostId(String postId) {
@@ -72,4 +69,5 @@ public class FeedItem {
     public void setAuthorPfpName(String authorPfpName) {
         this.authorPfpName = authorPfpName;
     }
+    public void setAuthorName(String authorName) { this.authorName = authorName; }
 }

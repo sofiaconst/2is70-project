@@ -6,7 +6,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.eduview.data.model.FeedItem;
-import com.example.eduview.data.model.FeedType;
+import com.example.eduview.data.model.FeedItemType;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -55,7 +55,7 @@ public class FeedRepository {
                     }
 
                     Collections.reverse(postIds);
-                    fetchFeedItem(postIds, FeedType.POST, liveData);
+                    fetchFeedItem(postIds, FeedItemType.PUBLISHED, liveData);
                     Log.d("FeedRepository", "Total posts found: " + snapshot.getChildrenCount());
                 })
                 .addOnFailureListener(e -> {
@@ -99,7 +99,7 @@ public class FeedRepository {
                     }
 
                     Collections.reverse(postIds);
-                    fetchFeedItem(postIds, FeedType.PENDING, liveData);
+                    fetchFeedItem(postIds, FeedItemType.PENDING, liveData);
                     Log.d("FeedRepository", "Total posts found: " + snapshot.getChildrenCount());
                 })
                 .addOnFailureListener(e -> {
@@ -143,7 +143,7 @@ public class FeedRepository {
                     }
 
                     Collections.reverse(postIds);
-                    fetchFeedItem(postIds, FeedType.ANNOUNCEMENT, liveData);
+                    fetchFeedItem(postIds, FeedItemType.ANNOUNCEMENT, liveData);
                     Log.d("FeedRepository", "Total posts found: " + snapshot.getChildrenCount());
                 })
                 .addOnFailureListener(e -> {
@@ -153,7 +153,7 @@ public class FeedRepository {
         return liveData;
     }
 
-    private void fetchFeedItem(List<String> postIds, FeedType feedItemType, MutableLiveData<List<FeedItem>> liveData) {
+    private void fetchFeedItem(List<String> postIds, FeedItemType feedItemType, MutableLiveData<List<FeedItem>> liveData) {
         ArrayList<FeedItem> items = new ArrayList<>();
 
         if (postIds.isEmpty()) {
@@ -176,13 +176,10 @@ public class FeedRepository {
                         if (content == null) content = "";
                         if (timestamp == null) timestamp = 0L;
 
-                        Log.d("FeedRepository", "ImageURL " + imageUrl);
-                        Log.d("FeedRepository", "Post content retrieved.");
-
                         if (author == null) {
                             completed[0]++;
 
-                            FeedItem item = new FeedItem(feedItemType, "", content);
+                            FeedItem item = new FeedItem(feedItemType, author, content);
                             item.setPostId(postId);
                             item.setImageUrl(imageUrl);
                             item.setTimestamp(timestamp);
@@ -222,7 +219,9 @@ public class FeedRepository {
                                     if (lastName == null) lastName = "";
                                     String authorName = (firstName + " " + lastName).trim();
 
-                                    FeedItem item = new FeedItem(feedItemType, authorName, finalContent);
+                                    FeedItem item = new FeedItem(feedItemType, author, finalContent);
+                                    item.setAuthorName(authorName);
+                                    Log.d("FeedRepository", "AUTHOR NAME" + item.getAuthorName());
                                     item.setPostId(postId);
                                     item.setImageUrl(imageUrl);
                                     item.setTimestamp(finalTimestamp);
@@ -249,7 +248,7 @@ public class FeedRepository {
                                     completed[0]++;
                                     Log.e("FeedRepository", "Failed to fetch author name", e);
 
-                                    FeedItem item = new FeedItem(feedItemType, "", finalContent);
+                                    FeedItem item = new FeedItem(feedItemType, author, finalContent);
                                     item.setPostId(postId);
                                     item.setImageUrl(imageUrl);
                                     item.setTimestamp(finalTimestamp);

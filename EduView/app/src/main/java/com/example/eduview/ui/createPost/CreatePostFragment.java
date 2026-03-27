@@ -6,7 +6,6 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.camera.core.ImageCapture;
-import androidx.camera.view.PreviewView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -23,24 +22,17 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.eduview.R;
-import com.example.eduview.data.model.PostType;
+import com.example.eduview.data.model.FeedItemType;
 import com.example.eduview.data.model.*;
-import com.example.eduview.data.repository.MediaRepository;
 import com.example.eduview.data.repository.SessionManager;
 import com.example.eduview.ui.main.MainActivity;
 import com.example.eduview.ui.main.MainViewModel;
 
-import java.io.File;
-
 import com.bumptech.glide.Glide;
 
-import androidx.camera.core.*;
-import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.core.content.ContextCompat;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Fragment for the "Create Post" screen.
@@ -253,7 +245,7 @@ public class CreatePostFragment extends Fragment {
         // Decide whether this post is an announcement or a normal post.
         // If the announcement area is shown and the box is checked, use ANNOUNCEMENT.
         // Otherwise, default to PENDING for student-style posts.
-        PostType type = getSelectedPostType(user);
+        FeedItemType type = getSelectedPostType(user);
 
         viewModel.createPost(type, classId, authorId);
     }
@@ -265,16 +257,16 @@ public class CreatePostFragment extends Fragment {
      * - checked announcement box -> ANNOUNCEMENT
      * - otherwise -> PENDING
      */
-    private PostType getSelectedPostType(User user) {
+    private FeedItemType getSelectedPostType(User user) {
         if (user.getRole() == UserRole.STUDENT) {
-            return PostType.PENDING;
+            return FeedItemType.PENDING;
         }
 
         if (user.getRole() == UserRole.TEACHER) {
             if (announcementCheckBox.isChecked()) {
-                return PostType.ANNOUNCEMENT;
+                return FeedItemType.ANNOUNCEMENT;
             }
-            return PostType.PUBLISHED;
+            return FeedItemType.PUBLISHED;
         }
 
         throw new IllegalStateException("Parents cannot create posts");

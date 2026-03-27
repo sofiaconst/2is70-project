@@ -4,8 +4,8 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.example.eduview.data.model.Post;
-import com.example.eduview.data.model.PostType;
+import com.example.eduview.data.model.FeedItem;
+import com.example.eduview.data.model.FeedItemType;
 import com.example.eduview.data.repository.PostRepository;
 
 /**
@@ -92,7 +92,7 @@ public class CreatePostViewModel extends ViewModel {
      * This collects the caption and image URL currently stored in the ViewModel,
      * builds a Post object, and asks the repository to upload it to Firebase.
      */
-    public void createPost(PostType type, String classId, String authorId) {
+    public void createPost(FeedItemType type, String classId, String authorId) {
 
         String currentCaption = caption.getValue() != null ? caption.getValue().trim() : "";
         String currentImageUrl = imageUrl.getValue() != null ? imageUrl.getValue().trim() : "";
@@ -103,12 +103,12 @@ public class CreatePostViewModel extends ViewModel {
             return;
         }
 
-        Post post = new Post(authorId, currentCaption, currentImageUrl);
+        FeedItem feedItem = new FeedItem(type, authorId, currentCaption);
+        feedItem.setImageUrl(currentImageUrl);
 
         postRepository.createPost(
-                type,
                 classId,
-                post,
+                feedItem,
                 postId -> postCreated.setValue(true),
                 error -> errorMessage.setValue(error.getMessage())
         );

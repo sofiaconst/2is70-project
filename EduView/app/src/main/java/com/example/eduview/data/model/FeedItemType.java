@@ -1,6 +1,6 @@
 package com.example.eduview.data.model;
 
-public enum PostType {
+public enum FeedItemType {
     ANNOUNCEMENT,
     PENDING,
     PUBLISHED

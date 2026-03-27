@@ -70,7 +70,7 @@
         android:id="@+id/PendingImage"
         android:contentDescription="Image"
         android:layout_width="366dp"
-        android:layout_height="160dp"
+        android:layout_height="220dp"
         android:layout_marginTop="20dp"
         android:adjustViewBounds="true"
         android:maxHeight="300dp"
