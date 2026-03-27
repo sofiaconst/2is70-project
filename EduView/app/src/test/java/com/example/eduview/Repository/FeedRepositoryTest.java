@@ -194,7 +194,7 @@ public class FeedRepositoryTest {
 
         FeedItem item = result.getValue().get(0);
         assertEquals("", item.getAuthorName());
-        assertEquals("Hello world", item.getContent());
+        assertEquals("Hello world", item.getCaption());
         assertEquals("post1", item.getPostId());
         assertEquals("img.png", item.getImageUrl());
         assertEquals(123L, item.getTimestamp());
@@ -255,7 +255,7 @@ public class FeedRepositoryTest {
 
         FeedItem item = result.getValue().get(0);
         assertEquals("Sam Smith", item.getAuthorName());
-        assertEquals("Post text", item.getContent());
+        assertEquals("Post text", item.getCaption());
         assertEquals("post2", item.getPostId());
         assertEquals(200L, item.getTimestamp());
         assertEquals("green_dino", item.getAuthorPfpName());
@@ -310,7 +310,7 @@ public class FeedRepositoryTest {
 
         FeedItem item = result.getValue().get(0);
         assertEquals("", item.getAuthorName());
-        assertEquals("Post text", item.getContent());
+        assertEquals("Post text", item.getCaption());
         assertEquals("post3", item.getPostId());
         assertEquals("img3.png", item.getImageUrl());
         assertEquals(300L, item.getTimestamp());
@@ -371,8 +371,8 @@ public class FeedRepositoryTest {
 
         assertNotNull(result.getValue());
         assertEquals(2, result.getValue().size());
-        assertEquals("Newer", result.getValue().get(0).getContent());
-        assertEquals("Older", result.getValue().get(1).getContent());
+        assertEquals("Newer", result.getValue().get(0).getCaption());
+        assertEquals("Older", result.getValue().get(1).getCaption());
     }
 
     @Test

@@ -9,8 +9,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.example.eduview.data.model.Post;
-import com.example.eduview.data.model.PostType;
+import com.example.eduview.data.model.FeedItem;
+import com.example.eduview.data.model.FeedItemType;
+import com.example.eduview.data.repository.FeedRepository;
 import com.example.eduview.data.repository.PostRepository;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -31,7 +32,8 @@ public class PostRepositoryTest {
     private DatabaseReference classRef;
     private DatabaseReference rootRef;
 
-    private PostRepository repository;
+    private PostRepository postRepository;
+    private FeedRepository feedRepository;
 
     @Before
     public void setUp() {
@@ -39,112 +41,8 @@ public class PostRepositoryTest {
         classRef = mock(DatabaseReference.class);
         rootRef = mock(DatabaseReference.class);
 
-        repository = new PostRepository(postRef, classRef, rootRef);
-    }
-
-    @Test
-    public void fetchPost_validPost_returnsPost() {
-        String postId = "post123";
-
-        DatabaseReference postNodeRef = mock(DatabaseReference.class);
-        when(postRef.child(postId)).thenReturn(postNodeRef);
-
-        Task<DataSnapshot> postTask = mockTaskSuccess();
-        when(postNodeRef.get()).thenReturn(postTask);
-
-        DataSnapshot snapshot = mock(DataSnapshot.class);
-        when(postTask.getResult()).thenReturn(snapshot);
-        when(snapshot.exists()).thenReturn(true);
-
-        mockStringChild(snapshot, "caption", "Hello class");
-        mockStringChild(snapshot, "imageUrl", "image.png");
-        mockStringChild(snapshot, "authorId", "user123");
-        mockLongChild(snapshot, "timestamp", 123L);
-
-        AtomicReference<Post> result = new AtomicReference<>();
-        AtomicReference<Exception> error = new AtomicReference<>();
-
-        repository.fetchPost(postId, result::set, error::set);
-
-        assertNull(error.get());
-        assertNotNull(result.get());
-        assertEquals("user123", result.get().getAuthorId());
-        assertEquals("Hello class", result.get().getCaption());
-        assertEquals("image.png", result.get().getImageUrl());
-        assertEquals(123L, result.get().getTimestamp());
-    }
-
-    @Test
-    public void fetchPost_fetchFails_callsOnError() {
-        String postId = "post123";
-
-        DatabaseReference postNodeRef = mock(DatabaseReference.class);
-        when(postRef.child(postId)).thenReturn(postNodeRef);
-
-        Task<DataSnapshot> failedTask = mockTaskFailure();
-        when(postNodeRef.get()).thenReturn(failedTask);
-
-        AtomicReference<Post> result = new AtomicReference<>();
-        AtomicReference<Exception> error = new AtomicReference<>();
-
-        repository.fetchPost(postId, result::set, error::set);
-
-        assertNull(result.get());
-        assertNotNull(error.get());
-        assertEquals("Failed to fetch post", error.get().getMessage());
-    }
-
-    @Test
-    public void fetchPost_postDoesNotExist_callsOnError() {
-        String postId = "missingPost";
-
-        DatabaseReference postNodeRef = mock(DatabaseReference.class);
-        when(postRef.child(postId)).thenReturn(postNodeRef);
-
-        Task<DataSnapshot> postTask = mockTaskSuccess();
-        when(postNodeRef.get()).thenReturn(postTask);
-
-        DataSnapshot snapshot = mock(DataSnapshot.class);
-        when(postTask.getResult()).thenReturn(snapshot);
-        when(snapshot.exists()).thenReturn(false);
-
-        AtomicReference<Post> result = new AtomicReference<>();
-        AtomicReference<Exception> error = new AtomicReference<>();
-
-        repository.fetchPost(postId, result::set, error::set);
-
-        assertNull(result.get());
-        assertNotNull(error.get());
-        assertEquals("Post not found", error.get().getMessage());
-    }
-
-    @Test
-    public void fetchPost_nullTimestamp_defaultsToZero() {
-        String postId = "post123";
-
-        DatabaseReference postNodeRef = mock(DatabaseReference.class);
-        when(postRef.child(postId)).thenReturn(postNodeRef);
-
-        Task<DataSnapshot> postTask = mockTaskSuccess();
-        when(postNodeRef.get()).thenReturn(postTask);
-
-        DataSnapshot snapshot = mock(DataSnapshot.class);
-        when(postTask.getResult()).thenReturn(snapshot);
-        when(snapshot.exists()).thenReturn(true);
-
-        mockStringChild(snapshot, "caption", "Hello class");
-        mockStringChild(snapshot, "imageUrl", "image.png");
-        mockStringChild(snapshot, "authorId", "user123");
-        mockLongChild(snapshot, "timestamp", null);
-
-        AtomicReference<Post> result = new AtomicReference<>();
-        AtomicReference<Exception> error = new AtomicReference<>();
-
-        repository.fetchPost(postId, result::set, error::set);
-
-        assertNull(error.get());
-        assertNotNull(result.get());
-        assertEquals(0L, result.get().getTimestamp());
+        postRepository = new PostRepository(postRef, classRef, rootRef);
+        feedRepository = new FeedRepository();
     }
 
     @Test
@@ -164,12 +62,13 @@ public class PostRepositoryTest {
         });
         when(updateTask.addOnFailureListener(any())).thenReturn(updateTask);
 
-        Post post = new Post("user1", "Caption text", "img.png");
+        FeedItem post = new FeedItem(FeedItemType.ANNOUNCEMENT, "user1", "Caption text");
+        post.setImageUrl("img.png");
 
         AtomicReference<String> result = new AtomicReference<>();
         AtomicReference<Exception> error = new AtomicReference<>();
 
-        repository.createPost(PostType.ANNOUNCEMENT, "classA", post, result::set, error::set);
+        postRepository.createPost("classA", post, result::set, error::set);
 
         assertNull(error.get());
         assertEquals("post999", result.get());
@@ -195,12 +94,13 @@ public class PostRepositoryTest {
         });
         when(updateTask.addOnFailureListener(any())).thenReturn(updateTask);
 
-        Post post = new Post("user2", "Pending post", "img2.png");
+        FeedItem post = new FeedItem(FeedItemType.PENDING, "user2", "Pending post");
+        post.setImageUrl("img2.png");
 
         AtomicReference<String> result = new AtomicReference<>();
         AtomicReference<Exception> error = new AtomicReference<>();
 
-        repository.createPost(PostType.PENDING, "classB", post, result::set, error::set);
+        postRepository.createPost("classB", post, result::set, error::set);
 
         assertNull(error.get());
         assertEquals("post555", result.get());
@@ -223,12 +123,13 @@ public class PostRepositoryTest {
         });
         when(updateTask.addOnFailureListener(any())).thenReturn(updateTask);
 
-        Post post = new Post("user3", "Published post", "img3.png");
+        FeedItem post = new FeedItem(FeedItemType.PUBLISHED, "user3", "Published post");
+        post.setImageUrl("img3.png");
 
         AtomicReference<String> result = new AtomicReference<>();
         AtomicReference<Exception> error = new AtomicReference<>();
 
-        repository.createPost(PostType.PUBLISHED, "classC", post, result::set, error::set);
+        postRepository.createPost("classC", post, result::set, error::set);
 
         assertNull(error.get());
         assertEquals("post777", result.get());
@@ -240,12 +141,13 @@ public class PostRepositoryTest {
         when(postRef.push()).thenReturn(pushedRef);
         when(pushedRef.getKey()).thenReturn(null);
 
-        Post post = new Post("user1", "Caption text", "img.png");
+        FeedItem post = new FeedItem(FeedItemType.ANNOUNCEMENT, "user1","Caption text");
+        post.setImageUrl("img.png");
 
         AtomicReference<String> result = new AtomicReference<>();
         AtomicReference<Exception> error = new AtomicReference<>();
 
-        repository.createPost(PostType.ANNOUNCEMENT, "classA", post, result::set, error::set);
+        postRepository.createPost("classA", post, result::set, error::set);
 
         assertNull(result.get());
         assertNotNull(error.get());
@@ -269,12 +171,12 @@ public class PostRepositoryTest {
             return updateTask;
         });
 
-        Post post = new Post("user1", "Caption text", "img.png");
+        FeedItem post = new FeedItem(FeedItemType.ANNOUNCEMENT,"user1", "Caption text");
 
         AtomicReference<String> result = new AtomicReference<>();
         AtomicReference<Exception> error = new AtomicReference<>();
 
-        repository.createPost(PostType.ANNOUNCEMENT, "classA", post, result::set, error::set);
+        postRepository.createPost("classA", post, result::set, error::set);
 
         assertNull(result.get());
         assertNotNull(error.get());
@@ -305,12 +207,12 @@ public class PostRepositoryTest {
         });
         when(updateTask.addOnFailureListener(any())).thenReturn(updateTask);
 
-        Post post = new Post("user9", "Caption text", "img.png");
+        FeedItem post = new FeedItem(FeedItemType.PENDING,"user9", "Caption text");
 
         AtomicReference<String> result = new AtomicReference<>();
         AtomicReference<Exception> error = new AtomicReference<>();
 
-        repository.createPost(PostType.PENDING, "classZ", post, result::set, error::set);
+        postRepository.createPost("classZ", post, result::set, error::set);
 
         assertNull(error.get());
         assertEquals("post321", result.get());

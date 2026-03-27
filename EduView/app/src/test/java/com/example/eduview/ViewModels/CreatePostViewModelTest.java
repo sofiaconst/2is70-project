@@ -6,7 +6,8 @@ import static org.mockito.Mockito.*;
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 import androidx.lifecycle.Observer;
 
-import com.example.eduview.data.model.PostType;
+import com.example.eduview.data.model.FeedItem;
+import com.example.eduview.data.model.FeedItemType;
 import com.example.eduview.data.repository.PostRepository;
 import com.example.eduview.ui.createPost.CreatePostViewModel;
 
@@ -77,12 +78,12 @@ public class CreatePostViewModelTest {
         viewModel.setCaption("");
         viewModel.setImageUrl("");
 
-        viewModel.createPost(PostType.PENDING, "class1", "user1");
+        viewModel.createPost(FeedItemType.PENDING, "class1", "user1");
 
         verify(errorObserver).onChanged("Post must contain text or an image.");
 
         // Tests that repo is not called
-        verify(mockRepository, never()).createPost(any(), any(), any(), any(), any());
+        verify(mockRepository, never()).createPost(any(), any(), any(), any());
     }
 
     @Test
@@ -91,10 +92,10 @@ public class CreatePostViewModelTest {
 
         viewModel.setCaption("Some text");
 
-        viewModel.createPost(PostType.PENDING, "class1", "user1");
+        viewModel.createPost(FeedItemType.PENDING, "class1", "user1");
 
         verify(mockRepository, times(1))
-                .createPost(eq(PostType.PENDING), eq("class1"), any(), any(), any());
+                .createPost(eq("class1"), any(FeedItem.class), any(), any());
     }
 
     @Test
@@ -106,9 +107,9 @@ public class CreatePostViewModelTest {
         ArgumentCaptor<java.util.function.Consumer<String>> successCaptor = ArgumentCaptor.forClass(java.util.function.Consumer.class);
         ArgumentCaptor<java.util.function.Consumer<Exception>> errorCaptor = ArgumentCaptor.forClass(java.util.function.Consumer.class);
 
-        viewModel.createPost(PostType.PENDING, "class1", "user1");
+        viewModel.createPost(FeedItemType.PENDING, "class1", "user1");
 
-        verify(mockRepository).createPost(any(), any(), any(), successCaptor.capture(), errorCaptor.capture());
+        verify(mockRepository).createPost(any(), any(), successCaptor.capture(), errorCaptor.capture());
 
         // Simulate success
         successCaptor.getValue().accept("postId");
@@ -123,9 +124,9 @@ public class CreatePostViewModelTest {
         ArgumentCaptor<java.util.function.Consumer<String>> successCaptor = ArgumentCaptor.forClass(java.util.function.Consumer.class);
         ArgumentCaptor<java.util.function.Consumer<Exception>> errorCaptor = ArgumentCaptor.forClass(java.util.function.Consumer.class);
 
-        viewModel.createPost(PostType.PENDING, "class1", "user1");
+        viewModel.createPost(FeedItemType.PENDING, "class1", "user1");
 
-        verify(mockRepository).createPost(any(), any(), any(), successCaptor.capture(), errorCaptor.capture());
+        verify(mockRepository).createPost(any(), any(), successCaptor.capture(), errorCaptor.capture());
 
         // Simulate failure
         errorCaptor.getValue().accept(new Exception("Something went wrong"));
