@@ -16,10 +16,21 @@ import androidx.navigation.ui.NavigationUI;
 import com.example.eduview.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+/**
+ * The activity where all of the main functionality is present.
+ */
 public class MainActivity extends AppCompatActivity {
 
     private MainViewModel mainViewModel;
 
+    /**
+     * Sets up the layout of the main activity and the corresponding view model on the creation of
+     * the activity.
+     * @param savedInstanceState If the activity is being re-initialized after
+     *     previously being shut down then this Bundle contains the data it most
+     *     recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>
+     *
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,7 +42,9 @@ public class MainActivity extends AppCompatActivity {
         setupViewModel();
     }
 
-    /** Layout and padding setup */
+    /**
+     * Layout and padding setup
+     */
     private void setupLayout() {
         EdgeToEdge.enable(this);
 
@@ -52,7 +65,9 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    /** Initialize ViewModel and start session */
+    /**
+     * Initialize ViewModel and start session
+     */
     private void setupViewModel() {
         // Get ViewModel
         mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
@@ -61,12 +76,16 @@ public class MainActivity extends AppCompatActivity {
         mainViewModel.startSession(this::onSessionReady);
     }
 
-    /** Callback invoked once the session/user info is ready */
+    /**
+     * Callback invoked once the session/user info is ready
+     */
     private void onSessionReady() {
         // Safe: user info exists, now we can set up navigation
         setupNavigation();
     }
-    /** Setup bottom navigation and NavController */
+    /**
+     * Setup bottom navigation and NavController
+     */
     private void setupNavigation() {
         BottomNavigationView bottomNav = findViewById(R.id.MainBottomNavigationView);
         bottomNav.getMenu().clear();
@@ -88,6 +107,10 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(bottomNav, navController);
     }
 
+    /**
+     * Returns the main view model.
+     * @return the main view model
+     */
     public MainViewModel getMainViewModel() {
         return this.mainViewModel;
     }

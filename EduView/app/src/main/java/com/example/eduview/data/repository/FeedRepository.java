@@ -15,12 +15,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Repository for loading and moderating classroom feed data from Firebase Database.
+ */
 public class FeedRepository {
 
     private final DatabaseReference classroomRef;
     private final DatabaseReference postsRef;
     private final DatabaseReference userRef;
 
+    /**
+     * Creates a repository with default Firebase references.
+     */
     public FeedRepository() {
         this(
                 FirebaseDatabase.getInstance().getReference("classrooms"),
@@ -29,6 +35,13 @@ public class FeedRepository {
         );
     }
 
+    /**
+     * Creates a repository with in use Firebase references.
+     *
+     * @param classroomRef reference to classrooms data
+     * @param postsRef reference to posts data
+     * @param userRef reference to users data
+     */
     public FeedRepository(DatabaseReference classroomRef,
                           DatabaseReference postsRef,
                           DatabaseReference userRef) {
@@ -37,150 +50,204 @@ public class FeedRepository {
         this.userRef = userRef;
     }
 
+    /**
+     * Loads published posts for a classroom.
+     *
+     * @param classroomId classroom identifier
+     * @return LiveData containing published posts
+     */
     public LiveData<List<FeedItem>> fetchPublishedPosts(String classroomId) {
         Log.d("FeedRepository", "Fetching published posts for classroom: " + classroomId);
 
+        // LiveData is returned immediately and will be filled later.
         MutableLiveData<List<FeedItem>> liveData = new MutableLiveData<>();
+
+        // Guard against invalid classroom IDs to avoid errors.
         if (classroomId == null || classroomId.isEmpty()) {
             Log.e("FeedRepository", "fetchPublishedPosts: classroomId is null");
             liveData.setValue(new ArrayList<>());
             return liveData;
         }
 
+        // Navigate to the published posts list stored under the classroom feed node.
         classroomRef.child(classroomId)
                 .child("feed")
                 .child("published_posts")
                 .get()
                 .addOnSuccessListener(snapshot -> {
-
                     Log.d("FeedRepository", "Published posts snapshot received");
 
+                    // If no posts exist yet, return an empty list.
                     if (!snapshot.exists()) {
-                        Log.d("FeedRepository", "No published posts found for classroom: " + classroomId);
                         liveData.setValue(new ArrayList<>());
                         return;
                     }
 
                     List<String> postIds = new ArrayList<>();
+
+                    // Collect the post IDs.
                     for (DataSnapshot postRef : snapshot.getChildren()) {
                         String postId = postRef.getKey();
-                        Log.d("FeedRepository", "Post ID found: " + postId);
                         if (postId != null) {
                             postIds.add(postId);
                         }
                     }
 
+                    // Reverse the IDs so newer inserted items are processed earlier.
                     Collections.reverse(postIds);
+
+                    // Resolve the IDs into actual FeedItem objects.
                     fetchFeedItem(postIds, FeedItemType.PUBLISHED, liveData);
-                    Log.d("FeedRepository", "Total posts found: " + snapshot.getChildrenCount());
                 })
                 .addOnFailureListener(e -> {
                     Log.e("FeedRepository", "Failed to fetch post ids", e);
+
+                    // On failure, return an empty list.
                     liveData.setValue(new ArrayList<>());
                 });
+
         return liveData;
     }
 
+    /**
+     * Loads pending posts for a classroom.
+     *
+     * @param classroomId classroom identifier
+     * @return LiveData containing pending posts
+     */
     public LiveData<List<FeedItem>> fetchPendingPosts(String classroomId) {
         Log.d("FeedRepository", "Fetching pending posts for classroom: " + classroomId);
 
+        // This LiveData will eventually contain all pending feed items.
         MutableLiveData<List<FeedItem>> liveData = new MutableLiveData<>();
+
+        // Stop early if the classroom ID is missing.
         if (classroomId == null || classroomId.isEmpty()) {
             Log.e("FeedRepository", "fetchPendingPosts: classroomId is null");
             liveData.setValue(new ArrayList<>());
             return liveData;
         }
 
+        // Request the pending post references for the classroom.
         classroomRef.child(classroomId)
                 .child("feed")
                 .child("pending")
                 .get()
                 .addOnSuccessListener(snapshot -> {
-
                     Log.d("FeedRepository", "Pending posts snapshot received");
 
+                    // No pending node means there are simply no pending posts.
                     if (!snapshot.exists()) {
-                        Log.d("FeedRepository", "No pending posts found for classroom: " + classroomId);
                         liveData.setValue(new ArrayList<>());
                         return;
                     }
 
                     List<String> postIds = new ArrayList<>();
+
+                    // Extract all pending post IDs from the snapshot.
                     for (DataSnapshot postRef : snapshot.getChildren()) {
                         String postId = postRef.getKey();
-                        Log.d("FeedRepository", "Post ID found: " + postId);
                         if (postId != null) {
                             postIds.add(postId);
                         }
                     }
 
+                    // Reverse order so newer references appear first.
                     Collections.reverse(postIds);
+
+                    // Resolve each ID into a feed item.
                     fetchFeedItem(postIds, FeedItemType.PENDING, liveData);
-                    Log.d("FeedRepository", "Total posts found: " + snapshot.getChildrenCount());
                 })
                 .addOnFailureListener(e -> {
                     Log.e("FeedRepository", "Failed to fetch post ids", e);
+
+                    // Publish an empty result if the fetch fails.
                     liveData.setValue(new ArrayList<>());
                 });
+
         return liveData;
     }
 
+    /**
+     * Loads announcements for a classroom.
+     *
+     * @param classroomId classroom identifier
+     * @return LiveData containing announcements
+     */
     public LiveData<List<FeedItem>> fetchAnnouncements(String classroomId) {
         Log.d("FeedRepository", "Fetching announcements for classroom: " + classroomId);
 
+        // This observable list will be updated once Firebase returns the data.
         MutableLiveData<List<FeedItem>> liveData = new MutableLiveData<>();
+
+        // Validate input before reading from the database.
         if (classroomId == null || classroomId.isEmpty()) {
             Log.e("FeedRepository", "fetchAnnouncements: classroomId is null");
             liveData.setValue(new ArrayList<>());
             return liveData;
         }
 
+        // Read the announcements references for the classroom feed.
         classroomRef.child(classroomId)
                 .child("feed")
                 .child("announcements")
                 .get()
                 .addOnSuccessListener(snapshot -> {
-
                     Log.d("FeedRepository", "Announcements snapshot received");
 
+                    // If the announcements node is missing, return an empty list.
                     if (!snapshot.exists()) {
-                        Log.d("FeedRepository", "No announcements found for classroom: " + classroomId);
                         liveData.setValue(new ArrayList<>());
                         return;
                     }
 
                     List<String> postIds = new ArrayList<>();
+
+                    // Each child key represents one announcement post ID.
                     for (DataSnapshot postRef : snapshot.getChildren()) {
                         String postId = postRef.getKey();
-                        Log.d("FeedRepository", "Post ID found: " + postId);
                         if (postId != null) {
                             postIds.add(postId);
                         }
                     }
 
+                    // Reverse the order before detailed loading.
                     Collections.reverse(postIds);
+
+                    // Load the full feed items for those announcement IDs.
                     fetchFeedItem(postIds, FeedItemType.ANNOUNCEMENT, liveData);
-                    Log.d("FeedRepository", "Total posts found: " + snapshot.getChildrenCount());
                 })
                 .addOnFailureListener(e -> {
                     Log.e("FeedRepository", "Failed to fetch post ids", e);
+
+                    // Still notify observers with an empty set.
                     liveData.setValue(new ArrayList<>());
                 });
+
         return liveData;
     }
 
+    /**
+     * Resolves post IDs into full feed items and enriches them with author data when available.
+     *
+     * @param postIds post identifiers to resolve
+     * @param feedItemType type assigned to each resulting item
+     * @param liveData target LiveData for the final list
+     */
     private void fetchFeedItem(List<String> postIds, FeedItemType feedItemType, MutableLiveData<List<FeedItem>> liveData) {
         ArrayList<FeedItem> items = new ArrayList<>();
 
+        // If there are no IDs to resolve, publish an empty result immediately.
         if (postIds.isEmpty()) {
             liveData.setValue(items);
             return;
         }
 
-        Log.d("FeedRepository", "Fetching posts");
+        // Track how many asynchronous post loads have completed.
         final int[] completed = {0};
 
         for (String postId : postIds) {
+            // Load the post details from the posts table.
             postsRef.child(postId)
                     .get()
                     .addOnSuccessListener(snapshot -> {
@@ -189,9 +256,11 @@ public class FeedRepository {
                         String imageUrl = snapshot.child("imageUrl").getValue(String.class);
                         Long timestamp = snapshot.child("timestamp").getValue(Long.class);
 
+                        // Normalize nullable data so FeedItem creation does not return errors.
                         if (content == null) content = "";
                         if (timestamp == null) timestamp = 0L;
 
+                        // If there is no author, still create a valid feed item without author details.
                         if (author == null) {
                             completed[0]++;
 
@@ -201,20 +270,9 @@ public class FeedRepository {
                             item.setTimestamp(timestamp);
                             items.add(item);
 
+                            // Once all posts have been handled, sort and publish them.
                             if (completed[0] == postIds.size()) {
-                                boolean hasRealTimestamps = false;
-                                for (FeedItem feedItem : items) {
-                                    if (feedItem.getTimestamp() > 0) {
-                                        hasRealTimestamps = true;
-                                        break;
-                                    }
-                                }
-
-                                if (hasRealTimestamps) {
-                                    items.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
-                                }
-
-                                liveData.setValue(items);
+                                publishSortedItems(items, liveData);
                             }
                             return;
                         }
@@ -222,6 +280,7 @@ public class FeedRepository {
                         String finalContent = content;
                         Long finalTimestamp = timestamp;
 
+                        // If the post has an author, load the author's display data too.
                         userRef.child(author)
                                 .get()
                                 .addOnSuccessListener(userSnapshot -> {
@@ -231,39 +290,30 @@ public class FeedRepository {
                                     String lastName = userSnapshot.child("last_name").getValue(String.class);
                                     String pfp = userSnapshot.child("pfp").getValue(String.class);
 
+                                    // Replace missing names with empty strings.
                                     if (firstName == null) firstName = "";
                                     if (lastName == null) lastName = "";
                                     String authorName = (firstName + " " + lastName).trim();
 
+                                    // Build the final feed item with author data.
                                     FeedItem item = new FeedItem(feedItemType, author, finalContent);
                                     item.setAuthorName(authorName);
-                                    Log.d("FeedRepository", "AUTHOR NAME" + item.getAuthorName());
                                     item.setPostId(postId);
                                     item.setImageUrl(imageUrl);
                                     item.setTimestamp(finalTimestamp);
                                     item.setAuthorPfpName(pfp);
                                     items.add(item);
 
+                                    // Publish only after every post request has finished.
                                     if (completed[0] == postIds.size()) {
-                                        boolean hasRealTimestamps = false;
-                                        for (FeedItem feedItem : items) {
-                                            if (feedItem.getTimestamp() > 0) {
-                                                hasRealTimestamps = true;
-                                                break;
-                                            }
-                                        }
-
-                                        if (hasRealTimestamps) {
-                                            items.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
-                                        }
-
-                                        liveData.setValue(items);
+                                        publishSortedItems(items, liveData);
                                     }
                                 })
                                 .addOnFailureListener(e -> {
                                     completed[0]++;
                                     Log.e("FeedRepository", "Failed to fetch author name", e);
 
+                                    // If author lookup fails, keep the post but without author info.
                                     FeedItem item = new FeedItem(feedItemType, author, finalContent);
                                     item.setPostId(postId);
                                     item.setImageUrl(imageUrl);
@@ -271,19 +321,7 @@ public class FeedRepository {
                                     items.add(item);
 
                                     if (completed[0] == postIds.size()) {
-                                        boolean hasRealTimestamps = false;
-                                        for (FeedItem feedItem : items) {
-                                            if (feedItem.getTimestamp() > 0) {
-                                                hasRealTimestamps = true;
-                                                break;
-                                            }
-                                        }
-
-                                        if (hasRealTimestamps) {
-                                            items.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
-                                        }
-
-                                        liveData.setValue(items);
+                                        publishSortedItems(items, liveData);
                                     }
                                 });
                     })
@@ -291,46 +329,77 @@ public class FeedRepository {
                         completed[0]++;
                         Log.e("FeedRepository", "Failed to fetch post", e);
 
+                        // Even failed post loads count toward completion so it can finish.
                         if (completed[0] == postIds.size()) {
-                            boolean hasRealTimestamps = false;
-                            for (FeedItem feedItem : items) {
-                                if (feedItem.getTimestamp() > 0) {
-                                    hasRealTimestamps = true;
-                                    break;
-                                }
-                            }
-
-                            if (hasRealTimestamps) {
-                                items.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
-                            }
-
-                            liveData.setValue(items);
+                            publishSortedItems(items, liveData);
                         }
                     });
         }
     }
 
-    public void approvePost(String classroomId, String postId) {
+    /**
+     * Sorts items by timestamp when available and publishes them.
+     *
+     * @param items feed items to publish
+     * @param liveData target LiveData
+     */
+    private void publishSortedItems(List<FeedItem> items, MutableLiveData<List<FeedItem>> liveData) {
+        boolean hasRealTimestamps = false;
 
+        // Check whether sorting by timestamp is meaningful.
+        for (FeedItem feedItem : items) {
+            if (feedItem.getTimestamp() > 0) {
+                hasRealTimestamps = true;
+                break;
+            }
+        }
+
+        // Only sort when at least one real timestamp exists.
+        if (hasRealTimestamps) {
+            items.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
+        }
+
+        // Publish the final list to observers.
+        liveData.setValue(items);
+    }
+
+    /**
+     * Moves a pending post into the published list.
+     *
+     * @param classroomId classroom identifier
+     * @param postId post identifier
+     */
+    public void approvePost(String classroomId, String postId) {
+        // Reference to the pending entry that should be removed after approval.
         DatabaseReference pendingRef = classroomRef
                 .child(classroomId)
                 .child("feed")
                 .child("pending")
                 .child(postId);
 
+        // Reference to the published entry where the approved post should be added.
         DatabaseReference publishedRef = classroomRef
                 .child(classroomId)
                 .child("feed")
                 .child("published_posts")
                 .child(postId);
 
-        publishedRef.setValue(true).addOnSuccessListener(aVoid -> pendingRef.removeValue())
+        // First mark the post as published, then remove it from pending.
+        publishedRef.setValue(true)
+                .addOnSuccessListener(aVoid -> pendingRef.removeValue())
                 .addOnFailureListener(e ->
                         Log.e("FeedRepository", "Failed to approve post", e)
                 );
     }
 
+    /**
+     * Removes a pending post from the classroom feed.
+     *
+     * @param classroomId classroom identifier
+     * @param postId post identifier
+     */
     public void rejectPost(String classroomId, String postId) {
+        // Rejecting simply deletes the post reference from the pending list.
         classroomRef.child(classroomId)
                 .child("feed")
                 .child("pending")

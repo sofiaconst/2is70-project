@@ -8,21 +8,38 @@ import com.example.eduview.R;
 import com.example.eduview.data.model.User;
 import com.example.eduview.data.repository.SessionManager;
 
+/**
+ * The ViewModel that manages the application's session state.
+ * Handles user session initialization, role-based UI decisions, and logout.
+ */
 public class MainViewModel extends ViewModel {
     private final SessionManager sessionManager;
     private User currentUser;
 
+    /**
+     * Default constructor using the SessionManager.
+     */
     public MainViewModel() {
         this(SessionManager.getInstance());
     }
 
-    //Constructor for Testing
+    /**
+     * Constructor used mainly for testing.
+     *
+     * @param sessionManager the session manager to use
+     */
     public MainViewModel(SessionManager sessionManager) {
         this.sessionManager = sessionManager;
     }
 
+    /**
+     * Initializes the user session and executes the callback.
+     *
+     * @param onUserReady callback when the user is successfully loaded
+     */
     public void startSession(Runnable onUserReady) {
         sessionManager.initializeSession(new SessionManager.SessionCallback() {
+            // On success of initializing the session
             @Override
             public void onSuccess(User user) {
                 currentUser = user;
@@ -32,6 +49,7 @@ public class MainViewModel extends ViewModel {
                 }
             }
 
+            // On error when initializing the session
             @Override
             public void onError(Exception e) {
                 Log.e("MainViewModel", "Failed to initialize session", e);
@@ -39,6 +57,12 @@ public class MainViewModel extends ViewModel {
         });
     }
 
+    /**
+     * Returns the corresponding bottom navigation menu resource based on the user's role.
+     *
+     * @return menu resource ID corresponding to the user's role
+     * @throws IllegalStateException if the user has not been initialized yet
+     */
     public int getMenuResForUser() {
         if (currentUser == null) {
             throw new IllegalStateException("User not loaded yet. Call startSession() first.");

@@ -24,16 +24,26 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+/**
+ * Fragment for displaying the feed screen.
+ * It initializes tabs, loads posts based on the user role,
+ * and handles retrying when the user session is not ready.
+ */
 public class FeedFragment extends Fragment {
 
-    private MainViewModel mainViewModel;
-    private FeedViewModel feedViewModel;
     private User user;
 
-    private TabLayout teacherTabs;
-    private ViewPager2 viewPager;
     private FloatingActionButton btnReloadFeed;
 
+    // View Models
+    private MainViewModel mainViewModel;
+    private FeedViewModel feedViewModel;
+
+    // Tab Logic
+    private TabLayout teacherTabs;
+    private ViewPager2 viewPager;
+
+    // Retry Logic
     private final Handler handler = new Handler(Looper.getMainLooper());
     private int retryCount = 0;
     private static final int MAX_RETRIES = 10;
@@ -43,39 +53,75 @@ public class FeedFragment extends Fragment {
         // Required empty public constructor
     }
 
+    /**
+     * Factory method for creating a new instance of FeedFragment.
+     *
+     * @return a new instance of FeedFragment
+     */
     public static FeedFragment newInstance(String param1, String param2) {
         FeedFragment fragment = new FeedFragment();
         Bundle args = new Bundle();
         return fragment;
     }
 
+    /**
+     * Loads previous state when the fragment is being created if its not null.
+     *
+     * @param savedInstanceState If the fragment is being re-created from
+     * a previous saved state, this is the state.
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d("FeedFragment", "OnCreate");
     }
 
+    /**
+     * Inflates the layout and initializes ViewModels when the view is created.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return the inflated view for this fragment
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Log.d("FeedFragment", "Fragment created");
 
+        // Inflate layout
         View view = inflater.inflate(R.layout.fragment_feed, container, false);
+
+        // Initialize ViewModels
         mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
         feedViewModel = new ViewModelProvider(this).get(FeedViewModel.class);
 
         return view;
     }
 
+    /**
+     * Initializes UI components and sets listeners after the view has been created.
+     *
+     * @param view The View returned by {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Log.d("FeedFragment", "View is created");
 
+        // Initialize UI elements to set up tabs and reload function
         teacherTabs = view.findViewById(R.id.TeacherTabs);
         viewPager = view.findViewById(R.id.viewPager);
         btnReloadFeed = view.findViewById(R.id.btnReloadFeed);
 
+        // Listeners for the reload button
         btnReloadFeed.setOnClickListener(v -> {
             Log.d("FeedFragment", "Reload button clicked");
             
@@ -83,15 +129,22 @@ public class FeedFragment extends Fragment {
             Animation rotation = AnimationUtils.loadAnimation(requireContext(), R.anim.rotate_refresh);
             v.startAnimation(rotation);
 
+            // Reload feed data
             feedViewModel.reloadAll();
         });
 
+        // Try to setup the feed
         trySetupFeed();
     }
 
+    /**
+     * Attempts to initialize the feed. If the user is not yet available,
+     * retries up to MAX_RETRIES times.
+     */
     private void trySetupFeed() {
         user = mainViewModel.getCurrentUser();
 
+        // Retry if user is not loaded
         if (user == null) {
             retryCount++;
             Log.e("FeedFragment", "Current user is NULL, retry " + retryCount);
@@ -107,14 +160,17 @@ public class FeedFragment extends Fragment {
 
         boolean isTeacher = user.getRole() == UserRole.TEACHER;
 
+        // Setup adapter for tabs
         viewPager.setAdapter(new FeedTabViewAdapter(this, isTeacher));
 
+        // Attach TabLayout to ViewPager
         new TabLayoutMediator(teacherTabs, viewPager, (tab, position) -> {
             if (position == 0) tab.setText(getString(R.string.feed_title_1));
             else if (position == 1) tab.setText(getString(R.string.feed_title_2));
             else if (position == 2 && isTeacher) tab.setText(getString(R.string.feed_title_3));
         }).attach();
 
+        // Load feed data
         feedViewModel.loadPostsForUser(user);
         feedViewModel.loadPublishedPosts();
         feedViewModel.loadAnnouncements();
@@ -126,6 +182,10 @@ public class FeedFragment extends Fragment {
         Log.d("FeedFragment", "Loading feed for user");
     }
 
+    /**
+     * Cleans up pending handler callbacks to prevent memory leaks when the fragment view
+     * is destroyed.
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();

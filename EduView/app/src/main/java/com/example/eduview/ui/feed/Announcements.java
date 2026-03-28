@@ -22,21 +22,49 @@ import com.example.eduview.ui.main.MainViewModel;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+/**
+ * Fragment responsible for displaying announcements.
+ * Shows a standard announcements list for teachers and students,
+ * and child-specific tabs for parents.
+ */
 public class Announcements extends Fragment {
 
     private RecyclerView recyclerAnnouncement;
     private FeedAdapter feedAdapter;
 
+    /**
+     * Default constructor.
+     */
     public Announcements() {
         // Required empty public constructor
     }
 
+    /**
+     * Inflates the announcements fragment layout.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return inflated fragment view
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_announcements, container, false);
     }
 
+    /**
+     * Initializes the appropriate UI depending on the user's role.
+     *
+     * @param view The View returned by {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -57,6 +85,12 @@ public class Announcements extends Fragment {
         }
     }
 
+    /**
+     * Sets up the announcements list for students and teachers.
+     *
+     * @param view fragment root view
+     * @param feedViewModel shared feed ViewModel
+     */
     private void setupNormalAnnouncementsList(@NonNull View view, @NonNull FeedViewModel feedViewModel) {
         RecyclerView recyclerAnnouncements = view.findViewById(R.id.recyclerAnnouncements);
         View emptyAnnouncementsState = view.findViewById(R.id.emptyAnnouncementsState);
@@ -80,6 +114,13 @@ public class Announcements extends Fragment {
         });
     }
 
+    /**
+     * Observes announcements and updates the list or empty state.
+     *
+     * @param feedViewModel shared feed ViewModel
+     * @param recyclerAnnouncements RecyclerView displaying announcements
+     * @param emptyAnnouncementsState view shown when there are no announcements
+     */
     private void observeAnnouncements(@NonNull FeedViewModel feedViewModel,
                                       @NonNull RecyclerView recyclerAnnouncements,
                                       @NonNull View emptyAnnouncementsState) {
@@ -100,6 +141,14 @@ public class Announcements extends Fragment {
         }
     }
 
+    /**
+     * Sets up child-specific announcement tabs for parent users.
+     * Each tab shows announcements for one child’s classroom.
+     *
+     * @param view fragment root view
+     * @param feedViewModel shared feed ViewModel
+     * @param parent current parent user
+     */
     private void setupParentTabs(@NonNull View view,
                                  @NonNull FeedViewModel feedViewModel,
                                  @NonNull Parent parent) {

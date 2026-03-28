@@ -22,7 +22,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Fragment for collecting child account information
+ * during the parent sign up flow.
+ * Allows adding and removing up to five child forms.
+ */
 public class ParentSignupFragment extends Fragment {
+
+    /**
+     * Returns the current number of child forms shown in the UI.
+     *
+     * @return number of child forms
+     */
     public int getCounter() {
         return counter;
     }
@@ -30,6 +41,19 @@ public class ParentSignupFragment extends Fragment {
     private int counter = 1;
     private List<View> formList = new ArrayList<>();
 
+    /**
+     * Inflates the parent sign up layout and initializes the child form controls.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return inflated fragment view
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -41,9 +65,11 @@ public class ParentSignupFragment extends Fragment {
         Button plus = view.findViewById(R.id.btn_plus);
         TextView counterText = view.findViewById(R.id.tv_counter);
 
+        // Initialize counter display and create the first child form
         counterText.setText(String.valueOf(counter));
         addForm(view);
 
+        // Remove the last child form if above minimum
         minus.setOnClickListener(v -> {
             if (counter > 1) {
                 counter--;
@@ -52,6 +78,7 @@ public class ParentSignupFragment extends Fragment {
             }
         });
 
+        // Add another child form if below maximum
         plus.setOnClickListener(v -> {
             if (counter < 5) {
                 counter++;
@@ -63,6 +90,11 @@ public class ParentSignupFragment extends Fragment {
         return view;
     }
 
+    /**
+     * Adds a new child input form to the container.
+     *
+     * @param view root view containing the form container
+     */
     private void addForm(View view) {
         LinearLayout formContainer = view.findViewById(R.id.formContainer);
 
@@ -76,6 +108,11 @@ public class ParentSignupFragment extends Fragment {
         formList.add(form);
     }
 
+    /**
+     * Removes the last child input form from the container if more than one exists.
+     *
+     * @param view root view containing the form container
+     */
     private void removeForm(View view) {
         LinearLayout formContainer = view.findViewById(R.id.formContainer);
 
@@ -87,6 +124,13 @@ public class ParentSignupFragment extends Fragment {
         }
     }
 
+    /**
+     * Collects and validates all child form inputs.
+     * Returns a list of child information if all fields are valid,
+     * otherwise returns null.
+     *
+     * @return list of child info objects, or null if validation fails
+     */
     public List<AuthService.ChildInfo> getChildrenInfo() {
         List<AuthService.ChildInfo> children = new ArrayList<>();
         Set<String> usernames = new HashSet<>();
@@ -108,6 +152,7 @@ public class ParentSignupFragment extends Fragment {
                 etChildLastName.setBackgroundResource(R.drawable.bg_input_rounded);
                 etChildUsername.setBackgroundResource(R.drawable.bg_input_rounded);
 
+                // Validate child information
                 if (firstName.isEmpty()) {
                     etChildFirstName.setBackgroundResource(R.drawable.bg_input_error);
                     allValid = false;
@@ -123,6 +168,7 @@ public class ParentSignupFragment extends Fragment {
 
                 if (!allValid) continue;
 
+                // Validate username format
                 if (username.contains("@") || username.contains(" ")) {
                     etChildUsername.setBackgroundResource(R.drawable.bg_input_error);
                     Toast.makeText(getContext(), "Username must not contain space characters nor @ symbols", Toast.LENGTH_SHORT).show();
@@ -130,6 +176,7 @@ public class ParentSignupFragment extends Fragment {
                     continue;
                 }
 
+                // Prevent duplicate usernames in the same form submission
                 if (usernames.contains(username.toLowerCase())) {
                     etChildUsername.setBackgroundResource(R.drawable.bg_input_error);
                     Toast.makeText(getContext(), "Duplicate username within form: " + username, Toast.LENGTH_SHORT).show();
@@ -137,7 +184,8 @@ public class ParentSignupFragment extends Fragment {
                     continue;
                 }
                 usernames.add(username.toLowerCase());
-                
+
+                // Convert username to email format
                 String email = username.toLowerCase() + "@eduview.com";
                 children.add(new AuthService.ChildInfo(firstName, lastName, email));
             }
@@ -145,6 +193,11 @@ public class ParentSignupFragment extends Fragment {
         return allValid ? children : null;
     }
 
+    /**
+     * Marks the child username field matching the provided email as invalid.
+     *
+     * @param email child email whose username field should be highlighted
+     */
     public void markUsernameError(String email) {
         String username = email.replace("@eduview.com", "");
         for (View form : formList) {
@@ -156,6 +209,9 @@ public class ParentSignupFragment extends Fragment {
         }
     }
 
+    /**
+     * Resets all child form input backgrounds to their default state.
+     */
     public void resetFields() {
         for (View form : formList) {
             form.findViewById(R.id.et_child_first_name).setBackgroundResource(R.drawable.bg_input_rounded);

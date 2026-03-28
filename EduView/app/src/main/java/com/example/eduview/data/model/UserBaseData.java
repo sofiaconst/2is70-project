@@ -1,5 +1,8 @@
 package com.example.eduview.data.model;
 
+/**
+ * Essentially the User class but used for parsing in User Repository.
+ */
 public class UserBaseData {
     public String firstName;
     public String lastName;

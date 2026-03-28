@@ -17,32 +17,53 @@ import com.example.eduview.data.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ViewModel responsible for managing feed data for different user roles.
+ * Handles loading posts, announcements, pending posts,
+ * and refresh or moderation actions.
+ */
 public class FeedViewModel extends ViewModel {
 
+    // Repositories
     private FeedRepository feedRepository;
     private UserRepository userRepository;
 
+    // Feed Items
     private LiveData<List<FeedItem>> publishedPosts;
     private LiveData<List<FeedItem>> announcements;
     private LiveData<List<FeedItem>> pendingPosts;
-
     private final MutableLiveData<List<Student>> parentChildren = new MutableLiveData<>(new ArrayList<>());
+
+    // Refresh
     private final MutableLiveData<Integer> refreshTrigger = new MutableLiveData<>(0);
 
     private String classroomId;
     private User currentUser;
 
-    // normal app constructor
+    /**
+     * Creates a FeedViewModel with default repository implementations.
+     */
     public FeedViewModel() {
         this(new FeedRepository(), new UserRepository());
     }
 
-    // test-friendly constructor
+    /**
+     * Creates a FeedViewModel with injected repositories.
+     *
+     * @param feedRepository repository used for feed-related operations
+     * @param userRepository repository used for user-related operations
+     */
     public FeedViewModel(FeedRepository feedRepository, UserRepository userRepository) {
         this.feedRepository = feedRepository;
         this.userRepository = userRepository;
     }
 
+    /**
+     * Determines and stores the classroom ID for the given user.
+     * Teachers and students are linked to a classroom, parents are not.
+     *
+     * @param user current user for whom feed data should be loaded
+     */
     public void loadPostsForUser(User user) {
         currentUser = user;
         classroomId = null;
@@ -56,6 +77,12 @@ public class FeedViewModel extends ViewModel {
         Log.d("FeedViewModel", "Class id found for class: " + classroomId);
     }
 
+    /**
+     * Loads the children associated with a parent user.
+     * Only children who are assigned to a classroom are included.
+     *
+     * @param parent parent whose children should be fetched
+     */
     public void loadChildrenForParent(Parent parent) {
         List<String> childIds = parent.getChildrenIDs();
 
@@ -104,38 +131,78 @@ public class FeedViewModel extends ViewModel {
         }
     }
 
+    /**
+     * Loads published posts for the current classroom.
+     */
     public void loadPublishedPosts() {
         publishedPosts = feedRepository.fetchPublishedPosts(classroomId);
     }
 
+    /**
+     * Loads announcements for the current classroom.
+     */
     public void loadAnnouncements() {
         announcements = feedRepository.fetchAnnouncements(classroomId);
     }
 
+    /**
+     * Loads pending posts for the current classroom.
+     */
     public void loadPendingPosts() {
         pendingPosts = feedRepository.fetchPendingPosts(classroomId);
     }
 
+    /**
+     * Returns the published posts LiveData.
+     *
+     * @return LiveData containing published posts
+     */
     public LiveData<List<FeedItem>> getPublishedPosts() {
         return publishedPosts;
     }
 
+    /**
+     * Returns the announcements LiveData.
+     *
+     * @return LiveData containing announcements
+     */
     public LiveData<List<FeedItem>> getAnnouncements() {
         return announcements;
     }
 
+    /**
+     * Returns the pending posts LiveData.
+     *
+     * @return LiveData containing pending posts
+     */
     public LiveData<List<FeedItem>> getPendingPosts() {
         return pendingPosts;
     }
 
+    /**
+     * Returns the list of children associated with the current parent.
+     *
+     * @return LiveData containing parent children
+     */
     public LiveData<List<Student>> getParentChildren() {
         return parentChildren;
     }
 
+    /**
+     * Returns a trigger value used to notify observers of manual refresh events.
+     *
+     * @return LiveData refresh counter
+     */
     public LiveData<Integer> getRefreshTrigger() {
         return refreshTrigger;
     }
 
+    /**
+     * Reloads all feed data for the current user.
+     * Teachers reload published, announcement, and pending posts.
+     * Students reload published and announcement posts.
+     * Parents do not reload classroom feed posts.
+     */
     public void reloadAll() {
         Log.d("FeedViewModel", "Reloading all feed data");
 
@@ -160,6 +227,11 @@ public class FeedViewModel extends ViewModel {
         refreshTrigger.setValue(currentValue + 1);
     }
 
+    /**
+     * Approves a pending post for the current classroom and refreshes the feed.
+     *
+     * @param postId ID of the post to approve
+     */
     public void approvePost(String postId) {
         if (classroomId == null || classroomId.isEmpty()) {
             Log.e("FeedViewModel", "Cannot approve post, classroomId is null");
@@ -170,6 +242,11 @@ public class FeedViewModel extends ViewModel {
         reloadAll();
     }
 
+    /**
+     * Rejects a pending post for the current classroom and refreshes the feed.
+     *
+     * @param postId ID of the post to reject
+     */
     public void rejectPost(String postId) {
         if (classroomId == null || classroomId.isEmpty()) {
             Log.e("FeedViewModel", "Cannot reject post, classroomId is null");

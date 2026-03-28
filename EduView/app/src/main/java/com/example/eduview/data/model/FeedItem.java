@@ -4,6 +4,10 @@ import android.view.ViewDebug;
 
 import com.google.firebase.database.Exclude;
 
+/**
+ * Represents a feed item (published post, announcement, pending post in the system.
+ * Contains information about the type, ID and contents of the feed item.
+ */
 public class FeedItem {
     @Exclude
     private FeedItemType type;
@@ -20,35 +24,78 @@ public class FeedItem {
     @Exclude
     private String authorPfpName;
 
+    /**
+     * Creates a new FeedItem with a type, author ID, caption and sets the author name to empty.
+     * @param type type of FeedItem
+     * @param authorId the feed item author's ID
+     * @param caption the caption of the feed item
+     */
     public FeedItem(FeedItemType type, String authorId, String caption) {
         this.type = type;
         this.authorId = authorId;
         this.caption = caption;
         authorName = "";
     }
+
+    /**
+     * Returns the type of the feed item.
+     * @return the type of the feed item
+     */
     @Exclude
     public FeedItemType getType() {
         return type;
     }
+
+    /**
+     * Returns the ID of the feed item.
+     * @return the ID of the feed item
+     */
     @Exclude
     public String getPostId() {
         return postId;
     }
+
+    /**
+     * Returns the author of the feed item
+     * @return the author of the feed item
+     */
     @Exclude
     public String getAuthorName() {
         return authorName;
     }
+
+    /**
+     * Returns the ID of the feed item author.
+     * @return the ID of the feed item author
+     */
     public String getAuthorId() { return authorId; }
 
+    /**
+     * Returns the caption of the feed item.
+     * @return the caption of the feed item
+     */
     public String getCaption() {
         return caption;
     }
 
+    /**
+     * Returns the image URL.
+     * @return the image URL
+     */
     public String getImageUrl() {
         return imageUrl;
     }
 
+    /**
+     * Returns the time in which the feed item was created.
+     * @return the time in which the feed item was created
+     */
     public long getTimestamp() { return timestamp; }
+
+    /**
+     * Returns the name of the picture that the author uses in their profile.
+     * @return the name of the picture that the author uses in their profile
+     */
     @Exclude
     public String getAuthorPfpName() {
         return authorPfpName;

@@ -37,42 +37,46 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
 
+/**
+ * Fragment that displays and manages the user profile screen.
+ * Handles role-based UI (student, teacher, parent), user actions, and UI rendering.
+ */
 public class ProfileFragment extends Fragment {
 
-    // --------------------- VIEWMODEL --------------------- //
+    // View Model
     private ProfileViewModel profileVM;
 
-    // --------------------- BASE UI --------------------- //
+    // Base UI
     private ImageView ivPfp;
     private TextView tvEditPfp;
     private TextView tvFullName, tvUserRole, tvClassLabel;
     private MaterialButton btnLogout;
 
-    // --------------------- QR SECTION --------------------- //
+    // QR Code Section
     private MaterialCardView cardQRCode;
     private TextView tvQRCodeLabel;
     private ImageView ivQRCode;
     private MaterialButton btnScanQR;
 
 
-    // --------------------- STUDENT: CLASS INFO --------------------- //
+    // Student Class Info
     private MaterialCardView cardClassInfo;
     private TextView tvClassName, tvTeacherName, tvNotRegistered;
 
-    // --------------------- PARENT: MY CHILDREN --------------------- //
+    // Parent Children Info
     private MaterialCardView cardMyChildren;
     private TextView tvNoChildren;
     private RecyclerView rvChildren;
     private ChildAdapter childAdapter;
     private View btnAddChild;
 
-    // --------------------- TEACHER: MANGAE STUDENTS --------------------- //
+    // Teacher Student Manager
     private MaterialCardView cardManageStudents;
     private ProgressBar pbStudents;
     private RecyclerView rvStudents;
     private StudentManagerAdapter studentManagerAdapter;
 
-    // --------------------- FEATURES --------------------- //
+    // Profile Features
     private StudentProfileFeature studentFeature;
     private TeacherProfileFeature teacherFeature;
     private ParentProfileFeature parentFeature;
@@ -80,11 +84,26 @@ public class ProfileFragment extends Fragment {
     public ProfileFragment() {
     }
 
+    /**
+     * Initializes the different views needed in the profile fragment when the fragment view is
+     * initially created.
+     *
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return the base profile view xml
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_profile, container, false);
 
+        // Methods for different views
         initBaseViews(root);
         initClassQRCodeViews(root);
         initClassInfoViews(root);
@@ -94,6 +113,11 @@ public class ProfileFragment extends Fragment {
         return root;
     }
 
+    /**
+     * Initializes basic profile UI components.
+     *
+     * @param root the base profile view xml
+     */
     private void initBaseViews(View root) {
         tvFullName = root.findViewById(R.id.User_name_text);
         tvUserRole = root.findViewById(R.id.textViewRole);
@@ -103,6 +127,11 @@ public class ProfileFragment extends Fragment {
         btnLogout = root.findViewById(R.id.buttonLogout);
     }
 
+    /**
+     * Initializes QR code related UI components.
+     *
+     * @param root the base profile view xml
+     */
     private void initClassQRCodeViews(View root) {
         tvQRCodeLabel = root.findViewById(R.id.tvQRLabel);
         cardQRCode = root.findViewById(R.id.cardQRCode);
@@ -110,12 +139,22 @@ public class ProfileFragment extends Fragment {
         btnScanQR = root.findViewById(R.id.buttonScanQR);
     }
 
+    /**
+     * Initializes student class information UI.
+     *
+     * @param root the base profile view xml
+     */
     private void initClassInfoViews(View root) {
         cardClassInfo = root.findViewById(R.id.cardClassInfo);
         tvClassName = root.findViewById(R.id.tvClassName);
         tvTeacherName = root.findViewById(R.id.tvTeacherName);
     }
 
+    /**
+     * Initializes the parent's children list UI components.
+     *
+     * @param root the base profile view xml
+     */
     private void initMyChildrenViews(View root) {
         cardMyChildren = root.findViewById(R.id.cardMyChildren);
         rvChildren = root.findViewById(R.id.rvChildren);
@@ -123,29 +162,50 @@ public class ProfileFragment extends Fragment {
         btnAddChild = root.findViewById(R.id.btnAddChild);
     }
 
+    /**
+     * Initializes the teacher's manage students UI components.
+     *
+     * @param root the base profile view xml
+     */
     private void initManageStudentsViews(View root) {
         cardManageStudents = root.findViewById(R.id.manageStudentsCard);
         pbStudents = root.findViewById(R.id.progressStudents);
         rvStudents = root.findViewById(R.id.rvStudents);
     }
 
+    /**
+     * Initializes the ViewModel sets up listeners and features of different roles when the view is
+     * first created.
+     *
+     * @param view The View returned by {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Initializing Profile ViewModel
         profileVM = new ViewModelProvider(this).get(ProfileViewModel.class);
 
+        // Set up recycler views and listeners
         setupRecyclerViews();
         setupListeners();
 
+        // Set up different features depending on role
         studentFeature = new StudentProfileFeature(getView());
         teacherFeature = new TeacherProfileFeature(getView(), studentManagerAdapter);
         parentFeature = new ParentProfileFeature(getView(), childAdapter);
 
+        // Observes the UI state that should be shown
         profileVM.getUIState().observe(getViewLifecycleOwner(), this::render);
     }
 
+    /**
+     * Sets up RecyclerViews and their adapters.
+     */
     private void setupRecyclerViews() {
+        // Set up student manager view for teacher
         studentManagerAdapter = new StudentManagerAdapter(student -> {
             new AlertDialog.Builder(requireContext())
                     .setTitle("Remove student")
@@ -159,22 +219,29 @@ public class ProfileFragment extends Fragment {
         rvStudents.setLayoutManager(new LinearLayoutManager(getContext()));
         rvStudents.setAdapter(studentManagerAdapter);
 
+        // Initializing adapter for parent viewing children
         childAdapter = new ChildAdapter();
         rvChildren.setLayoutManager(new LinearLayoutManager(getContext()));
         rvChildren.setAdapter(childAdapter);
 
     }
 
+    /**
+     * Renders UI based on the provided state.
+     *
+     * @param state used to access the different role states
+     */
     private void render(ProfileUIState state) {
         if (state == null) return;
 
+        // Render basic user information
         tvFullName.setText(state.displayName);
         tvUserRole.setText(state.roleText);
         ivPfp.setImageResource(state.profilePictureResId);
 
         resetVisibility();
 
-
+        // Bind the feature to profile fragment according to the role state
         if (state.studentState != null) {
             studentFeature.bind(state);
         }
@@ -188,6 +255,9 @@ public class ProfileFragment extends Fragment {
         }
     }
 
+    /**
+     * Hides all optional UI sections before rendering a new state.
+     */
     private void resetVisibility() {
         cardQRCode.setVisibility(View.GONE);
         cardMyChildren.setVisibility(View.GONE);
@@ -195,6 +265,9 @@ public class ProfileFragment extends Fragment {
         cardClassInfo.setVisibility(View.GONE);
     }
 
+    /**
+     * Sets up UI listeners.
+     */
     private void setupListeners() {
         tvEditPfp.setOnClickListener(v -> showPfpSelectionDialog());
 
@@ -210,29 +283,43 @@ public class ProfileFragment extends Fragment {
 
     }
 
+    /**
+     * Displays a dialog allowing the user to select a profile picture.
+     */
     private void showPfpSelectionDialog() {
+        // Inflate the layout for the profile picture selection
         View dialogView = LayoutInflater.from(requireContext())
                 .inflate(R.layout.dialog_pfp_selection, null);
 
+        // Get reference to the RecyclerView that will display profile pictures
         RecyclerView rvPfps = dialogView.findViewById(R.id.rvPfpSelection);
 
+        // Create the dialog with a title and the custom layout
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setTitle("Choose Profile Picture")
                 .setView(dialogView)
                 .setNegativeButton("Cancel", null)
                 .create();
 
+        // Create listener for selecting a profile picture
         PfpAdapter adapter = new PfpAdapter(pfp -> {
+            // Update profile picture in ViewModel
             profileVM.updateProfilePicture(pfp);
             dialog.dismiss();
         });
 
+        // Set layout manager to display items in a grid
         rvPfps.setLayoutManager(new GridLayoutManager(requireContext(), 3));
+
+        // Attach adapter to RecyclerView
         rvPfps.setAdapter(adapter);
 
         dialog.show();
     }
 
+    /**
+     * Starts the QR scanner for joining a classroom.
+     */
     private void startScanner() {
         ScanOptions options = new ScanOptions();
         options.setCaptureActivity(CustomScannerActivity.class);
@@ -242,6 +329,9 @@ public class ProfileFragment extends Fragment {
         qrCodeLauncher.launch(options);
     }
 
+    /**
+     * Handles QR scan result and triggers class join.
+     */
     private final ActivityResultLauncher<ScanOptions> qrCodeLauncher = registerForActivityResult(
             new ScanContract(),
             result -> {
@@ -253,28 +343,35 @@ public class ProfileFragment extends Fragment {
             }
     );
 
+    /**
+     * Displays dialog for adding a child account.
+     */
     private void showAddChildDialog() {
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_child, null);
         AlertDialog dialog = new AlertDialog.Builder(getContext(), R.style.TransparentDialog)
                 .setView(dialogView)
                 .create();
 
+        // Child information
         EditText etFirstName = dialogView.findViewById(R.id.etChildFirstName);
         EditText etLastName = dialogView.findViewById(R.id.etChildLastName);
         EditText etUsername = dialogView.findViewById(R.id.etChildUsername);
         EditText etPassword = dialogView.findViewById(R.id.etParentPassword);
-        
+
+        // Get parent of child
         TextInputLayout tilFirstName = (TextInputLayout) etFirstName.getParent().getParent();
         TextInputLayout tilLastName = (TextInputLayout) etLastName.getParent().getParent();
         TextInputLayout tilUsername = (TextInputLayout) etUsername.getParent().getParent();
         TextInputLayout tilPassword = (TextInputLayout) etPassword.getParent().getParent();
 
+        // Initialize buttons
         Button btnAdd = dialogView.findViewById(R.id.btnAdd);
         Button btnCancel = dialogView.findViewById(R.id.btnCancel);
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
 
         btnAdd.setOnClickListener(v -> {
+            // User input
             String firstName = etFirstName.getText().toString().trim();
             String lastName = etLastName.getText().toString().trim();
             String username = etUsername.getText().toString().trim();
@@ -288,6 +385,7 @@ public class ProfileFragment extends Fragment {
             etUsername.setBackgroundResource(R.drawable.bg_input_rounded);
             etPassword.setBackgroundResource(R.drawable.bg_input_rounded);
 
+            // Validate inputs
             if (firstName.isEmpty()) {
                 etFirstName.setBackgroundResource(R.drawable.bg_input_error);
                 hasError = true;
@@ -309,10 +407,12 @@ public class ProfileFragment extends Fragment {
                 hasError = true;
             }
 
+            // Stop if validation failed
             if (hasError) {
                 return;
             }
 
+            // Trigger ViewModel action
             profileVM.addChild(firstName, lastName, username, password);
         });
 
@@ -321,6 +421,7 @@ public class ProfileFragment extends Fragment {
         profileVM.getAddChildStatus().observe(getViewLifecycleOwner(), status -> {
             if (status == null) return;
 
+            // States of child according to status
             if (status.equals("LOADING")) {
                 btnAdd.setEnabled(false);
                 btnAdd.setText("Adding...");
@@ -342,6 +443,7 @@ public class ProfileFragment extends Fragment {
 
         dialog.show();
 
+        // Adjust dialog width for landscape orientation
         boolean isLandscape =
                 getResources().getConfiguration().orientation
                         == android.content.res.Configuration.ORIENTATION_LANDSCAPE;

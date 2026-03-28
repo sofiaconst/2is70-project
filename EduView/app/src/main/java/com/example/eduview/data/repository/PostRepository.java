@@ -9,6 +9,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+/**
+ * Handles the creation of posts and logging into the database.
+ */
 public class PostRepository {
     //Database reference to the posts node
     private final DatabaseReference postRef;
@@ -54,6 +57,7 @@ public class PostRepository {
 
         String feedPath;
 
+        // Determines the feed path according to the type of the feed item.
         switch (feedItem.getType()) {
             case ANNOUNCEMENT:
                 feedPath = "announcements";
@@ -78,6 +82,7 @@ public class PostRepository {
 
         feedItem.setTimestamp(System.currentTimeMillis());
 
+        // Uses a HashMap to create the posts and its information in the database.
         Map<String, Object> updates = new HashMap<>();
         updates.put("/posts/" + postId, feedItem);
         updates.put("/classrooms/" + classId + "/feed/" + feedPath + "/" + postId, true);

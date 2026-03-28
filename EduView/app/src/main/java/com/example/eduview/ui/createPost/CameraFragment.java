@@ -29,6 +29,10 @@ import java.util.concurrent.Executor;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 
+/**
+ * Fragment that captures a photo using the device camera and uploading it for use
+ * in post creation.
+ */
 public class CameraFragment extends Fragment {
 
     private PreviewView previewView;
@@ -38,6 +42,18 @@ public class CameraFragment extends Fragment {
 
     public CameraFragment() {}
 
+    /**
+     * Inflates the camera screen layout
+     * @param inflater The LayoutInflater object that can be used to inflate
+     * any views in the fragment,
+     * @param container If non-null, this is the parent view that the fragment's
+     * UI should be attached to.  The fragment should not add the view itself,
+     * but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     *
+     * @return inflated camera view
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -46,20 +62,33 @@ public class CameraFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_camera, container, false);
     }
 
+    /**
+     * Initializes UI components, executes camera callbacks, and deals with photo capturing
+     * logic.
+     * @param view The View returned by {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        // UI Components
         previewView = view.findViewById(R.id.previewView);
         ImageButton btnCapture = view.findViewById(R.id.btnCapture);
         ImageButton btnCancel = view.findViewById(R.id.btnCancel);
 
         cameraExecutor = ContextCompat.getMainExecutor(requireContext());
 
+        // Take photos with camera.
         startCamera();
 
+        // Buttons for exiting the fragment and taking a photo.
         btnCapture.setOnClickListener(v -> takePhoto());
         btnCancel.setOnClickListener(v -> requireActivity().onBackPressed());
     }
 
+    /**
+     * Initializes the camera preview and image capture.
+     */
     private void startCamera() {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
                 ProcessCameraProvider.getInstance(requireContext());
@@ -71,8 +100,10 @@ public class CameraFragment extends Fragment {
                 Preview preview = new Preview.Builder().build();
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
+                // Setup image capture
                 imageCapture = new ImageCapture.Builder().build();
 
+                // Use the back camera by default
                 CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
 
                 cameraProvider.unbindAll();
@@ -89,15 +120,22 @@ public class CameraFragment extends Fragment {
         }, cameraExecutor);
     }
 
+    /**
+     * Captures a photo, uploads it, and returns the uploaded image URL
+     * to the create post fragment.
+     */
     private void takePhoto() {
         if (imageCapture == null) return;
+        // Image capture is ready
 
+        // Create a temporary file for the captured image
         File photoFile = new File(requireContext().getExternalFilesDir(null),
                 System.currentTimeMillis() + ".jpg");
 
         ImageCapture.OutputFileOptions outputOptions =
                 new ImageCapture.OutputFileOptions.Builder(photoFile).build();
 
+        // Capture image and save it to the temporary file
         imageCapture.takePicture(outputOptions, cameraExecutor,
                 new ImageCapture.OnImageSavedCallback() {
                     @Override
