@@ -33,7 +33,6 @@ public class PostRepositoryTest {
     private DatabaseReference rootRef;
 
     private PostRepository postRepository;
-    private FeedRepository feedRepository;
 
     @Before
     public void setUp() {
@@ -42,7 +41,6 @@ public class PostRepositoryTest {
         rootRef = mock(DatabaseReference.class);
 
         postRepository = new PostRepository(postRef, classRef, rootRef);
-        feedRepository = new FeedRepository();
     }
 
     @Test
