@@ -17,6 +17,7 @@ import com.example.eduview.R;
 import com.example.eduview.data.model.FeedItem;
 import com.example.eduview.data.model.FeedItemType;
 import com.example.eduview.data.model.ProfilePicture;
+import com.example.eduview.data.model.UserRole;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -141,6 +142,11 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     .centerCrop()
                     .into(holder.ivPostImage);
         }
+        if (item.isTeacher()) {
+            holder.textViewRole.setVisibility(View.VISIBLE);
+        } else {
+            holder.textViewRole.setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -256,6 +262,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         TextView tvPostDate;
         ImageView ivPostImage;
         View ivProfilePicture;
+        TextView textViewRole;
 
         /**
          * Creates a ViewHolder for published posts by fetching the components of the item xml.
@@ -268,6 +275,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             tvPostDate = itemView.findViewById(R.id.tvPostDate);
             ivPostImage = itemView.findViewById(R.id.ivPostImage);
             ivProfilePicture = itemView.findViewById(R.id.pfp);
+            textViewRole = itemView.findViewById((R.id.textViewRole));
         }
     }
 

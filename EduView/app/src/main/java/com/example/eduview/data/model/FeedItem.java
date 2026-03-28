@@ -23,6 +23,8 @@ public class FeedItem {
 
     @Exclude
     private String authorPfpName;
+    @Exclude
+    private boolean authorIsTeacher;
 
     /**
      * Creates a new FeedItem with a type, author ID, caption and sets the author name to empty.
@@ -101,6 +103,15 @@ public class FeedItem {
         return authorPfpName;
     }
 
+    /**
+     * Returns if the feed item author is a teacher.
+     * @return whether the feed item author is a teacher
+     */
+    @Exclude
+    public boolean isTeacher() {
+        return authorIsTeacher;
+    }
+
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
@@ -117,4 +128,7 @@ public class FeedItem {
         this.authorPfpName = authorPfpName;
     }
     public void setAuthorName(String authorName) { this.authorName = authorName; }
+    public void setAuthorIsTeacher(boolean isTeacher) {
+        this.authorIsTeacher = isTeacher;
+    }
 }

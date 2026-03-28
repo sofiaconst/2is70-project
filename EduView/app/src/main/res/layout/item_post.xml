@@ -29,10 +29,35 @@
         android:textColor="@color/black"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/pfp"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/materialCardView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="7dp"
+        android:layout_marginTop="6dp"
+        app:cardBackgroundColor="#E2B35A"
+        app:cardCornerRadius="10dp"
+        app:layout_constraintStart_toEndOf="@+id/tvStudentName"
+        app:layout_constraintTop_toTopOf="parent"
+        app:strokeColor="@android:color/black"
+        app:strokeWidth="1dp">
+
+        <TextView
+            android:id="@+id/textViewRole"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="12dp"
+            android:paddingTop="3dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="4dp"
+            android:text="Teacher"
+            android:textColor="@android:color/black"
+            android:textSize="12sp" />
+
+    </com.google.android.material.card.MaterialCardView>
     <TextView
         android:id="@+id/tvPostDate"
         android:layout_width="wrap_content"

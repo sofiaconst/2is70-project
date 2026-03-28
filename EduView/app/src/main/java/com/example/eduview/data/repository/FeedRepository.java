@@ -243,11 +243,11 @@ public class FeedRepository {
             return;
         }
 
-        // Track how many asynchronous post loads have completed.
+        // Tracks how many full item-building operations have finished.
         final int[] completed = {0};
 
         for (String postId : postIds) {
-            // Load the post details from the posts table.
+            // Load the raw post data first.
             postsRef.child(postId)
                     .get()
                     .addOnSuccessListener(snapshot -> {
@@ -256,21 +256,22 @@ public class FeedRepository {
                         String imageUrl = snapshot.child("imageUrl").getValue(String.class);
                         Long timestamp = snapshot.child("timestamp").getValue(Long.class);
 
-                        // Normalize nullable data so FeedItem creation does not return errors.
+                        // Normalize nullable values so FeedItem creation stays safe.
                         if (content == null) content = "";
                         if (timestamp == null) timestamp = 0L;
 
-                        // If there is no author, still create a valid feed item without author details.
+                        // If the author is missing, create the item without author details.
                         if (author == null) {
-                            completed[0]++;
-
-                            FeedItem item = new FeedItem(feedItemType, author, content);
+                            FeedItem item = new FeedItem(feedItemType, null, content);
                             item.setPostId(postId);
                             item.setImageUrl(imageUrl);
                             item.setTimestamp(timestamp);
+                            item.setAuthorIsTeacher(false);
                             items.add(item);
 
-                            // Once all posts have been handled, sort and publish them.
+                            // Count this item as finished because no more lookups are needed.
+                            completed[0]++;
+
                             if (completed[0] == postIds.size()) {
                                 publishSortedItems(items, liveData);
                             }
@@ -278,58 +279,68 @@ public class FeedRepository {
                         }
 
                         String finalContent = content;
-                        Long finalTimestamp = timestamp;
+                        long finalTimestamp = timestamp;
 
-                        // If the post has an author, load the author's display data too.
+                        // Load author profile data like display name and profile picture.
                         userRef.child(author)
                                 .get()
                                 .addOnSuccessListener(userSnapshot -> {
-                                    completed[0]++;
-
                                     String firstName = userSnapshot.child("first_name").getValue(String.class);
                                     String lastName = userSnapshot.child("last_name").getValue(String.class);
                                     String pfp = userSnapshot.child("pfp").getValue(String.class);
 
-                                    // Replace missing names with empty strings.
+                                    // Replace missing names with empty strings before combining them.
                                     if (firstName == null) firstName = "";
                                     if (lastName == null) lastName = "";
                                     String authorName = (firstName + " " + lastName).trim();
 
-                                    // Build the final feed item with author data.
+                                    // Build the item with all post and author information gathered so far.
                                     FeedItem item = new FeedItem(feedItemType, author, finalContent);
                                     item.setAuthorName(authorName);
                                     item.setPostId(postId);
                                     item.setImageUrl(imageUrl);
                                     item.setTimestamp(finalTimestamp);
                                     item.setAuthorPfpName(pfp);
-                                    items.add(item);
 
-                                    // Publish only after every post request has finished.
-                                    if (completed[0] == postIds.size()) {
-                                        publishSortedItems(items, liveData);
-                                    }
+                                    // Check teacher role last, then mark the item as completed.
+                                    postAuthorIsTeacher(author, isTeacher -> {
+                                        item.setAuthorIsTeacher(isTeacher);
+                                        items.add(item);
+                                        completed[0]++;
+
+                                        // Only publish when every item has fully finished loading.
+                                        if (completed[0] == postIds.size()) {
+                                            publishSortedItems(items, liveData);
+                                        }
+                                    });
                                 })
                                 .addOnFailureListener(e -> {
-                                    completed[0]++;
                                     Log.e("FeedRepository", "Failed to fetch author name", e);
 
-                                    // If author lookup fails, keep the post but without author info.
+                                    // If author details fail, still keep the post itself.
                                     FeedItem item = new FeedItem(feedItemType, author, finalContent);
                                     item.setPostId(postId);
                                     item.setImageUrl(imageUrl);
                                     item.setTimestamp(finalTimestamp);
-                                    items.add(item);
 
-                                    if (completed[0] == postIds.size()) {
-                                        publishSortedItems(items, liveData);
-                                    }
+                                    // Still resolve whether the author is a teacher before finishing.
+                                    postAuthorIsTeacher(author, isTeacher -> {
+                                        item.setAuthorIsTeacher(isTeacher);
+                                        items.add(item);
+                                        completed[0]++;
+
+                                        if (completed[0] == postIds.size()) {
+                                            publishSortedItems(items, liveData);
+                                        }
+                                    });
                                 });
                     })
                     .addOnFailureListener(e -> {
-                        completed[0]++;
                         Log.e("FeedRepository", "Failed to fetch post", e);
 
-                        // Even failed post loads count toward completion so it can finish.
+                        // Even failed posts must count toward completion so the batch can finish.
+                        completed[0]++;
+
                         if (completed[0] == postIds.size()) {
                             publishSortedItems(items, liveData);
                         }
@@ -399,14 +410,55 @@ public class FeedRepository {
      * @param postId post identifier
      */
     public void rejectPost(String classroomId, String postId) {
-        // Rejecting simply deletes the post reference from the pending list.
-        classroomRef.child(classroomId)
+        // Reference to the pending post entry inside the classroom feed.
+        DatabaseReference pendingRef = classroomRef.child(classroomId)
                 .child("feed")
                 .child("pending")
-                .child(postId)
-                .removeValue()
+                .child(postId);
+
+        // Reference to the actual post object stored in the posts node.
+        DatabaseReference postRef = postsRef.child(postId);
+
+        // First remove the pending reference from the classroom.
+        pendingRef.removeValue()
+                .addOnSuccessListener(aVoid -> {
+                    // After removing it from pending, also delete the real post data.
+                    postRef.removeValue()
+                            .addOnFailureListener(e ->
+                                    Log.e("FeedRepository", "Failed to delete post from posts node", e)
+                            );
+                })
                 .addOnFailureListener(e ->
                         Log.e("FeedRepository", "Failed to reject post", e)
                 );
+    }
+
+    /**
+     * Checks whether a given post author is a teacher.
+     *
+     * @param authorId the ID of the user to check
+     * @param callback returns true if the user is a teacher, false otherwise
+     */
+    public void postAuthorIsTeacher(String authorId, java.util.function.Consumer<Boolean> callback) {
+
+        // Fetch the user node corresponding to the author ID.
+        userRef.child(authorId).get().addOnSuccessListener(snapshot -> {
+
+            // Read the role field from the user object.
+            String role = snapshot.child("role").getValue(String.class);
+
+            // Check if the role exists and matches Teacher.
+            if (role != null && role.equalsIgnoreCase("Teacher")) {
+                callback.accept(true);
+            } else {
+                callback.accept(false);
+            }
+
+        }).addOnFailureListener(e -> {
+            Log.e("FeedRepository", "Failed to check author role", e);
+
+            // On failure, default to false to keep UI stable.
+            callback.accept(false);
+        });
     }
 }
