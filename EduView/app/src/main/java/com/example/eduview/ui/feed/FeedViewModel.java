@@ -4,6 +4,7 @@ import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 
 import com.example.eduview.data.model.FeedItem;
@@ -11,6 +12,7 @@ import com.example.eduview.data.model.Parent;
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.User;
+import com.example.eduview.data.repository.ClassroomRepository;
 import com.example.eduview.data.repository.FeedRepository;
 import com.example.eduview.data.repository.UserRepository;
 
@@ -25,26 +27,41 @@ import java.util.List;
 public class FeedViewModel extends ViewModel {
 
     // Repositories
-    private FeedRepository feedRepository;
-    private UserRepository userRepository;
+    private final FeedRepository feedRepository;
+    private final UserRepository userRepository;
+    private final ClassroomRepository classroomRepository;
 
-    // Feed Items
+    // Feed items shown on screen
     private final MutableLiveData<List<FeedItem>> publishedPosts = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<List<FeedItem>> announcements = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<List<FeedItem>> pendingPosts = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<List<Student>> parentChildren = new MutableLiveData<>(new ArrayList<>());
 
-    // Refresh
+    // Refresh trigger used by the UI to react to manual reloads
     private final MutableLiveData<Integer> refreshTrigger = new MutableLiveData<>(0);
 
     private String classroomId;
     private User currentUser;
 
+    // LiveData used to observe a student's classroom in real time
+    private LiveData<String> liveStudentClassroom;
+    private Observer<String> studentClassroomObserver;
+
+    // Live feed sources currently attached to the ViewModel
+    private LiveData<List<FeedItem>> livePublishedSource;
+    private LiveData<List<FeedItem>> liveAnnouncementsSource;
+    private LiveData<List<FeedItem>> livePendingSource;
+
+    // Observers for the currently attached feed sources
+    private Observer<List<FeedItem>> publishedObserver;
+    private Observer<List<FeedItem>> announcementsObserver;
+    private Observer<List<FeedItem>> pendingObserver;
+
     /**
      * Creates a FeedViewModel with default repository implementations.
      */
     public FeedViewModel() {
-        this(new FeedRepository(), new UserRepository());
+        this(new FeedRepository(), new UserRepository(), new ClassroomRepository());
     }
 
     /**
@@ -52,43 +69,149 @@ public class FeedViewModel extends ViewModel {
      *
      * @param feedRepository repository used for feed-related operations
      * @param userRepository repository used for user-related operations
+     * @param classroomRepository repository used for classroom-related operations
      */
-    public FeedViewModel(FeedRepository feedRepository, UserRepository userRepository) {
+    public FeedViewModel(FeedRepository feedRepository,
+                         UserRepository userRepository,
+                         ClassroomRepository classroomRepository) {
         this.feedRepository = feedRepository;
         this.userRepository = userRepository;
+        this.classroomRepository = classroomRepository;
     }
 
     /**
      * Determines and stores the classroom ID for the given user.
      * Teachers and students are linked to a classroom, parents are not.
      *
+     * For students, the classroom membership is observed in real time so the feed
+     * can be cleared immediately when the student is removed from the classroom.
+     *
      * @param user current user for whom feed data should be loaded
      */
     public void loadPostsForUser(User user) {
         if (user == null) return;
+
         currentUser = user;
         classroomId = null;
 
+        // Remove old feed observers before attaching new ones.
+        detachFeedListeners();
+
         if (user instanceof Student) {
-            classroomId = ((Student) user).getClassId();
+            observeStudentClassroom((Student) user);
+            return;
         } else if (user instanceof Teacher) {
             classroomId = ((Teacher) user).getClassId();
         }
 
         Log.d("FeedViewModel", "Class id found for user: " + classroomId);
-        
+
         if (classroomId != null && !classroomId.isEmpty()) {
-            loadPublishedPosts();
-            loadAnnouncements();
-            if (user instanceof Teacher) {
-                loadPendingPosts();
-            }
+            attachFeedListeners();
         } else {
-            // Clear feed if user is not in a class
-            publishedPosts.setValue(new ArrayList<>());
-            announcements.setValue(new ArrayList<>());
+            clearFeed();
+        }
+    }
+
+    /**
+     * Starts observing the student's classroom field in real time.
+     * When the classroom becomes empty, the feed is cleared immediately.
+     * When the classroom changes, the feed listeners are reattached to the new class.
+     *
+     * @param student student whose classroom membership should be observed
+     */
+    private void observeStudentClassroom(Student student) {
+        if (student == null || student.getUserId() == null) return;
+
+        // Remove any previous classroom observer to avoid duplicate listeners.
+        if (liveStudentClassroom != null && studentClassroomObserver != null) {
+            liveStudentClassroom.removeObserver(studentClassroomObserver);
+        }
+
+        liveStudentClassroom = classroomRepository.getLiveStudentClassroom(student.getUserId());
+
+        studentClassroomObserver = newClassroomId -> {
+            Log.d("FeedViewModel", "Live student classroom changed: " + newClassroomId);
+
+            // If the student no longer belongs to a class, remove all feed content immediately.
+            if (newClassroomId == null || newClassroomId.trim().isEmpty()) {
+                classroomId = null;
+                detachFeedListeners();
+                clearFeed();
+                return;
+            }
+
+            // Only reattach if the classroom actually changed.
+            if (!newClassroomId.equals(classroomId)) {
+                classroomId = newClassroomId;
+                detachFeedListeners();
+                attachFeedListeners();
+            }
+        };
+
+        liveStudentClassroom.observeForever(studentClassroomObserver);
+    }
+
+    /**
+     * Attaches live feed listeners for the current classroom.
+     * Published posts and announcements are loaded for students and teachers.
+     * Pending posts are loaded only for teachers.
+     */
+    private void attachFeedListeners() {
+        if (classroomId == null || classroomId.isEmpty()) return;
+
+        // Observe published posts for the classroom.
+        livePublishedSource = feedRepository.fetchPublishedPosts(classroomId);
+        publishedObserver = items -> publishedPosts.setValue(items != null ? items : new ArrayList<>());
+        livePublishedSource.observeForever(publishedObserver);
+
+        // Observe announcements for the classroom.
+        liveAnnouncementsSource = feedRepository.fetchAnnouncements(classroomId);
+        announcementsObserver = items -> announcements.setValue(items != null ? items : new ArrayList<>());
+        liveAnnouncementsSource.observeForever(announcementsObserver);
+
+        // Only teachers should see pending posts.
+        if (currentUser instanceof Teacher) {
+            livePendingSource = feedRepository.fetchPendingPosts(classroomId);
+            pendingObserver = items -> pendingPosts.setValue(items != null ? items : new ArrayList<>());
+            livePendingSource.observeForever(pendingObserver);
+        } else {
             pendingPosts.setValue(new ArrayList<>());
         }
+    }
+
+    /**
+     * Removes the currently attached feed listeners.
+     * This prevents the ViewModel from continuing to observe an old classroom feed.
+     */
+    private void detachFeedListeners() {
+        if (livePublishedSource != null && publishedObserver != null) {
+            livePublishedSource.removeObserver(publishedObserver);
+            livePublishedSource = null;
+            publishedObserver = null;
+        }
+
+        if (liveAnnouncementsSource != null && announcementsObserver != null) {
+            liveAnnouncementsSource.removeObserver(announcementsObserver);
+            liveAnnouncementsSource = null;
+            announcementsObserver = null;
+        }
+
+        if (livePendingSource != null && pendingObserver != null) {
+            livePendingSource.removeObserver(pendingObserver);
+            livePendingSource = null;
+            pendingObserver = null;
+        }
+    }
+
+    /**
+     * Clears all feed lists shown in the UI.
+     * This is used when a user is not part of a classroom.
+     */
+    private void clearFeed() {
+        publishedPosts.setValue(new ArrayList<>());
+        announcements.setValue(new ArrayList<>());
+        pendingPosts.setValue(new ArrayList<>());
     }
 
     /**
@@ -120,6 +243,7 @@ public class FeedViewModel extends ViewModel {
                                 + " | userId=" + student.getUserId()
                                 + " | classId=" + student.getClassId());
 
+                        // Only show children that are actually assigned to a classroom.
                         if (student.getClassId() != null && !student.getClassId().trim().isEmpty()) {
                             children.add(student);
                         } else {
@@ -136,6 +260,7 @@ public class FeedViewModel extends ViewModel {
                 @Override
                 public void onError(Exception e) {
                     Log.e("FeedViewModel", "Failed to fetch child user", e);
+
                     remaining[0]--;
                     if (remaining[0] == 0) {
                         parentChildren.setValue(children);
@@ -147,32 +272,60 @@ public class FeedViewModel extends ViewModel {
 
     /**
      * Loads published posts for the current classroom.
+     * This method performs a one-time attachment of a live source to the ViewModel state.
+     *
+     * Prefer using the automatic classroom observer flow where possible.
      */
     public void loadPublishedPosts() {
-        if (classroomId == null) return;
-        feedRepository.fetchPublishedPosts(classroomId).observeForever(items -> {
-            if (items != null) publishedPosts.setValue(items);
-        });
+        if (classroomId == null || classroomId.isEmpty()) return;
+
+        livePublishedSource = feedRepository.fetchPublishedPosts(classroomId);
+        publishedObserver = items -> {
+            if (items != null) {
+                publishedPosts.setValue(items);
+            } else {
+                publishedPosts.setValue(new ArrayList<>());
+            }
+        };
+        livePublishedSource.observeForever(publishedObserver);
     }
 
     /**
      * Loads announcements for the current classroom.
+     * This method performs a one-time attachment of a live source to the ViewModel state.
+     *
+     * Prefer using the automatic classroom observer flow where possible.
      */
     public void loadAnnouncements() {
-        if (classroomId == null) return;
-        feedRepository.fetchAnnouncements(classroomId).observeForever(items -> {
-            if (items != null) announcements.setValue(items);
-        });
+        if (classroomId == null || classroomId.isEmpty()) return;
+
+        liveAnnouncementsSource = feedRepository.fetchAnnouncements(classroomId);
+        announcementsObserver = items -> {
+            if (items != null) {
+                announcements.setValue(items);
+            } else {
+                announcements.setValue(new ArrayList<>());
+            }
+        };
+        liveAnnouncementsSource.observeForever(announcementsObserver);
     }
 
     /**
      * Loads pending posts for the current classroom.
+     * This is intended for teacher users only.
      */
     public void loadPendingPosts() {
-        if (classroomId == null) return;
-        feedRepository.fetchPendingPosts(classroomId).observeForever(items -> {
-            if (items != null) pendingPosts.setValue(items);
-        });
+        if (classroomId == null || classroomId.isEmpty()) return;
+
+        livePendingSource = feedRepository.fetchPendingPosts(classroomId);
+        pendingObserver = items -> {
+            if (items != null) {
+                pendingPosts.setValue(items);
+            } else {
+                pendingPosts.setValue(new ArrayList<>());
+            }
+        };
+        livePendingSource.observeForever(pendingObserver);
     }
 
     /**
@@ -269,5 +422,20 @@ public class FeedViewModel extends ViewModel {
 
         feedRepository.rejectPost(classroomId, postId);
         reloadAll();
+    }
+
+    /**
+     * Called when the ViewModel is being destroyed.
+     * Removes all observers to avoid leaks and stale listeners.
+     */
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+
+        if (liveStudentClassroom != null && studentClassroomObserver != null) {
+            liveStudentClassroom.removeObserver(studentClassroomObserver);
+        }
+
+        detachFeedListeners();
     }
 }
