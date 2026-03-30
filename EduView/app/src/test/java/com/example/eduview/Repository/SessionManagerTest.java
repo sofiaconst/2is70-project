@@ -9,6 +9,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
+
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.User;
 import com.example.eduview.data.repository.AuthRepository;
@@ -17,10 +19,14 @@ import com.example.eduview.data.repository.UserRepository;
 import com.google.firebase.auth.FirebaseUser;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 public class SessionManagerTest {
+
+    @Rule
+    public InstantTaskExecutorRule instantTaskExecutorRule = new InstantTaskExecutorRule();
 
     private AuthRepository authRepository;
     private UserRepository userRepository;
@@ -36,36 +42,34 @@ public class SessionManagerTest {
 
     @Test
     public void requireLogin_whenNoUser_throwsException() {
-        // If nobody is logged in, requireLogin should throw.
         assertThrows(IllegalStateException.class, () -> sessionManager.requireLogin());
     }
 
     @Test
-    public void getCurrentUser_whenNoUser_throwsException() {
-        // getCurrentUser also depends on requireLogin, so it should throw too.
-        assertThrows(IllegalStateException.class, () -> sessionManager.getCurrentUser());
+    public void getCurrentUser_whenNoUser_returnsNull() {
+        assertNull(sessionManager.getCurrentUser());
+    }
+
+    @Test
+    public void setCurrentUserForTest_setsCurrentUserAndLiveData() {
+        Student student = new Student("s1", "Sam", "Student", "sam@test.com", "class-1");
+
+        sessionManager.setCurrentUserForTest(student);
+
+        assertNotNull(sessionManager.getCurrentUser());
+        assertEquals("s1", sessionManager.getCurrentUser().getUserId());
+        assertNotNull(sessionManager.getSessionUser().getValue());
+        assertEquals("s1", sessionManager.getSessionUser().getValue().getUserId());
     }
 
     @Test
     public void initializeSession_whenCurrentUserAlreadyExists_returnsItImmediately() {
-        // First call loads and caches the user.
-        // Second call should return the cached user without hitting the repo again.
-        FirebaseUser firebaseUser = Mockito.mock(FirebaseUser.class);
         Student student = new Student("s1", "Sam", "Student", "sam@test.com", "class-1");
-
-        when(authRepository.getCurrentFirebaseUser()).thenReturn(firebaseUser);
-        when(firebaseUser.getUid()).thenReturn("s1");
-
-        Mockito.doAnswer(invocation -> {
-            UserRepository.UserCallback callback = invocation.getArgument(1);
-            callback.onSuccess(student);
-            return null;
-        }).when(userRepository).getUserById(Mockito.eq("s1"), any(UserRepository.UserCallback.class));
+        sessionManager.setCurrentUserForTest(student);
 
         final User[] returnedUser = new User[1];
         final Exception[] returnedError = new Exception[1];
 
-        // First call: fills currentUser cache
         sessionManager.initializeSession(new SessionManager.SessionCallback() {
             @Override
             public void onSuccess(User user) {
@@ -82,34 +86,12 @@ public class SessionManagerTest {
         assertEquals("s1", returnedUser[0].getUserId());
         assertNull(returnedError[0]);
 
-        // Clear previous callback results
-        returnedUser[0] = null;
-        returnedError[0] = null;
-
-        // Second call: should use cached currentUser directly
-        sessionManager.initializeSession(new SessionManager.SessionCallback() {
-            @Override
-            public void onSuccess(User user) {
-                returnedUser[0] = user;
-            }
-
-            @Override
-            public void onError(Exception e) {
-                returnedError[0] = e;
-            }
-        });
-
-        assertNotNull(returnedUser[0]);
-        assertEquals("s1", returnedUser[0].getUserId());
-        assertNull(returnedError[0]);
-
-        // Repo fetch should only have happened once total
-        verify(userRepository).getUserById(Mockito.eq("s1"), any(UserRepository.UserCallback.class));
+        verify(authRepository, never()).getCurrentFirebaseUser();
+        verify(userRepository, never()).getUserById(any(), any());
     }
 
     @Test
     public void initializeSession_whenFirebaseUserIsNull_callsError() {
-        // If Firebase has no logged-in user, session init should fail.
         when(authRepository.getCurrentFirebaseUser()).thenReturn(null);
 
         final User[] returnedUser = new User[1];
@@ -131,12 +113,11 @@ public class SessionManagerTest {
         assertNotNull(returnedError[0]);
         assertEquals("User not logged in", returnedError[0].getMessage());
 
-        verify(userRepository, never()).getUserById(Mockito.anyString(), any(UserRepository.UserCallback.class));
+        verify(userRepository, never()).getUserById(any(), any());
     }
 
     @Test
-    public void initializeSession_whenRepositorySucceeds_setsCurrentUser() {
-        // Normal success path: Firebase user exists and repo returns the app user.
+    public void initializeSession_whenRepositorySucceeds_setsCurrentUserAndLiveData() {
         FirebaseUser firebaseUser = Mockito.mock(FirebaseUser.class);
         Student student = new Student("s1", "Sam", "Student", "sam@test.com", "class-1");
 
@@ -168,13 +149,15 @@ public class SessionManagerTest {
         assertEquals("s1", returnedUser[0].getUserId());
         assertNull(returnedError[0]);
 
-        // getCurrentUser should now work because currentUser was set.
+        assertNotNull(sessionManager.getCurrentUser());
         assertEquals("s1", sessionManager.getCurrentUser().getUserId());
+
+        assertNotNull(sessionManager.getSessionUser().getValue());
+        assertEquals("s1", sessionManager.getSessionUser().getValue().getUserId());
     }
 
     @Test
     public void initializeSession_whenRepositoryFails_callsError() {
-        // If loading the user fails, the callback should get that error.
         FirebaseUser firebaseUser = Mockito.mock(FirebaseUser.class);
 
         when(authRepository.getCurrentFirebaseUser()).thenReturn(firebaseUser);
@@ -204,30 +187,13 @@ public class SessionManagerTest {
         assertNull(returnedUser[0]);
         assertNotNull(returnedError[0]);
         assertEquals("Failed to load user", returnedError[0].getMessage());
+        assertNull(sessionManager.getCurrentUser());
     }
 
     @Test
-    public void logoutCurrentUser_withCallback_logsOutAndReturnsSuccess() {
-        // Logout should clear the session, call auth logout, and notify callback.
-        FirebaseUser firebaseUser = Mockito.mock(FirebaseUser.class);
+    public void logoutCurrentUser_withCallback_logsOutClearsSessionAndReturnsSuccess() {
         Student student = new Student("s1", "Sam", "Student", "sam@test.com", "class-1");
-
-        when(authRepository.getCurrentFirebaseUser()).thenReturn(firebaseUser);
-        when(firebaseUser.getUid()).thenReturn("s1");
-
-        Mockito.doAnswer(invocation -> {
-            UserRepository.UserCallback callback = invocation.getArgument(1);
-            callback.onSuccess(student);
-            return null;
-        }).when(userRepository).getUserById(Mockito.eq("s1"), any(UserRepository.UserCallback.class));
-
-        sessionManager.initializeSession(new SessionManager.SessionCallback() {
-            @Override
-            public void onSuccess(User user) { }
-
-            @Override
-            public void onError(Exception e) { }
-        });
+        sessionManager.setCurrentUserForTest(student);
 
         final User[] returnedUser = new User[1];
         final Exception[] returnedError = new Exception[1];
@@ -247,20 +213,24 @@ public class SessionManagerTest {
         verify(authRepository).logout();
         assertNull(returnedUser[0]);
         assertNull(returnedError[0]);
-        assertThrows(IllegalStateException.class, () -> sessionManager.getCurrentUser());
+        assertNull(sessionManager.getCurrentUser());
+        assertNull(sessionManager.getSessionUser().getValue());
     }
 
     @Test
-    public void logoutCurrentUser_withoutCallback_stillLogsOut() {
-        // Null callback should still be allowed.
+    public void logoutCurrentUser_withoutCallback_stillLogsOutAndClearsSession() {
+        Student student = new Student("s1", "Sam", "Student", "sam@test.com", "class-1");
+        sessionManager.setCurrentUserForTest(student);
+
         sessionManager.logoutCurrentUser(null);
 
         verify(authRepository).logout();
+        assertNull(sessionManager.getCurrentUser());
+        assertNull(sessionManager.getSessionUser().getValue());
     }
 
     @Test
     public void reloadSession_whenFirebaseUserIsNull_callsError() {
-        // Reload should fail if Firebase has no logged-in user.
         when(authRepository.getCurrentFirebaseUser()).thenReturn(null);
 
         final User[] returnedUser = new User[1];
@@ -284,8 +254,7 @@ public class SessionManagerTest {
     }
 
     @Test
-    public void reloadSession_whenRepositorySucceeds_updatesCurrentUser() {
-        // Reload should refresh the cached user.
+    public void reloadSession_whenRepositorySucceeds_updatesCurrentUserAndLiveData() {
         FirebaseUser firebaseUser = Mockito.mock(FirebaseUser.class);
         Student student = new Student("s2", "Sally", "Student", "sally@test.com", "class-2");
 
@@ -317,11 +286,12 @@ public class SessionManagerTest {
         assertEquals("s2", returnedUser[0].getUserId());
         assertNull(returnedError[0]);
         assertEquals("s2", sessionManager.getCurrentUser().getUserId());
+        assertNotNull(sessionManager.getSessionUser().getValue());
+        assertEquals("s2", sessionManager.getSessionUser().getValue().getUserId());
     }
 
     @Test
     public void reloadSession_whenRepositoryFails_callsError() {
-        // Reload should pass repo errors back to the caller.
         FirebaseUser firebaseUser = Mockito.mock(FirebaseUser.class);
 
         when(authRepository.getCurrentFirebaseUser()).thenReturn(firebaseUser);
@@ -351,5 +321,25 @@ public class SessionManagerTest {
         assertNull(returnedUser[0]);
         assertNotNull(returnedError[0]);
         assertEquals("Reload failed", returnedError[0].getMessage());
+    }
+
+    @Test
+    public void reloadSession_withNullCallback_doesNotCrash() {
+        FirebaseUser firebaseUser = Mockito.mock(FirebaseUser.class);
+        Student student = new Student("s4", "Sue", "Student", "sue@test.com", "class-4");
+
+        when(authRepository.getCurrentFirebaseUser()).thenReturn(firebaseUser);
+        when(firebaseUser.getUid()).thenReturn("s4");
+
+        Mockito.doAnswer(invocation -> {
+            UserRepository.UserCallback callback = invocation.getArgument(1);
+            callback.onSuccess(student);
+            return null;
+        }).when(userRepository).getUserById(Mockito.eq("s4"), any(UserRepository.UserCallback.class));
+
+        sessionManager.reloadSession(null);
+
+        assertNotNull(sessionManager.getCurrentUser());
+        assertEquals("s4", sessionManager.getCurrentUser().getUserId());
     }
 }
