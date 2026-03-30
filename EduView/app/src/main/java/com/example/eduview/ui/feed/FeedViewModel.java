@@ -389,6 +389,15 @@ public class FeedViewModel extends ViewModel {
 
         loadPostsForUser(currentUser);
 
+        if (!(currentUser instanceof Parent)) {
+            loadPublishedPosts();
+            loadAnnouncements();
+
+            if (currentUser instanceof Teacher) {
+                loadPendingPosts();
+            }
+        }
+
         Integer currentValue = refreshTrigger.getValue();
         if (currentValue == null) currentValue = 0;
         refreshTrigger.setValue(currentValue + 1);

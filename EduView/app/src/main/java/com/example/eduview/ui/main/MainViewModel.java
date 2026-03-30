@@ -2,7 +2,6 @@ package com.example.eduview.ui.main;
 
 import android.util.Log;
 
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.eduview.R;
@@ -15,6 +14,7 @@ import com.example.eduview.data.repository.SessionManager;
  */
 public class MainViewModel extends ViewModel {
     private final SessionManager sessionManager;
+    private User currentUser;
 
     /**
      * Default constructor using the SessionManager.
@@ -42,6 +42,7 @@ public class MainViewModel extends ViewModel {
             // On success of initializing the session
             @Override
             public void onSuccess(User user) {
+                currentUser = user;
                 Log.d("MainViewModel", "Session initialized: " + user.getFirstName());
                 if (onUserReady != null) {
                     onUserReady.run(); // Activity can safely setup navigation now
@@ -70,14 +71,13 @@ public class MainViewModel extends ViewModel {
      * @throws IllegalStateException if the user has not been initialized yet
      */
     public int getMenuResForUser() {
-        User user = sessionManager.getCurrentUser();
-        if (user == null) {
+        if (currentUser == null) {
             throw new IllegalStateException("User not loaded yet. Call startSession() first.");
         }
 
-        Log.d("MainViewModel", "Current role = " + user.getRole());
+        Log.d("MainViewModel", "Current role = " + currentUser.getRole());
 
-        switch (user.getRole()) {
+        switch (currentUser.getRole()) {
             case PARENT:
                 return R.menu.bottom_nav_parent;
             case TEACHER:
@@ -88,24 +88,18 @@ public class MainViewModel extends ViewModel {
     }
 
     /**
-     * Get the UI-ready current user. Always fetched from SessionManager to stay fresh.
+     * Get the UI-ready current user.
      */
     public User getCurrentUser() {
-        return sessionManager.getCurrentUser();
-    }
-    
-    /**
-     * Returns an observable LiveData of the current session user.
-     */
-    public LiveData<User> getSessionUser() {
-        return sessionManager.getSessionUser();
+        return currentUser;
     }
 
     /**
-     * Logout the current session.
+     * Logout the current session and clear cached user.
      */
     public void logout() {
         sessionManager.logoutCurrentUser(null);
+        currentUser = null;
     }
 
 }
