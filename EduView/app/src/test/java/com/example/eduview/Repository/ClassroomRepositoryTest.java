@@ -6,8 +6,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 
 import com.example.eduview.data.model.Classroom;
 import com.example.eduview.data.repository.ClassroomRepository;
@@ -17,8 +20,10 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -27,6 +32,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ClassroomRepositoryTest {
+
+    @Rule
+    public InstantTaskExecutorRule instantTaskExecutorRule = new InstantTaskExecutorRule();
 
     private DatabaseReference rootRef;
     private DatabaseReference classroomsRef;
@@ -210,7 +218,7 @@ public class ClassroomRepositoryTest {
     }
 
     @Test
-    public void getStudentIdsForClassroom_success_returnsIds() {
+    public void getLiveStudentIdsForClassroom_listenerUpdatesLiveData() {
         String classId = "classX";
 
         DatabaseReference classNodeRef = mock(DatabaseReference.class);
@@ -219,43 +227,42 @@ public class ClassroomRepositoryTest {
         when(classroomsRef.child(classId)).thenReturn(classNodeRef);
         when(classNodeRef.child("students")).thenReturn(studentsNodeRef);
 
-        Task<DataSnapshot> task = mockTaskSuccess();
-        when(studentsNodeRef.get()).thenReturn(task);
+        AtomicReference<ValueEventListener> capturedListener = new AtomicReference<>();
+
+        org.mockito.Mockito.doAnswer(invocation -> {
+            ValueEventListener listener = invocation.getArgument(0);
+            capturedListener.set(listener);
+            return null;
+        }).when(studentsNodeRef).addValueEventListener(any(ValueEventListener.class));
+
+        LiveData<List<String>> result = repository.getLiveStudentIdsForClassroom(classId);
 
         DataSnapshot snapshot = mock(DataSnapshot.class);
-        when(task.getResult()).thenReturn(snapshot);
-
         DataSnapshot child1 = mock(DataSnapshot.class);
         DataSnapshot child2 = mock(DataSnapshot.class);
+
         when(child1.getKey()).thenReturn("studentA");
         when(child2.getKey()).thenReturn("studentB");
         when(snapshot.getChildren()).thenReturn(Arrays.asList(child1, child2));
 
-        AtomicReference<List<String>> result = new AtomicReference<>();
-        AtomicReference<Exception> error = new AtomicReference<>();
+        assertNotNull(capturedListener.get());
 
-        repository.getStudentIdsForClassroom(classId, new ClassroomRepository.ClassroomCallback<List<String>>() {
-            @Override
-            public void onSuccess(List<String> ids) {
-                result.set(ids);
-            }
+        Observer<List<String>> observer = value -> { };
+        result.observeForever(observer);
 
-            @Override
-            public void onError(Exception e) {
-                error.set(e);
-            }
-        });
+        capturedListener.get().onDataChange(snapshot);
 
-        assertNull(error.get());
-        assertNotNull(result.get());
-        assertEquals(2, result.get().size());
-        assertTrue(result.get().contains("studentA"));
-        assertTrue(result.get().contains("studentB"));
+        assertNotNull(result.getValue());
+        assertEquals(2, result.getValue().size());
+        assertTrue(result.getValue().contains("studentA"));
+        assertTrue(result.getValue().contains("studentB"));
+
+        result.removeObserver(observer);
     }
 
     @Test
-    public void getStudentIdsForClassroom_failure_callsOnError() {
-        String classId = "classX";
+    public void getLiveStudentIdsForClassroom_emptySnapshot_setsEmptyList() {
+        String classId = "classY";
 
         DatabaseReference classNodeRef = mock(DatabaseReference.class);
         DatabaseReference studentsNodeRef = mock(DatabaseReference.class);
@@ -263,27 +270,98 @@ public class ClassroomRepositoryTest {
         when(classroomsRef.child(classId)).thenReturn(classNodeRef);
         when(classNodeRef.child("students")).thenReturn(studentsNodeRef);
 
-        Task<DataSnapshot> task = mockTaskFailure();
-        when(studentsNodeRef.get()).thenReturn(task);
+        AtomicReference<ValueEventListener> capturedListener = new AtomicReference<>();
 
-        AtomicReference<List<String>> result = new AtomicReference<>();
-        AtomicReference<Exception> error = new AtomicReference<>();
+        org.mockito.Mockito.doAnswer(invocation -> {
+            ValueEventListener listener = invocation.getArgument(0);
+            capturedListener.set(listener);
+            return null;
+        }).when(studentsNodeRef).addValueEventListener(any(ValueEventListener.class));
 
-        repository.getStudentIdsForClassroom(classId, new ClassroomRepository.ClassroomCallback<List<String>>() {
-            @Override
-            public void onSuccess(List<String> ids) {
-                result.set(ids);
-            }
+        LiveData<List<String>> result = repository.getLiveStudentIdsForClassroom(classId);
 
-            @Override
-            public void onError(Exception e) {
-                error.set(e);
-            }
-        });
+        DataSnapshot snapshot = mock(DataSnapshot.class);
+        when(snapshot.getChildren()).thenReturn(Arrays.asList());
 
-        assertNull(result.get());
-        assertNotNull(error.get());
-        assertEquals("Failed to fetch classroom students", error.get().getMessage());
+        Observer<List<String>> observer = value -> { };
+        result.observeForever(observer);
+
+        capturedListener.get().onDataChange(snapshot);
+
+        assertNotNull(result.getValue());
+        assertTrue(result.getValue().isEmpty());
+
+        result.removeObserver(observer);
+    }
+
+    @Test
+    public void getLiveStudentClassroom_listenerUpdatesLiveData() {
+        String studentId = "student1";
+
+        DatabaseReference studentsRef = mock(DatabaseReference.class);
+        DatabaseReference studentRef = mock(DatabaseReference.class);
+        DatabaseReference classroomRef = mock(DatabaseReference.class);
+
+        when(rootRef.child("students")).thenReturn(studentsRef);
+        when(studentsRef.child(studentId)).thenReturn(studentRef);
+        when(studentRef.child("classroom")).thenReturn(classroomRef);
+
+        AtomicReference<ValueEventListener> capturedListener = new AtomicReference<>();
+
+        org.mockito.Mockito.doAnswer(invocation -> {
+            ValueEventListener listener = invocation.getArgument(0);
+            capturedListener.set(listener);
+            return null;
+        }).when(classroomRef).addValueEventListener(any(ValueEventListener.class));
+
+        LiveData<String> result = repository.getLiveStudentClassroom(studentId);
+
+        DataSnapshot snapshot = mock(DataSnapshot.class);
+        when(snapshot.getValue(String.class)).thenReturn("classABC");
+
+        Observer<String> observer = value -> { };
+        result.observeForever(observer);
+
+        capturedListener.get().onDataChange(snapshot);
+
+        assertEquals("classABC", result.getValue());
+
+        result.removeObserver(observer);
+    }
+
+    @Test
+    public void getLiveStudentClassroom_nullValue_postsNull() {
+        String studentId = "student2";
+
+        DatabaseReference studentsRef = mock(DatabaseReference.class);
+        DatabaseReference studentRef = mock(DatabaseReference.class);
+        DatabaseReference classroomRef = mock(DatabaseReference.class);
+
+        when(rootRef.child("students")).thenReturn(studentsRef);
+        when(studentsRef.child(studentId)).thenReturn(studentRef);
+        when(studentRef.child("classroom")).thenReturn(classroomRef);
+
+        AtomicReference<ValueEventListener> capturedListener = new AtomicReference<>();
+
+        org.mockito.Mockito.doAnswer(invocation -> {
+            ValueEventListener listener = invocation.getArgument(0);
+            capturedListener.set(listener);
+            return null;
+        }).when(classroomRef).addValueEventListener(any(ValueEventListener.class));
+
+        LiveData<String> result = repository.getLiveStudentClassroom(studentId);
+
+        DataSnapshot snapshot = mock(DataSnapshot.class);
+        when(snapshot.getValue(String.class)).thenReturn(null);
+
+        Observer<String> observer = value -> { };
+        result.observeForever(observer);
+
+        capturedListener.get().onDataChange(snapshot);
+
+        assertNull(result.getValue());
+
+        result.removeObserver(observer);
     }
 
     @Test
@@ -351,26 +429,43 @@ public class ClassroomRepositoryTest {
         assertEquals("Remove failed", error.get().getMessage());
     }
 
+    @Test
+    public void removeStudentFromClassroom_writesExpectedPaths() {
+        @SuppressWarnings("unchecked")
+        Task<Void> updateTask = mock(Task.class);
+
+        AtomicReference<Map<String, Object>> sentUpdates = new AtomicReference<>();
+
+        when(rootRef.updateChildren(any())).thenAnswer(invocation -> {
+            sentUpdates.set(invocation.getArgument(0));
+            return updateTask;
+        });
+
+        when(updateTask.addOnSuccessListener(any())).thenAnswer(invocation -> {
+            OnSuccessListener<Void> listener = invocation.getArgument(0);
+            listener.onSuccess(null);
+            return updateTask;
+        });
+        when(updateTask.addOnFailureListener(any())).thenReturn(updateTask);
+
+        repository.removeStudentFromClassroom("classA", "student1", new ClassroomRepository.ClassroomCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) { }
+
+            @Override
+            public void onError(Exception e) { }
+        });
+
+        assertNotNull(sentUpdates.get());
+        assertEquals(null, sentUpdates.get().get("classrooms/classA/students/student1"));
+        assertEquals("", sentUpdates.get().get("students/student1/classroom"));
+    }
+
     private Task<DataSnapshot> mockTaskSuccess() {
         @SuppressWarnings("unchecked")
         Task<DataSnapshot> task = mock(Task.class);
 
         when(task.isSuccessful()).thenReturn(true);
-
-        when(task.addOnCompleteListener(any())).thenAnswer(invocation -> {
-            OnCompleteListener<DataSnapshot> listener = invocation.getArgument(0);
-            listener.onComplete(task);
-            return task;
-        });
-
-        return task;
-    }
-
-    private Task<DataSnapshot> mockTaskFailure() {
-        @SuppressWarnings("unchecked")
-        Task<DataSnapshot> task = mock(Task.class);
-
-        when(task.isSuccessful()).thenReturn(false);
 
         when(task.addOnCompleteListener(any())).thenAnswer(invocation -> {
             OnCompleteListener<DataSnapshot> listener = invocation.getArgument(0);

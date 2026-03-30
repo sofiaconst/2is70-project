@@ -5,6 +5,7 @@ import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 
 import com.example.eduview.AuthService;
@@ -17,7 +18,6 @@ import com.example.eduview.data.model.User;
 import com.example.eduview.data.repository.ClassroomRepository;
 import com.example.eduview.data.repository.SessionManager;
 import com.example.eduview.data.repository.UserRepository;
-
 import com.example.eduview.ui.profile.profileStates.ParentProfileState;
 import com.example.eduview.ui.profile.profileStates.StudentProfileState;
 import com.example.eduview.ui.profile.profileStates.TeacherProfileState;
@@ -28,7 +28,6 @@ import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -48,6 +47,14 @@ public class ProfileViewModel extends ViewModel {
     private final MutableLiveData<String> addChildStatus = new MutableLiveData<>();
 
     private User currentUser;
+
+    // Track teacher classroom student list for cleanup
+    private LiveData<List<String>> liveStudentIds;
+    private Observer<List<String>> studentIdsObserver;
+
+    // Track student classroom membership for dynamic profile updates
+    private LiveData<String> liveStudentClassroom;
+    private Observer<String> studentClassroomObserver;
 
     /**
      * Default constructor.
@@ -86,7 +93,7 @@ public class ProfileViewModel extends ViewModel {
         String roleText = currentUser.getRole().name();
         int profilePictureResId = currentUser.getProfilePictureResourceId();
 
-        // Null states before user role is known
+        // Null states before user role is known.
         StudentProfileState studentState = null;
         TeacherProfileState teacherState = null;
         ParentProfileState parentState = null;
@@ -118,18 +125,62 @@ public class ProfileViewModel extends ViewModel {
 
     /**
      * Builds the initial student state.
+     * The student's classroom is observed in real time so the profile updates
+     * immediately when the student joins or is removed from a classroom.
      *
      * @param student the currently logged-in student
      * @return the initial student profile state
      */
     private StudentProfileState buildStudentState(Student student) {
-        if (student.getClassId() == null || student.getClassId().isEmpty()) {
-            return StudentProfileState.notRegistered();
+        if (student == null || student.getUserId() == null) {
+            return StudentProfileState.error("Invalid student");
         }
 
-        // Load classroom data.
-        loadStudentClass(student.getClassId());
+        // Start listening to the classroom field directly from Firebase.
+        observeStudentClassroom(student);
+
+        // The observer will publish either notRegistered() or the loaded class state.
         return StudentProfileState.loading();
+    }
+
+    /**
+     * Starts observing the student's classroom membership in real time.
+     * When the classroom becomes empty, the profile switches to not-registered.
+     * When the classroom is set, classroom details are loaded again.
+     *
+     * @param student the logged-in student
+     */
+    private void observeStudentClassroom(Student student) {
+        if (student == null || student.getUserId() == null) return;
+
+        // Remove any old observer before attaching a new one.
+        if (liveStudentClassroom != null && studentClassroomObserver != null) {
+            liveStudentClassroom.removeObserver(studentClassroomObserver);
+        }
+
+        liveStudentClassroom = classroomRepository.getLiveStudentClassroom(student.getUserId());
+
+        studentClassroomObserver = classId -> {
+            Log.d("ProfileViewModel", "Live student classroom changed: " + classId);
+
+            // Keep the in-memory user object in sync as well.
+            if (currentUser instanceof Student) {
+                try {
+                    ((Student) currentUser).setClassId(classId);
+                } catch (Exception ignored) {
+                    // If Student has no setter, the UI will still work from the live observer.
+                }
+            }
+
+            // No class means the student should immediately look unregistered in the UI.
+            if (classId == null || classId.trim().isEmpty()) {
+                updateStudentState(StudentProfileState.notRegistered());
+            } else {
+                loadStudentClass(classId);
+            }
+        };
+
+        liveStudentClassroom.observeForever(studentClassroomObserver);
     }
 
     /**
@@ -260,7 +311,6 @@ public class ProfileViewModel extends ViewModel {
      */
     private void loadStudentClass(String classId) {
         classroomRepository.getClassroomById(classId, new ClassroomRepository.ClassroomCallback<Classroom>() {
-            // If student class was loaded
             @Override
             public void onSuccess(Classroom classroom) {
                 if (classroom == null) {
@@ -268,7 +318,7 @@ public class ProfileViewModel extends ViewModel {
                     return;
                 }
 
-                // Store class name and teacher ID of student
+                // Extract the values needed for the student profile section.
                 String className = classroom.getName();
                 String teacherId = classroom.getTeacherId();
 
@@ -287,7 +337,7 @@ public class ProfileViewModel extends ViewModel {
 
                     @Override
                     public void onError(Exception e) {
-                        // If teacher loading fails still show the class information.
+                        // If teacher loading fails, still show the class information.
                         updateStudentState(StudentProfileState.success(className, null));
                     }
                 });
@@ -295,7 +345,9 @@ public class ProfileViewModel extends ViewModel {
 
             @Override
             public void onError(Exception e) {
-                updateStudentState(StudentProfileState.error(e != null ? e.getMessage() : "Failed to load classroom"));
+                updateStudentState(StudentProfileState.error(
+                        e != null ? e.getMessage() : "Failed to load classroom"
+                ));
             }
         });
     }
@@ -315,7 +367,17 @@ public class ProfileViewModel extends ViewModel {
                 sessionManager.reloadSession(new SessionManager.SessionCallback() {
                     @Override
                     public void onSuccess(User user) {
-                        loadStudentClass(((Student) sessionManager.getCurrentUser()).getClassId());
+                        currentUser = user;
+
+                        if (user instanceof Student) {
+                            String newClassId = ((Student) user).getClassId();
+
+                            if (newClassId == null || newClassId.isEmpty()) {
+                                updateStudentState(StudentProfileState.notRegistered());
+                            } else {
+                                loadStudentClass(newClassId);
+                            }
+                        }
                     }
 
                     @Override
@@ -351,13 +413,21 @@ public class ProfileViewModel extends ViewModel {
                 // Generate a QR code from the class ID so students can join.
                 Bitmap qr = generateQRCode(classId);
 
-                // After loading basic classroom data fetch students in classroom.
-                loadTeacherStudents(classId, className, qr);
+                // Remove any previous student list observer before observing the current class.
+                if (liveStudentIds != null && studentIdsObserver != null) {
+                    liveStudentIds.removeObserver(studentIdsObserver);
+                }
+
+                liveStudentIds = classroomRepository.getLiveStudentIdsForClassroom(classId);
+                studentIdsObserver = ids -> loadTeacherStudents(classId, className, qr, ids);
+                liveStudentIds.observeForever(studentIdsObserver);
             }
 
             @Override
             public void onError(Exception e) {
-                updateTeacherState(TeacherProfileState.error(e != null ? e.getMessage() : "Failed to load classroom"));
+                updateTeacherState(TeacherProfileState.error(
+                        e != null ? e.getMessage() : "Failed to load classroom"
+                ));
             }
         });
     }
@@ -368,24 +438,15 @@ public class ProfileViewModel extends ViewModel {
      * @param classId the classroom ID
      * @param className the classroom name
      * @param qr the generated QR code bitmap for the classroom
+     * @param studentIds the list of student IDs currently in the classroom
      */
-    private void loadTeacherStudents(String classId, String className, Bitmap qr) {
-        classroomRepository.getStudentIdsForClassroom(classId, new ClassroomRepository.ClassroomCallback<List<String>>() {
-            @Override
-            public void onSuccess(List<String> studentIds) {
-                // Convert the list of student IDs into actual Student objects.
-                userRepository.getStudentsByIds(studentIds,
-                        students -> updateTeacherState(TeacherProfileState.success(className, qr, students)),
-                        e -> updateTeacherState(TeacherProfileState.success(className, qr, new ArrayList<>()))
-                );
-            }
-
-            @Override
-            public void onError(Exception e) {
-                // If loading student IDs fails, show class info with an empty list.
-                updateTeacherState(TeacherProfileState.success(className, qr, new ArrayList<>()));
-            }
-        });
+    private void loadTeacherStudents(String classId, String className, Bitmap qr, List<String> studentIds) {
+        // Convert the list of student IDs into actual Student objects.
+        userRepository.getStudentsByIds(
+                studentIds,
+                students -> updateTeacherState(TeacherProfileState.success(className, qr, students)),
+                e -> updateTeacherState(TeacherProfileState.success(className, qr, new ArrayList<>()))
+        );
     }
 
     /**
@@ -401,8 +462,7 @@ public class ProfileViewModel extends ViewModel {
         classroomRepository.removeStudentFromClassroom(classId, student.getUserId(), new ClassroomRepository.ClassroomCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
-                // Refresh the class data after the student has been removed.
-                loadTeacherClass(classId);
+                // The real-time classroom student list listener will update the teacher UI automatically.
             }
 
             @Override
@@ -439,7 +499,7 @@ public class ProfileViewModel extends ViewModel {
                         students.add((Student) user);
                     }
 
-                    // When the last request finishes publish the collected students.
+                    // When the last request finishes, publish the collected students.
                     if (remaining.decrementAndGet() == 0) {
                         updateParentState(ParentProfileState.success(students));
                     }
@@ -447,7 +507,7 @@ public class ProfileViewModel extends ViewModel {
 
                 @Override
                 public void onError(Exception error) {
-                    // If one lookup fails continue and finish once all requests are done.
+                    // If one lookup fails, continue and finish once all requests are done.
                     if (remaining.decrementAndGet() == 0) {
                         updateParentState(ParentProfileState.success(students));
                     }
@@ -467,13 +527,13 @@ public class ProfileViewModel extends ViewModel {
     public void addChild(String fName, String lName, String username, String password) {
         String parentId = sessionManager.getCurrentUser().getUserId();
 
-        // Validation for required form fields
+        // Validation for required form fields.
         if (fName.isEmpty() || lName.isEmpty() || username.isEmpty() || password.isEmpty()) {
             addChildStatus.postValue("Please fill all fields");
             return;
         }
 
-        // Email conversion
+        // Usernames should remain simple and should not already look like emails.
         if (username.contains("@") || username.contains(" ")) {
             addChildStatus.postValue("Username must not include space character nor @ symbols");
             return;
@@ -481,7 +541,7 @@ public class ProfileViewModel extends ViewModel {
 
         addChildStatus.postValue("LOADING");
 
-        // Convert username to email format
+        // Convert username to email format.
         String email = username.toLowerCase() + "@eduview.com";
 
         AuthService authService = new AuthService();
@@ -508,9 +568,9 @@ public class ProfileViewModel extends ViewModel {
             public void onFailure(Exception e) {
                 String errorMsg = e.getMessage();
 
-                if (errorMsg != null && (errorMsg.contains("Email already exists") ||
-                        errorMsg.contains("Username already exists") ||
-                        errorMsg.contains("Username already taken"))) {
+                if (errorMsg != null && (errorMsg.contains("Email already exists")
+                        || errorMsg.contains("Username already exists")
+                        || errorMsg.contains("Username already taken"))) {
                     addChildStatus.postValue("Username already exists");
                 } else {
                     addChildStatus.postValue("ERROR: " + errorMsg);
@@ -542,7 +602,12 @@ public class ProfileViewModel extends ViewModel {
 
         try {
             // Encode the class code into a square QR matrix and convert it to a bitmap.
-            BitMatrix bitMatrix = new MultiFormatWriter().encode(classCode, BarcodeFormat.QR_CODE, 500, 500);
+            BitMatrix bitMatrix = new MultiFormatWriter().encode(
+                    classCode,
+                    BarcodeFormat.QR_CODE,
+                    500,
+                    500
+            );
             return new BarcodeEncoder().createBitmap(bitMatrix);
         } catch (WriterException e) {
             return null;
@@ -552,7 +617,7 @@ public class ProfileViewModel extends ViewModel {
     /**
      * Returns observable profile UI state.
      *
-     * @return live data containing the current
+     * @return live data containing the current profile UI state
      */
     public LiveData<ProfileUIState> getUIState() {
         return uiState;
@@ -565,5 +630,22 @@ public class ProfileViewModel extends ViewModel {
      */
     public LiveData<String> getAddChildStatus() {
         return addChildStatus;
+    }
+
+    /**
+     * Called when the ViewModel is being destroyed.
+     * Removes active observers to avoid leaks and stale updates.
+     */
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+
+        if (liveStudentIds != null && studentIdsObserver != null) {
+            liveStudentIds.removeObserver(studentIdsObserver);
+        }
+
+        if (liveStudentClassroom != null && studentClassroomObserver != null) {
+            liveStudentClassroom.removeObserver(studentClassroomObserver);
+        }
     }
 }

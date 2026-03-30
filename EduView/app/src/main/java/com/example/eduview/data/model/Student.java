@@ -31,7 +31,7 @@ public class Student extends User {
     /*
         Setters
      */
-    public void setClassID(String classID) {
+    public void setClassId(String classID) {
         this.classroomId = classID;
     }
 

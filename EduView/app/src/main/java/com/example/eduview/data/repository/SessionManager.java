@@ -56,6 +56,7 @@ import com.google.firebase.auth.FirebaseUser;
  * SessionManager acts as a thin coordination layer between the UI
  * and the authentication repository.
  */
+
 public class SessionManager {
 
     // Repositories
@@ -132,6 +133,10 @@ public class SessionManager {
     public User getCurrentUser() {
         requireLogin();
         return currentUser;
+    }
+
+    public LiveData<User> getSessionUser() {
+        return currentUserLiveData;
     }
 
     public void reloadSession(SessionCallback callback) {

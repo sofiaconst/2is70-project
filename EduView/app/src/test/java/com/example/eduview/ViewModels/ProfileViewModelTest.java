@@ -6,12 +6,14 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
+import androidx.lifecycle.MutableLiveData;
 
 import com.example.eduview.data.model.Classroom;
 import com.example.eduview.data.model.Parent;
@@ -29,12 +31,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
-import java.util.List;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import static org.mockito.ArgumentMatchers.eq;
+import java.util.List;
 
 public class ProfileViewModelTest {
 
@@ -54,7 +55,6 @@ public class ProfileViewModelTest {
 
     @Test
     public void constructor_withNullCurrentUser_leavesUiStateNull() {
-        // If nobody is logged in, the view model should not build a profile state.
         when(sessionManager.getCurrentUser()).thenReturn(null);
 
         ProfileViewModel viewModel = new ProfileViewModel(sessionManager, userRepository, classroomRepository);
@@ -64,9 +64,10 @@ public class ProfileViewModelTest {
 
     @Test
     public void constructor_studentWithoutClass_buildsNotRegisteredState() {
-        // Student with no class should go to the "not registered" state right away.
         Student student = new Student("s1", "Sam", "Student", "sam@test.com", "");
         when(sessionManager.getCurrentUser()).thenReturn(student);
+        when(classroomRepository.getLiveStudentClassroom("s1"))
+                .thenReturn(new MutableLiveData<>(""));
 
         ProfileViewModel viewModel = new ProfileViewModel(sessionManager, userRepository, classroomRepository);
 
@@ -78,12 +79,12 @@ public class ProfileViewModelTest {
         assertNull(state.teacherState);
         assertNull(state.parentState);
 
+        verify(classroomRepository).getLiveStudentClassroom("s1");
         verify(classroomRepository, never()).getClassroomById(anyString(), any());
     }
 
     @Test
     public void constructor_teacherWithoutClass_buildsErrorState() {
-        // Teacher with no class id should get an error state immediately.
         Teacher teacher = new Teacher("t1", "Tina", "Teacher", "tina@test.com", "");
         when(sessionManager.getCurrentUser()).thenReturn(teacher);
 
@@ -102,7 +103,6 @@ public class ProfileViewModelTest {
 
     @Test
     public void constructor_parentWithNullId_buildsErrorState() {
-        // Parent with invalid id should get an error state immediately.
         Parent parent = new Parent(null, "Pat", "Parent", "pat@test.com", new ArrayList<>());
         when(sessionManager.getCurrentUser()).thenReturn(parent);
 
@@ -121,7 +121,6 @@ public class ProfileViewModelTest {
 
     @Test
     public void loadParentChildren_withNoChildren_setsSuccessWithEmptyList() {
-        // Parent with no child ids should end up with an empty children list.
         when(sessionManager.getCurrentUser()).thenReturn(null);
         ProfileViewModel viewModel = new ProfileViewModel(sessionManager, userRepository, classroomRepository);
 
@@ -129,14 +128,11 @@ public class ProfileViewModelTest {
         viewModel.loadParentChildren(parent);
 
         ProfileUIState state = viewModel.getUIState().getValue();
-        // This method updates parent state only if uiState already exists.
-        // So first build a parent-based VM and test again below if needed.
         assertTrue(state == null || state.parentState == null);
     }
 
     @Test
     public void constructor_parentWithNoChildren_buildsParentStateAndLoadsEmptyChildren() {
-        // Parent branch should build state and finish with an empty children list.
         Parent parent = new Parent("p1", "Pat", "Parent", "pat@test.com", new ArrayList<>());
         when(sessionManager.getCurrentUser()).thenReturn(parent);
 
@@ -146,11 +142,12 @@ public class ProfileViewModelTest {
         assertNotNull(state);
         assertEquals("Pat Parent", state.displayName);
         assertNotNull(state.parentState);
+        assertNull(state.studentState);
+        assertNull(state.teacherState);
     }
 
     @Test
     public void loadParentChildren_onlyKeepsStudents() {
-        // One student should be kept, non-student users should be ignored.
         Parent parent = new Parent("p1", "Pat", "Parent", "pat@test.com",
                 Arrays.asList("child-1", "child-2"));
 
@@ -177,9 +174,10 @@ public class ProfileViewModelTest {
 
     @Test
     public void joinClass_onRepositoryError_updatesStudentErrorState() {
-        // If joining fails, student state should become an error state.
         Student student = new Student("s1", "Sam", "Student", "sam@test.com", "");
         when(sessionManager.getCurrentUser()).thenReturn(student);
+        when(classroomRepository.getLiveStudentClassroom("s1"))
+                .thenReturn(new MutableLiveData<>(""));
 
         Mockito.doAnswer(invocation -> {
             ClassroomRepository.ClassroomCallback<Void> callback = invocation.getArgument(2);
@@ -205,9 +203,17 @@ public class ProfileViewModelTest {
 
     @Test
     public void removeStudentFromClass_withNullStudent_doesNothing() {
-        // Null student should just return early.
         Teacher teacher = new Teacher("t1", "Tina", "Teacher", "tina@test.com", "class-42");
         when(sessionManager.getCurrentUser()).thenReturn(teacher);
+
+        Mockito.doAnswer(invocation -> {
+            ClassroomRepository.ClassroomCallback<Classroom> callback = invocation.getArgument(1);
+            callback.onError(new Exception("Failed to load classroom"));
+            return null;
+        }).when(classroomRepository).getClassroomById(
+                eq("class-42"),
+                Mockito.<ClassroomRepository.ClassroomCallback<Classroom>>any()
+        );
 
         ProfileViewModel viewModel = new ProfileViewModel(sessionManager, userRepository, classroomRepository);
         viewModel.removeStudentFromClass(null);
@@ -217,11 +223,19 @@ public class ProfileViewModelTest {
 
     @Test
     public void removeStudentFromClass_teacher_callsRepository() {
-        // Teacher removing a student should call the classroom repo.
         Teacher teacher = new Teacher("t1", "Tina", "Teacher", "tina@test.com", "class-42");
         Student student = new Student("s1", "Sam", "Student", "sam@test.com", "class-42");
 
         when(sessionManager.getCurrentUser()).thenReturn(teacher);
+
+        Mockito.doAnswer(invocation -> {
+            ClassroomRepository.ClassroomCallback<Classroom> callback = invocation.getArgument(1);
+            callback.onError(new Exception("Failed to load classroom"));
+            return null;
+        }).when(classroomRepository).getClassroomById(
+                eq("class-42"),
+                Mockito.<ClassroomRepository.ClassroomCallback<Classroom>>any()
+        );
 
         Mockito.doAnswer(invocation -> {
             ClassroomRepository.ClassroomCallback<Void> callback = invocation.getArgument(2);
@@ -231,15 +245,6 @@ public class ProfileViewModelTest {
                 eq("class-42"),
                 eq("s1"),
                 Mockito.<ClassroomRepository.ClassroomCallback<Void>>any()
-        );
-
-        Mockito.doAnswer(invocation -> {
-            ClassroomRepository.ClassroomCallback<Classroom> callback = invocation.getArgument(1);
-            callback.onSuccess(null);
-            return null;
-        }).when(classroomRepository).getClassroomById(
-                eq("class-42"),
-                Mockito.<ClassroomRepository.ClassroomCallback<Classroom>>any()
         );
 
         ProfileViewModel viewModel = new ProfileViewModel(sessionManager, userRepository, classroomRepository);
@@ -254,7 +259,6 @@ public class ProfileViewModelTest {
 
     @Test
     public void updateProfilePicture_withNoCurrentUser_doesNothing() {
-        // No user means nothing should be updated.
         when(sessionManager.getCurrentUser()).thenReturn(null);
 
         ProfileViewModel viewModel = new ProfileViewModel(sessionManager, userRepository, classroomRepository);
@@ -265,9 +269,10 @@ public class ProfileViewModelTest {
 
     @Test
     public void logout_clearsUiStateAndLogsOutSession() {
-        // Logout should clear the UI state and call the session manager.
         Student student = new Student("s1", "Sam", "Student", "sam@test.com", "");
         when(sessionManager.getCurrentUser()).thenReturn(student);
+        when(classroomRepository.getLiveStudentClassroom("s1"))
+                .thenReturn(new MutableLiveData<>(""));
 
         ProfileViewModel viewModel = new ProfileViewModel(sessionManager, userRepository, classroomRepository);
         assertNotNull(viewModel.getUIState().getValue());
@@ -277,11 +282,13 @@ public class ProfileViewModelTest {
         assertNull(viewModel.getUIState().getValue());
         verify(sessionManager).logoutCurrentUser(null);
     }
+
     @Test
     public void constructor_studentWithClass_loadsClassAndTeacherName() {
-        // Student with a class should load classroom info and then teacher name.
         Student student = new Student("s1", "Sam", "Student", "sam@test.com", "class-1");
         when(sessionManager.getCurrentUser()).thenReturn(student);
+        when(classroomRepository.getLiveStudentClassroom("s1"))
+                .thenReturn(new MutableLiveData<>("class-1"));
 
         Classroom classroom = mock(Classroom.class);
         when(classroom.getName()).thenReturn("Math");
@@ -294,7 +301,7 @@ public class ProfileViewModelTest {
             callback.onSuccess(classroom);
             return null;
         }).when(classroomRepository).getClassroomById(
-                Mockito.eq("class-1"),
+                eq("class-1"),
                 Mockito.<ClassroomRepository.ClassroomCallback<Classroom>>any()
         );
 
@@ -303,7 +310,7 @@ public class ProfileViewModelTest {
             callback.onSuccess(teacher);
             return null;
         }).when(userRepository).getUserById(
-                Mockito.eq("t1"),
+                eq("t1"),
                 Mockito.<UserRepository.UserCallback>any()
         );
 
@@ -316,16 +323,17 @@ public class ProfileViewModelTest {
 
     @Test
     public void constructor_studentWithClass_butClassroomFetchFails_setsErrorState() {
-        // If the classroom cannot be loaded, the student state should become an error state.
         Student student = new Student("s1", "Sam", "Student", "sam@test.com", "class-1");
         when(sessionManager.getCurrentUser()).thenReturn(student);
+        when(classroomRepository.getLiveStudentClassroom("s1"))
+                .thenReturn(new MutableLiveData<>("class-1"));
 
         Mockito.doAnswer(invocation -> {
             ClassroomRepository.ClassroomCallback<Classroom> callback = invocation.getArgument(1);
             callback.onError(new Exception("Failed to load classroom"));
             return null;
         }).when(classroomRepository).getClassroomById(
-                Mockito.eq("class-1"),
+                eq("class-1"),
                 Mockito.<ClassroomRepository.ClassroomCallback<Classroom>>any()
         );
 
@@ -338,9 +346,10 @@ public class ProfileViewModelTest {
 
     @Test
     public void constructor_studentWithClassroomAndNoTeacherId_stillBuildsStudentState() {
-        // If the classroom has no teacher id, we should still get a valid student state.
         Student student = new Student("s1", "Sam", "Student", "sam@test.com", "class-1");
         when(sessionManager.getCurrentUser()).thenReturn(student);
+        when(classroomRepository.getLiveStudentClassroom("s1"))
+                .thenReturn(new MutableLiveData<>("class-1"));
 
         Classroom classroom = mock(Classroom.class);
         when(classroom.getName()).thenReturn("Math");
@@ -351,7 +360,7 @@ public class ProfileViewModelTest {
             callback.onSuccess(classroom);
             return null;
         }).when(classroomRepository).getClassroomById(
-                Mockito.eq("class-1"),
+                eq("class-1"),
                 Mockito.<ClassroomRepository.ClassroomCallback<Classroom>>any()
         );
 
@@ -361,14 +370,11 @@ public class ProfileViewModelTest {
         assertNotNull(state);
         assertNotNull(state.studentState);
 
-        verify(userRepository, never()).getUserById(Mockito.anyString(), Mockito.<UserRepository.UserCallback>any());
+        verify(userRepository, never()).getUserById(anyString(), Mockito.<UserRepository.UserCallback>any());
     }
-
-
 
     @Test
     public void constructor_teacherWithClassroomFetchError_setsTeacherErrorState() {
-        // If the teacher's classroom cannot be loaded, teacher state should become error.
         Teacher teacher = new Teacher("t1", "Tina", "Teacher", "tina@test.com", "class-9");
         when(sessionManager.getCurrentUser()).thenReturn(teacher);
 
@@ -377,7 +383,7 @@ public class ProfileViewModelTest {
             callback.onError(new Exception("Failed to load classroom"));
             return null;
         }).when(classroomRepository).getClassroomById(
-                Mockito.eq("class-9"),
+                eq("class-9"),
                 Mockito.<ClassroomRepository.ClassroomCallback<Classroom>>any()
         );
 
@@ -388,13 +394,13 @@ public class ProfileViewModelTest {
         assertNotNull(state.teacherState);
     }
 
-
     @Test
     public void joinClass_successThenReloadSuccess_loadsUpdatedStudentClass() {
-        // Joining succeeds, session reload succeeds, and then the new classroom is loaded.
         Student initialStudent = new Student("s1", "Sam", "Student", "sam@test.com", "");
         Student reloadedStudent = new Student("s1", "Sam", "Student", "sam@test.com", "class-22");
         when(sessionManager.getCurrentUser()).thenReturn(initialStudent);
+        when(classroomRepository.getLiveStudentClassroom("s1"))
+                .thenReturn(new MutableLiveData<>(""));
 
         Classroom classroom = mock(Classroom.class);
         when(classroom.getName()).thenReturn("Science");
@@ -405,14 +411,13 @@ public class ProfileViewModelTest {
             callback.onSuccess(null);
             return null;
         }).when(classroomRepository).joinClassroom(
-                Mockito.eq("s1"),
-                Mockito.eq("ABC123"),
+                eq("s1"),
+                eq("ABC123"),
                 Mockito.<ClassroomRepository.ClassroomCallback<Void>>any()
         );
 
         Mockito.doAnswer(invocation -> {
             SessionManager.SessionCallback callback = invocation.getArgument(0);
-            when(sessionManager.getCurrentUser()).thenReturn(reloadedStudent);
             callback.onSuccess(reloadedStudent);
             return null;
         }).when(sessionManager).reloadSession(Mockito.any());
@@ -422,7 +427,7 @@ public class ProfileViewModelTest {
             callback.onSuccess(classroom);
             return null;
         }).when(classroomRepository).getClassroomById(
-                Mockito.eq("class-22"),
+                eq("class-22"),
                 Mockito.<ClassroomRepository.ClassroomCallback<Classroom>>any()
         );
 
@@ -430,30 +435,31 @@ public class ProfileViewModelTest {
         viewModel.joinClass("ABC123");
 
         verify(classroomRepository).joinClassroom(
-                Mockito.eq("s1"),
-                Mockito.eq("ABC123"),
+                eq("s1"),
+                eq("ABC123"),
                 Mockito.<ClassroomRepository.ClassroomCallback<Void>>any()
         );
         verify(sessionManager).reloadSession(Mockito.any());
         verify(classroomRepository).getClassroomById(
-                Mockito.eq("class-22"),
+                eq("class-22"),
                 Mockito.<ClassroomRepository.ClassroomCallback<Classroom>>any()
         );
     }
 
     @Test
     public void joinClass_successButReloadFails_setsStudentErrorState() {
-        // If join works but reload fails, the student state should become error.
         Student student = new Student("s1", "Sam", "Student", "sam@test.com", "");
         when(sessionManager.getCurrentUser()).thenReturn(student);
+        when(classroomRepository.getLiveStudentClassroom("s1"))
+                .thenReturn(new MutableLiveData<>(""));
 
         Mockito.doAnswer(invocation -> {
             ClassroomRepository.ClassroomCallback<Void> callback = invocation.getArgument(2);
             callback.onSuccess(null);
             return null;
         }).when(classroomRepository).joinClassroom(
-                Mockito.eq("s1"),
-                Mockito.eq("ABC123"),
+                eq("s1"),
+                eq("ABC123"),
                 Mockito.<ClassroomRepository.ClassroomCallback<Void>>any()
         );
 
@@ -473,7 +479,6 @@ public class ProfileViewModelTest {
 
     @Test
     public void removeStudentFromClass_whenCurrentUserIsNotTeacher_doesNothing() {
-        // Only teachers should be allowed to remove students.
         Parent parent = new Parent("p1", "Pat", "Parent", "pat@test.com", new ArrayList<>());
         Student student = new Student("s1", "Sam", "Student", "sam@test.com", "class-42");
         when(sessionManager.getCurrentUser()).thenReturn(parent);
@@ -482,37 +487,37 @@ public class ProfileViewModelTest {
         viewModel.removeStudentFromClass(student);
 
         verify(classroomRepository, never()).removeStudentFromClassroom(
-                Mockito.anyString(),
-                Mockito.anyString(),
+                anyString(),
+                anyString(),
                 Mockito.<ClassroomRepository.ClassroomCallback<Void>>any()
         );
     }
 
     @Test
     public void loadParentChildren_withNullParent_doesNothing() {
-        // Null parent should return immediately and not hit the repo.
         when(sessionManager.getCurrentUser()).thenReturn(null);
         ProfileViewModel viewModel = new ProfileViewModel(sessionManager, userRepository, classroomRepository);
 
         viewModel.loadParentChildren(null);
 
-        verify(userRepository, never()).getUserById(Mockito.anyString(), Mockito.<UserRepository.UserCallback>any());
+        verify(userRepository, never()).getUserById(anyString(), Mockito.<UserRepository.UserCallback>any());
     }
 
     @Test
     public void updateProfilePicture_withCurrentUser_callsRepository() {
-        // Updating the profile picture should call the repo for the current user.
         Student student = new Student("s1", "Sam", "Student", "sam@test.com", "");
         when(sessionManager.getCurrentUser()).thenReturn(student);
+        when(classroomRepository.getLiveStudentClassroom("s1"))
+                .thenReturn(new MutableLiveData<>(""));
 
         ProfileViewModel viewModel = new ProfileViewModel(sessionManager, userRepository, classroomRepository);
         viewModel.updateProfilePicture(ProfilePicture.DEFAULT);
 
         verify(userRepository).updateProfilePicture("s1", ProfilePicture.DEFAULT);
     }
+
     @Test
     public void constructor_teacherWithNullClass_buildsImmediateErrorState() {
-        // Teacher with null class id should immediately get an error state.
         Teacher teacher = new Teacher("t1", "Tina", "Teacher", "tina@test.com", null);
         when(sessionManager.getCurrentUser()).thenReturn(teacher);
 
@@ -523,24 +528,25 @@ public class ProfileViewModelTest {
         assertNotNull(state.teacherState);
 
         verify(classroomRepository, never()).getClassroomById(
-                Mockito.anyString(),
+                anyString(),
                 Mockito.<ClassroomRepository.ClassroomCallback<Classroom>>any()
         );
     }
 
     @Test
     public void joinClass_whenJoinFails_setsStudentErrorState() {
-        // If joining a class fails right away, student state should become error.
         Student student = new Student("s1", "Sam", "Student", "sam@test.com", "");
         when(sessionManager.getCurrentUser()).thenReturn(student);
+        when(classroomRepository.getLiveStudentClassroom("s1"))
+                .thenReturn(new MutableLiveData<>(""));
 
         Mockito.doAnswer(invocation -> {
             ClassroomRepository.ClassroomCallback<Void> callback = invocation.getArgument(2);
             callback.onError(new Exception("Join failed"));
             return null;
         }).when(classroomRepository).joinClassroom(
-                Mockito.eq("s1"),
-                Mockito.eq("ABC123"),
+                eq("s1"),
+                eq("ABC123"),
                 Mockito.<ClassroomRepository.ClassroomCallback<Void>>any()
         );
 
@@ -551,5 +557,4 @@ public class ProfileViewModelTest {
         assertNotNull(state);
         assertNotNull(state.studentState);
     }
-
 }

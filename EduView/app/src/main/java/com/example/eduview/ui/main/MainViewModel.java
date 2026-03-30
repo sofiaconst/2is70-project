@@ -58,6 +58,13 @@ public class MainViewModel extends ViewModel {
     }
 
     /**
+     * Triggers a manual reload of the current session data from the repository.
+     */
+    public void refreshSession() {
+        sessionManager.reloadSession(null);
+    }
+
+    /**
      * Returns the corresponding bottom navigation menu resource based on the user's role.
      *
      * @return menu resource ID corresponding to the user's role
