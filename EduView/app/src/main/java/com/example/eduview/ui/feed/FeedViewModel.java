@@ -29,9 +29,9 @@ public class FeedViewModel extends ViewModel {
     private UserRepository userRepository;
 
     // Feed Items
-    private LiveData<List<FeedItem>> publishedPosts;
-    private LiveData<List<FeedItem>> announcements;
-    private LiveData<List<FeedItem>> pendingPosts;
+    private final MutableLiveData<List<FeedItem>> publishedPosts = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<List<FeedItem>> announcements = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<List<FeedItem>> pendingPosts = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<List<Student>> parentChildren = new MutableLiveData<>(new ArrayList<>());
 
     // Refresh
@@ -65,6 +65,7 @@ public class FeedViewModel extends ViewModel {
      * @param user current user for whom feed data should be loaded
      */
     public void loadPostsForUser(User user) {
+        if (user == null) return;
         currentUser = user;
         classroomId = null;
 
@@ -74,7 +75,15 @@ public class FeedViewModel extends ViewModel {
             classroomId = ((Teacher) user).getClassId();
         }
 
-        Log.d("FeedViewModel", "Class id found for class: " + classroomId);
+        Log.d("FeedViewModel", "Class id found for user: " + classroomId);
+        
+        if (classroomId != null && !classroomId.isEmpty()) {
+            loadPublishedPosts();
+            loadAnnouncements();
+            if (user instanceof Teacher) {
+                loadPendingPosts();
+            }
+        }
     }
 
     /**
@@ -135,21 +144,30 @@ public class FeedViewModel extends ViewModel {
      * Loads published posts for the current classroom.
      */
     public void loadPublishedPosts() {
-        publishedPosts = feedRepository.fetchPublishedPosts(classroomId);
+        if (classroomId == null) return;
+        feedRepository.fetchPublishedPosts(classroomId).observeForever(items -> {
+            if (items != null) publishedPosts.setValue(items);
+        });
     }
 
     /**
      * Loads announcements for the current classroom.
      */
     public void loadAnnouncements() {
-        announcements = feedRepository.fetchAnnouncements(classroomId);
+        if (classroomId == null) return;
+        feedRepository.fetchAnnouncements(classroomId).observeForever(items -> {
+            if (items != null) announcements.setValue(items);
+        });
     }
 
     /**
      * Loads pending posts for the current classroom.
      */
     public void loadPendingPosts() {
-        pendingPosts = feedRepository.fetchPendingPosts(classroomId);
+        if (classroomId == null) return;
+        feedRepository.fetchPendingPosts(classroomId).observeForever(items -> {
+            if (items != null) pendingPosts.setValue(items);
+        });
     }
 
     /**
@@ -212,15 +230,6 @@ public class FeedViewModel extends ViewModel {
         }
 
         loadPostsForUser(currentUser);
-
-        if (!(currentUser instanceof Parent)) {
-            loadPublishedPosts();
-            loadAnnouncements();
-
-            if (currentUser instanceof Teacher) {
-                loadPendingPosts();
-            }
-        }
 
         Integer currentValue = refreshTrigger.getValue();
         if (currentValue == null) currentValue = 0;
