@@ -5,6 +5,7 @@ import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 
 import com.example.eduview.AuthService;
@@ -48,6 +49,10 @@ public class ProfileViewModel extends ViewModel {
     private final MutableLiveData<String> addChildStatus = new MutableLiveData<>();
 
     private User currentUser;
+    
+    // Track live data for cleanup
+    private LiveData<List<String>> liveStudentIds;
+    private Observer<List<String>> studentIdsObserver;
 
     /**
      * Default constructor.
@@ -351,8 +356,14 @@ public class ProfileViewModel extends ViewModel {
                 // Generate a QR code from the class ID so students can join.
                 Bitmap qr = generateQRCode(classId);
 
-                // After loading basic classroom data fetch students in classroom.
-                loadTeacherStudents(classId, className, qr);
+                // Start observing student IDs in real-time
+                if (liveStudentIds != null && studentIdsObserver != null) {
+                    liveStudentIds.removeObserver(studentIdsObserver);
+                }
+                
+                liveStudentIds = classroomRepository.getLiveStudentIdsForClassroom(classId);
+                studentIdsObserver = ids -> loadTeacherStudents(classId, className, qr, ids);
+                liveStudentIds.observeForever(studentIdsObserver);
             }
 
             @Override
@@ -368,24 +379,14 @@ public class ProfileViewModel extends ViewModel {
      * @param classId the classroom ID
      * @param className the classroom name
      * @param qr the generated QR code bitmap for the classroom
+     * @param studentIds the list of student IDs currently in the classroom
      */
-    private void loadTeacherStudents(String classId, String className, Bitmap qr) {
-        classroomRepository.getStudentIdsForClassroom(classId, new ClassroomRepository.ClassroomCallback<List<String>>() {
-            @Override
-            public void onSuccess(List<String> studentIds) {
-                // Convert the list of student IDs into actual Student objects.
-                userRepository.getStudentsByIds(studentIds,
-                        students -> updateTeacherState(TeacherProfileState.success(className, qr, students)),
-                        e -> updateTeacherState(TeacherProfileState.success(className, qr, new ArrayList<>()))
-                );
-            }
-
-            @Override
-            public void onError(Exception e) {
-                // If loading student IDs fails, show class info with an empty list.
-                updateTeacherState(TeacherProfileState.success(className, qr, new ArrayList<>()));
-            }
-        });
+    private void loadTeacherStudents(String classId, String className, Bitmap qr, List<String> studentIds) {
+        // Convert the list of student IDs into actual Student objects.
+        userRepository.getStudentsByIds(studentIds,
+                students -> updateTeacherState(TeacherProfileState.success(className, qr, students)),
+                e -> updateTeacherState(TeacherProfileState.success(className, qr, new ArrayList<>()))
+        );
     }
 
     /**
@@ -401,8 +402,7 @@ public class ProfileViewModel extends ViewModel {
         classroomRepository.removeStudentFromClassroom(classId, student.getUserId(), new ClassroomRepository.ClassroomCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
-                // Refresh the class data after the student has been removed.
-                loadTeacherClass(classId);
+                // Real-time listener will handle the update
             }
 
             @Override
@@ -565,5 +565,13 @@ public class ProfileViewModel extends ViewModel {
      */
     public LiveData<String> getAddChildStatus() {
         return addChildStatus;
+    }
+    
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        if (liveStudentIds != null && studentIdsObserver != null) {
+            liveStudentIds.removeObserver(studentIdsObserver);
+        }
     }
 }
