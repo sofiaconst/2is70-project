@@ -83,6 +83,11 @@ public class FeedViewModel extends ViewModel {
             if (user instanceof Teacher) {
                 loadPendingPosts();
             }
+        } else {
+            // Clear feed if user is not in a class
+            publishedPosts.setValue(new ArrayList<>());
+            announcements.setValue(new ArrayList<>());
+            pendingPosts.setValue(new ArrayList<>());
         }
     }
 
