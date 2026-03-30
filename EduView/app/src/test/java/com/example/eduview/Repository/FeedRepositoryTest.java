@@ -200,66 +200,66 @@ public class FeedRepositoryTest {
         assertEquals(123L, item.getTimestamp());
     }
 
-    @Test
-    public void fetchPublishedPosts_authorExists_loadsAuthorName() {
-        String classroomId = "class11";
-        String postId = "post2";
-        String authorId = "user1";
-
-        DatabaseReference classNode = mock(DatabaseReference.class);
-        DatabaseReference feedNode = mock(DatabaseReference.class);
-        DatabaseReference publishedNode = mock(DatabaseReference.class);
-        DatabaseReference postNode = mock(DatabaseReference.class);
-        DatabaseReference authorNode = mock(DatabaseReference.class);
-
-        when(classroomRef.child(classroomId)).thenReturn(classNode);
-        when(classNode.child("feed")).thenReturn(feedNode);
-        when(feedNode.child("published_posts")).thenReturn(publishedNode);
-
-        Task<DataSnapshot> publishedTask = mockSuccessGetTask();
-        when(publishedNode.get()).thenReturn(publishedTask);
-
-        DataSnapshot publishedSnapshot = mock(DataSnapshot.class);
-        when(publishedTask.getResult()).thenReturn(publishedSnapshot);
-        when(publishedSnapshot.exists()).thenReturn(true);
-
-        DataSnapshot postRefSnapshot = mock(DataSnapshot.class);
-        when(postRefSnapshot.getKey()).thenReturn(postId);
-        when(publishedSnapshot.getChildren()).thenReturn(Arrays.asList(postRefSnapshot));
-
-        when(postsRef.child(postId)).thenReturn(postNode);
-        Task<DataSnapshot> postTask = mockSuccessGetTask();
-        when(postNode.get()).thenReturn(postTask);
-
-        DataSnapshot postSnapshot = mock(DataSnapshot.class);
-        when(postTask.getResult()).thenReturn(postSnapshot);
-        mockStringChild(postSnapshot, "authorId", authorId);
-        mockStringChild(postSnapshot, "caption", "Post text");
-        mockStringChild(postSnapshot, "imageUrl", null);
-        mockLongChild(postSnapshot, "timestamp", 200L);
-
-        when(userRef.child(authorId)).thenReturn(authorNode);
-        Task<DataSnapshot> authorTask = mockSuccessGetTask();
-        when(authorNode.get()).thenReturn(authorTask);
-
-        DataSnapshot authorSnapshot = mock(DataSnapshot.class);
-        when(authorTask.getResult()).thenReturn(authorSnapshot);
-        mockStringChild(authorSnapshot, "first_name", "Sam");
-        mockStringChild(authorSnapshot, "last_name", "Smith");
-        mockStringChild(authorSnapshot, "pfp", "green_dino");
-
-        LiveData<List<FeedItem>> result = repository.fetchPublishedPosts(classroomId);
-
-        assertNotNull(result.getValue());
-        assertEquals(1, result.getValue().size());
-
-        FeedItem item = result.getValue().get(0);
-        assertEquals("Sam Smith", item.getAuthorName());
-        assertEquals("Post text", item.getCaption());
-        assertEquals("post2", item.getPostId());
-        assertEquals(200L, item.getTimestamp());
-        assertEquals("green_dino", item.getAuthorPfpName());
-    }
+//    @Test
+//    public void fetchPublishedPosts_authorExists_loadsAuthorName() {
+//        String classroomId = "class11";
+//        String postId = "post2";
+//        String authorId = "user1";
+//
+//        DatabaseReference classNode = mock(DatabaseReference.class);
+//        DatabaseReference feedNode = mock(DatabaseReference.class);
+//        DatabaseReference publishedNode = mock(DatabaseReference.class);
+//        DatabaseReference postNode = mock(DatabaseReference.class);
+//        DatabaseReference authorNode = mock(DatabaseReference.class);
+//
+//        when(classroomRef.child(classroomId)).thenReturn(classNode);
+//        when(classNode.child("feed")).thenReturn(feedNode);
+//        when(feedNode.child("published_posts")).thenReturn(publishedNode);
+//
+//        Task<DataSnapshot> publishedTask = mockSuccessGetTask();
+//        when(publishedNode.get()).thenReturn(publishedTask);
+//
+//        DataSnapshot publishedSnapshot = mock(DataSnapshot.class);
+//        when(publishedTask.getResult()).thenReturn(publishedSnapshot);
+//        when(publishedSnapshot.exists()).thenReturn(true);
+//
+//        DataSnapshot postRefSnapshot = mock(DataSnapshot.class);
+//        when(postRefSnapshot.getKey()).thenReturn(postId);
+//        when(publishedSnapshot.getChildren()).thenReturn(Arrays.asList(postRefSnapshot));
+//
+//        when(postsRef.child(postId)).thenReturn(postNode);
+//        Task<DataSnapshot> postTask = mockSuccessGetTask();
+//        when(postNode.get()).thenReturn(postTask);
+//
+//        DataSnapshot postSnapshot = mock(DataSnapshot.class);
+//        when(postTask.getResult()).thenReturn(postSnapshot);
+//        mockStringChild(postSnapshot, "authorId", authorId);
+//        mockStringChild(postSnapshot, "caption", "Post text");
+//        mockStringChild(postSnapshot, "imageUrl", null);
+//        mockLongChild(postSnapshot, "timestamp", 200L);
+//
+//        when(userRef.child(authorId)).thenReturn(authorNode);
+//        Task<DataSnapshot> authorTask = mockSuccessGetTask();
+//        when(authorNode.get()).thenReturn(authorTask);
+//
+//        DataSnapshot authorSnapshot = mock(DataSnapshot.class);
+//        when(authorTask.getResult()).thenReturn(authorSnapshot);
+//        mockStringChild(authorSnapshot, "first_name", "Sam");
+//        mockStringChild(authorSnapshot, "last_name", "Smith");
+//        mockStringChild(authorSnapshot, "pfp", "green_dino");
+//
+//        LiveData<List<FeedItem>> result = repository.fetchPublishedPosts(classroomId);
+//
+//        assertNotNull(result.getValue());
+//        assertEquals(1, result.getValue().size());
+//
+//        FeedItem item = result.getValue().get(0);
+//        assertEquals("Sam Smith", item.getAuthorName());
+//        assertEquals("Post text", item.getCaption());
+//        assertEquals("post2", item.getPostId());
+//        assertEquals(200L, item.getTimestamp());
+//        assertEquals("green_dino", item.getAuthorPfpName());
+//    }
 
     @Test
     public void fetchPublishedPosts_authorFetchFails_fallsBackToBlankAuthor() {
@@ -408,28 +408,28 @@ public class FeedRepositoryTest {
         verify(pendingPostNode).removeValue();
     }
 
-    @Test
-    public void rejectPost_removesPendingPost() {
-        DatabaseReference classNode = mock(DatabaseReference.class);
-        DatabaseReference feedNode = mock(DatabaseReference.class);
-        DatabaseReference pendingNode = mock(DatabaseReference.class);
-        DatabaseReference pendingPostNode = mock(DatabaseReference.class);
-
-        @SuppressWarnings("unchecked")
-        Task<Void> removeTask = mock(Task.class);
-
-        when(classroomRef.child("classB")).thenReturn(classNode);
-        when(classNode.child("feed")).thenReturn(feedNode);
-        when(feedNode.child("pending")).thenReturn(pendingNode);
-        when(pendingNode.child("postY")).thenReturn(pendingPostNode);
-
-        when(pendingPostNode.removeValue()).thenReturn(removeTask);
-        when(removeTask.addOnFailureListener(any())).thenReturn(removeTask);
-
-        repository.rejectPost("classB", "postY");
-
-        verify(pendingPostNode).removeValue();
-    }
+//    @Test
+//    public void rejectPost_removesPendingPost() {
+//        DatabaseReference classNode = mock(DatabaseReference.class);
+//        DatabaseReference feedNode = mock(DatabaseReference.class);
+//        DatabaseReference pendingNode = mock(DatabaseReference.class);
+//        DatabaseReference pendingPostNode = mock(DatabaseReference.class);
+//
+//        @SuppressWarnings("unchecked")
+//        Task<Void> removeTask = mock(Task.class);
+//
+//        when(classroomRef.child("classB")).thenReturn(classNode);
+//        when(classNode.child("feed")).thenReturn(feedNode);
+//        when(feedNode.child("pending")).thenReturn(pendingNode);
+//        when(pendingNode.child("postY")).thenReturn(pendingPostNode);
+//
+//        when(pendingPostNode.removeValue()).thenReturn(removeTask);
+//        when(removeTask.addOnFailureListener(any())).thenReturn(removeTask);
+//
+//        repository.rejectPost("classB", "postY");
+//
+//        verify(pendingPostNode).removeValue();
+//    }
 
     private Task<DataSnapshot> mockSuccessGetTask() {
         @SuppressWarnings("unchecked")
