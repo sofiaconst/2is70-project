@@ -11,6 +11,9 @@ stores app-level session data
 
 import android.util.Log;
 
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+
 import com.example.eduview.data.model.Student;
 import com.example.eduview.data.model.Teacher;
 import com.example.eduview.data.model.Parent;
@@ -62,6 +65,8 @@ public class SessionManager {
     // Repositories
     private final AuthRepository authRepository;
     private final UserRepository userRepository;
+    
+    private final MutableLiveData<User> currentUserLiveData = new MutableLiveData<>();
     private User currentUser;
 
     // Singleton
@@ -85,6 +90,7 @@ public class SessionManager {
     // For Testing Profile fragment
     public void setCurrentUserForTest(User user) {
         this.currentUser = user;
+        this.currentUserLiveData.setValue(user);
     }
 
     public void initializeSession(SessionCallback callback) {
@@ -105,6 +111,7 @@ public class SessionManager {
             @Override
             public void onSuccess(User user) {
                 currentUser = user;
+                currentUserLiveData.postValue(user);
                 callback.onSuccess(currentUser);
             }
 
@@ -118,6 +125,7 @@ public class SessionManager {
 
     public void logoutCurrentUser(SessionCallback callback) {
         currentUser = null;
+        currentUserLiveData.postValue(null);
         authRepository.logout();
         if(callback != null) {
             callback.onSuccess(null); // notify logout complete
@@ -131,7 +139,6 @@ public class SessionManager {
     }
 
     public User getCurrentUser() {
-        requireLogin();
         return currentUser;
     }
 
@@ -143,7 +150,7 @@ public class SessionManager {
         FirebaseUser firebaseUser = authRepository.getCurrentFirebaseUser();
 
         if (firebaseUser == null) {
-            callback.onError(new IllegalStateException("User not logged in"));
+            if (callback != null) callback.onError(new IllegalStateException("User not logged in"));
             return;
         }
 
@@ -153,12 +160,13 @@ public class SessionManager {
             @Override
             public void onSuccess(User user) {
                 currentUser = user;
-                callback.onSuccess(currentUser);
+                currentUserLiveData.postValue(user);
+                if (callback != null) callback.onSuccess(currentUser);
             }
 
             @Override
             public void onError(Exception error) {
-                callback.onError(error);
+                if (callback != null) callback.onError(error);
             }
         });
     }
@@ -166,7 +174,5 @@ public class SessionManager {
     public interface SessionCallback {
         void onSuccess(User user);
         void onError(Exception e);
-
     }
 }
-
