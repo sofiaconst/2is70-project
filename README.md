@@ -7,6 +7,8 @@ Group: 1
 ## Description
 App developed for the 2IS70 DBL App Development course.
 
+No third-party Java source files were used unchanged in this project.
+
 ## Team
 - Leo Benihtah
 - Alex Christou
