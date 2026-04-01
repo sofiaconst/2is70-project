@@ -2,12 +2,12 @@
 
 DBL App Development  
 Course: 2IS70  
-Group: 1
+Group: 01
 
 ## Description
 App developed for the 2IS70 DBL App Development course.
 
-No third-party Java source files were used unchanged in this project.
+No third-party Java source files were used in this project.
 
 ## Team
 - Leo Benihtah
@@ -16,9 +16,3 @@ No third-party Java source files were used unchanged in this project.
 - Gianluigi Petrosillo Bautista
 - Buğra Karaç
 - Olivier Wieczeryński
-
-## Tech Stack
-- TBD
-
-## How to Run
-- TBD
